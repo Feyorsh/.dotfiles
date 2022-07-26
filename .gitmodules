@@ -1,0 +1,36 @@
+[submodule "nvim/.local/share/nvim/site/autoload/vim-plug"]
+	path = nvim/.local/share/nvim/site/autoload/vim-plug
+	url = https://github.com/junegunn/vim-plug.git
+[submodule "tmux/.config/tmux/plugins/tmux"]
+	path = tmux/.config/tmux/plugins/tmux
+	url = https://github.com/dracula/tmux.git
+[submodule "zsh/zsh-autosuggestions"]
+	path = zsh/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "zsh/.zsh/zsh-autosuggestions"]
+	path = zsh/.zsh/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "nvim/vim-plug"]
+	path = nvim/vim-plug
+	url = https://github.com/junegunn/vim-plug.git
+[submodule "nvim/.local/share/nvim/plugged/auto-pairs"]
+	path = nvim/.local/share/nvim/plugged/auto-pairs
+	url = https://github.com/chun-yang/auto-pairs.git
+[submodule "nvim/.local/share/nvim/plugged/fzf"]
+	path = nvim/.local/share/nvim/plugged/fzf
+	url = https://github.com/junegunn/fzf.git
+[submodule "nvim/.local/share/nvim/plugged/nerdtree"]
+	path = nvim/.local/share/nvim/plugged/nerdtree
+	url = https://github.com/scrooloose/nerdtree.git
+[submodule "nvim/.local/share/nvim/plugged/vim-surround"]
+	path = nvim/.local/share/nvim/plugged/vim-surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule "nvim/.local/share/nvim/plugged/coc.nvim"]
+	path = nvim/.local/share/nvim/plugged/coc.nvim
+	url = https://github.com/neoclide/coc.nvim.git
+[submodule "tmux/.config/tmux/plugins/tmux-sensible"]
+	path = tmux/.config/tmux/plugins/tmux-sensible
+	url = https://git::@github.com/tmux-plugins/tmux-sensible
+[submodule "tmux/.config/tmux/plugins/tpm"]
+	path = tmux/.config/tmux/plugins/tpm
+	url = https://git::@github.com/tmux-plugins/tpm

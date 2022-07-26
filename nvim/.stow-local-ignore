@@ -1,0 +1,9 @@
+\.git.*
+vim-plug
+
+# install scripts
+STOW_INSTALL
+
+^/README.*
+^/LICENSE.*
+^/COPYING
