@@ -1,0 +1,20 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[user]
+	name = Borris-the-real-OG
+	email = ghubs25@gmail.com
+[core]
+	editor = nvim
+[diff]
+	tool = default-difftool
+[difftool "default-difftool"]
+	cmd = code --wait --diff $LOCAL $REMOTE
+[credential]
+	helper = osxkeychain
+[init]
+	defaultBranch = main
+[fetch]
+	prune = true

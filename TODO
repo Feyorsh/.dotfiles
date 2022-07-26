@@ -1,0 +1,36 @@
+.githooks
+	Mirror structure of .git/hooks so we can use stow in setup
+setup
+	See above
+tmux
+	Add some more plugins
+	Tweak tmux.conf
+nvim
+	Add a good theme
+	Figure out extensions for compiling/quickfix
+	Change the highlight color of brackets/quotes (annoying)
+starship
+	Potentially do some more prompt tweaking
+		|= Definitely fix the pipe prompt (quick fix)
+		|= Never mind, actually fix it pls
+		|= Idea: Just print err numbers, otherwise prompt gets cluttered
+	Add personal branch of starship as submodule
+yabai
+	Finish the script for (attempting) to accomodate chonky windows (*cough* Spotify *cough*)
+skhd
+	Add good combos to adjust yabai (alt seems like a good meta key)
+git
+	Poor fella doesn't have any config ;( (but does it need any though?)
+	Note: Alternate OSs won't have macOS keychain manager, so this *might* need to be encrypted if I'm lazy enough to put PID in .gitconfig
+	Configure default .gitconfig (actually, I probably don't want a default) and project .gitconfig
+zsh
+	Potentially add zsh-vi-mode (https://github.com/jeffreytse/zsh-vi-mode)
+	Potentially spruce it up some more
+	Alias 'diff' to 'git-diff'
+iterm
+	Potentially add iterm config to .dotfiles
+	(Tangential) Figure out how to provide escapes to use meta keys (yabai/skhd) in terminal
+	Potentially switch to kitty LOL
+
+GENERAL NOTES:
+	Try to manually manage plugins, but maybe git_manage works fine? We'll see once plugin managers try to pull from remote and realize there's no .git (this applies to tpm and vim-plug).
