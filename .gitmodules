@@ -31,3 +31,19 @@
 [submodule "tmux/.config/tmux/plugins/tpm"]
 	path = tmux/.config/tmux/plugins/tpm
 	url = https://git::@github.com/tmux-plugins/tpm
+[submodule "nvim/.local/share/nvim/plugged/vem-tabline"]
+	path = nvim/.local/share/nvim/plugged/vem-tabline
+	url = https://github.com/pacha/vem-tabline.git
+	ignore = dirty
+[submodule "nvim/.local/share/nvim/plugged/vim-devicons"]
+	path = nvim/.local/share/nvim/plugged/vim-devicons
+	url = https://github.com/ryanoasis/vim-devicons.git
+[submodule "nvim/.local/share/nvim/plugged/vim-snazzy"]
+	path = nvim/.local/share/nvim/plugged/vim-snazzy
+	url = https://github.com/connorholyday/vim-snazzy.git
+[submodule "nvim/.local/share/nvim/plugged/vim-fugitive"]
+	path = nvim/.local/share/nvim/plugged/vim-fugitive
+	url = https://github.com/tpope/vim-fugitive.git
+[submodule "nvim/.local/share/nvim/plugged/lightline.vim"]
+	path = nvim/.local/share/nvim/plugged/lightline.vim
+	url = https://github.com/itchyny/lightline.vim.git
