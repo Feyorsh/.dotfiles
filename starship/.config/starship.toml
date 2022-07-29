@@ -22,7 +22,9 @@ error_symbol = "[\\$](bold red)"
 [status]
 disabled = false
 map_symbol = true
-symbol = " "
+pipestatus = true
+pipestatus_format = "[[$status](bg:#CC3300)](fg:#CC3300) -> [[$status](bg:#CC3300)](fg:#CC3300) "
+symbol = ""
 signal_symbol = ""
 sigint_symbol = ""
 # This is a hack that requires modifying the source to match 'common_meaning'

@@ -36,7 +36,7 @@ function better_man() {
 	done
 }
 alias man='better_man'
-
+alias diff='git diff'
 setopt interactivecomments
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

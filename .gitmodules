@@ -47,3 +47,6 @@
 [submodule "nvim/.local/share/nvim/plugged/lightline.vim"]
 	path = nvim/.local/share/nvim/plugged/lightline.vim
 	url = https://github.com/itchyny/lightline.vim.git
+[submodule "starship/starship"]
+	path = starship/starship
+	url = https://github.com/Borris-the-real-OG/starship.git

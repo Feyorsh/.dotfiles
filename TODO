@@ -6,14 +6,17 @@ tmux
 	Add some more plugins
 	Tweak tmux.conf
 nvim
-	Add a good theme
+	Configure lightline (i.e. for terminal shrinkage and git status), see https://github.com/itchyny/lightline.vim
 	Figure out extensions for compiling/quickfix
+	Figure out how to use vim-fugitive
 	Change the highlight color of brackets/quotes (annoying)
+	coc config lives in .config proper... Should I leave it like this because it's just node_modules?
 starship
 	Potentially do some more prompt tweaking
 		|= Definitely fix the pipe prompt (quick fix)
 		|= Never mind, actually fix it pls
 		|= Idea: Just print err numbers, otherwise prompt gets cluttered
+	PRETTY SURE 128 ERROR CODE IS BROKEN !!
 	Add personal branch of starship as submodule
 yabai
 	Finish the script for (attempting) to accomodate chonky windows (*cough* Spotify *cough*)

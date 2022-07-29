@@ -1,3 +1,0 @@
-#!/bin/zsh
-
-"`dirname $0`"/update_vim-plug "$@"
