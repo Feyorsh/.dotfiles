@@ -1,0 +1,6 @@
+#!/bin/zsh
+# I'm not sure if this level of scuffed directory traversal is okay... eh whatever.
+\cp $GIT_DIR/../../../../nvim/vim-pathogen/autoload/pathogen.vim $GIT_DIR/../../../../nvim/.local/share/nvim/site/autoload/pathogen.vim
+echo "[VIM-PATHOGEN] Updated `cd $GIT_DIR/../../../..; pwd`/nvim/.local/share/nvim/site/autoload/pathogen.vim"
+# --- Finished
+exit 0

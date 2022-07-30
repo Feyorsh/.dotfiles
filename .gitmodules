@@ -1,29 +1,23 @@
-[submodule "nvim/.local/share/nvim/site/autoload/vim-plug"]
-	path = nvim/.local/share/nvim/site/autoload/vim-plug
-	url = https://github.com/junegunn/vim-plug.git
 [submodule "tmux/.config/tmux/plugins/tmux"]
 	path = tmux/.config/tmux/plugins/tmux
 	url = https://github.com/dracula/tmux.git
 [submodule "zsh/.zsh/zsh-autosuggestions"]
 	path = zsh/.zsh/zsh-autosuggestions
 	url = https://github.com/zsh-users/zsh-autosuggestions
-[submodule "nvim/vim-plug"]
-	path = nvim/vim-plug
-	url = https://github.com/junegunn/vim-plug.git
-[submodule "nvim/.local/share/nvim/plugged/auto-pairs"]
-	path = nvim/.local/share/nvim/plugged/auto-pairs
+[submodule "nvim/.config/nvim/bundle/auto-pairs"]
+	path = nvim/.config/nvim/bundle/auto-pairs
 	url = https://github.com/chun-yang/auto-pairs.git
-[submodule "nvim/.local/share/nvim/plugged/fzf"]
-	path = nvim/.local/share/nvim/plugged/fzf
+[submodule "nvim/.config/nvim/bundle/fzf"]
+	path = nvim/.config/nvim/bundle/fzf
 	url = https://github.com/junegunn/fzf.git
-[submodule "nvim/.local/share/nvim/plugged/nerdtree"]
-	path = nvim/.local/share/nvim/plugged/nerdtree
+[submodule "nvim/.config/nvim/bundle/nerdtree"]
+	path = nvim/.config/nvim/bundle/nerdtree
 	url = https://github.com/scrooloose/nerdtree.git
-[submodule "nvim/.local/share/nvim/plugged/vim-surround"]
-	path = nvim/.local/share/nvim/plugged/vim-surround
+[submodule "nvim/.config/nvim/bundle/vim-surround"]
+	path = nvim/.config/nvim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround.git
-[submodule "nvim/.local/share/nvim/plugged/coc.nvim"]
-	path = nvim/.local/share/nvim/plugged/coc.nvim
+[submodule "nvim/.config/nvim/bundle/coc.nvim"]
+	path = nvim/.config/nvim/bundle/coc.nvim
 	url = https://github.com/neoclide/coc.nvim.git
 [submodule "tmux/.config/tmux/plugins/tmux-sensible"]
 	path = tmux/.config/tmux/plugins/tmux-sensible
@@ -31,22 +25,25 @@
 [submodule "tmux/.config/tmux/plugins/tpm"]
 	path = tmux/.config/tmux/plugins/tpm
 	url = https://git::@github.com/tmux-plugins/tpm
-[submodule "nvim/.local/share/nvim/plugged/vem-tabline"]
-	path = nvim/.local/share/nvim/plugged/vem-tabline
+[submodule "nvim/.config/nvim/bundle/vem-tabline"]
+	path = nvim/.config/nvim/bundle/vem-tabline
 	url = https://github.com/pacha/vem-tabline.git
 	ignore = dirty
-[submodule "nvim/.local/share/nvim/plugged/vim-devicons"]
-	path = nvim/.local/share/nvim/plugged/vim-devicons
+[submodule "nvim/.config/nvim/bundle/vim-devicons"]
+	path = nvim/.config/nvim/bundle/vim-devicons
 	url = https://github.com/ryanoasis/vim-devicons.git
-[submodule "nvim/.local/share/nvim/plugged/vim-snazzy"]
-	path = nvim/.local/share/nvim/plugged/vim-snazzy
+[submodule "nvim/.config/nvim/bundle/vim-snazzy"]
+	path = nvim/.config/nvim/bundle/vim-snazzy
 	url = https://github.com/connorholyday/vim-snazzy.git
-[submodule "nvim/.local/share/nvim/plugged/vim-fugitive"]
-	path = nvim/.local/share/nvim/plugged/vim-fugitive
+[submodule "nvim/.config/nvim/bundle/vim-fugitive"]
+	path = nvim/.config/nvim/bundle/vim-fugitive
 	url = https://github.com/tpope/vim-fugitive.git
-[submodule "nvim/.local/share/nvim/plugged/lightline.vim"]
-	path = nvim/.local/share/nvim/plugged/lightline.vim
-	url = https://github.com/itchyny/lightline.vim.git
+[submodule "nvim/.config/nvim/bundle/lualine.nvim"]
+	path = nvim/.config/nvim/bundle/lualine.nvim
+	url = https://github.com/nvim-lualine/lualine.nvim.git
 [submodule "starship/starship"]
 	path = starship/starship
 	url = https://github.com/Borris-the-real-OG/starship.git
+[submodule "nvim/vim-pathogen"]
+	path = nvim/vim-pathogen
+	url = https://github.com/tpope/vim-pathogen

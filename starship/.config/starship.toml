@@ -60,14 +60,15 @@ behind = "(⇣$count) "
 diverged = "(⇡$count/⇣$count) "
 
 up_to_date = " "
-deleted = "[-$count](fg:#ff5b56 bg:#26605B) "
 staged = "[+$count](fg:#5af78d bg:#26605B) "
+deleted = "[-$count](fg:#ff5b56 bg:#26605B) "
+modified = "[~$count](fg:#F4F8A8 bg:#26605B) "
 untracked = "[?$count](fg:#ABABAB bg:#26605B) "
 conflicted = "[!](fg:#ff6700 bg:#26605B) "
-
 stashed = "*"
+
 ignore_submodules = true
-format = '[($conflicted$ahead_behind$untracked$staged$deleted$stashed$up_to_date)](bg:#26605B)[](fg:#26605B)'
+format = '[($conflicted$ahead_behind$untracked$staged$modified$deleted$stashed$up_to_date)](bg:#26605B)[](fg:#26605B)'
 
 [cmd_duration]
 min_time = 60_000
