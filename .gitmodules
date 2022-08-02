@@ -10,9 +10,6 @@
 [submodule "nvim/.config/nvim/bundle/fzf"]
 	path = nvim/.config/nvim/bundle/fzf
 	url = https://github.com/junegunn/fzf.git
-[submodule "nvim/.config/nvim/bundle/nerdtree"]
-	path = nvim/.config/nvim/bundle/nerdtree
-	url = https://github.com/scrooloose/nerdtree.git
 [submodule "nvim/.config/nvim/bundle/vim-surround"]
 	path = nvim/.config/nvim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround.git
@@ -47,3 +44,15 @@
 [submodule "nvim/vim-pathogen"]
 	path = nvim/vim-pathogen
 	url = https://github.com/tpope/vim-pathogen
+[submodule "nvim/.config/nvim/bundle/nvim-tree.lua"]
+	path = nvim/.config/nvim/bundle/nvim-tree.lua
+	url = https://github.com/kyazdani42/nvim-tree.lua
+[submodule "nvim/.config/nvim/bundle/nvim-treesitter"]
+	path = nvim/.config/nvim/bundle/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
+[submodule "nvim/.config/nvim/bundle/gitsigns.nvim"]
+	path = nvim/.config/nvim/bundle/gitsigns.nvim
+	url = https://github.com/lewis6991/gitsigns.nvim.git
+[submodule "nvim/.config/nvim/bundle/nvim-cmp"]
+	path = nvim/.config/nvim/bundle/nvim-cmp
+	url = https://github.com/hrsh7th/nvim-cmp.git

@@ -1,2 +1,2 @@
-nvim/.local/share/nvim/site/autoload/plug.vim
+nvim/.config/nvim/autoload/pathogen.vim
 

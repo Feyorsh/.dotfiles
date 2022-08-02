@@ -1,2 +1,0 @@
-#!/bin/zsh
-cp "`dirname $0`"/vim-plug/plug.vim "`dirname $0`"/.local/share/nvim/site/autoload/plug.vim
