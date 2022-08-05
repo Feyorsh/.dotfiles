@@ -1,4 +1,3 @@
-vim.cmd [[packadd packer.nvim]]
 vim.cmd([[
 	augroup packer_user_config
 		autocmd!

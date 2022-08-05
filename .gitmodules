@@ -13,3 +13,51 @@
 [submodule "starship/starship"]
 	path = starship/starship
 	url = https://github.com/Borris-the-real-OG/starship.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/bufferline.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/bufferline.nvim
+	url = https://github.com/akinsho/bufferline.nvim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/gitsigns.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/gitsigns.nvim
+	url = https://github.com/lewis6991/gitsigns.nvim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/lualine.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/lualine.nvim
+	url = https://github.com/nvim-lualine/lualine.nvim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-autopairs"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-autopairs
+	url = https://github.com/windwp/nvim-autopairs.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-cmp"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-cmp
+	url = https://github.com/hrsh7th/nvim-cmp.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-colorizer.lua"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-colorizer.lua
+	url = https://github.com/norcalli/nvim-colorizer.lua.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-lspconfig"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-tree.lua"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-tree.lua
+	url = https://github.com/kyazdani42/nvim-tree.lua.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-treesitter"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-web-devicons"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-web-devicons
+	url = https://github.com/kyazdani42/nvim-web-devicons.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/plenary.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/telescope.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/vim-fugitive"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/vim-fugitive
+	url = https://github.com/tpope/vim-fugitive.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/vim-snazzy"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/vim-snazzy
+	url = https://github.com/connorholyday/vim-snazzy.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/vim-surround"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/vim-surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/packer.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/packer.nvim
+	url = https://github.com/wbthomason/packer.nvim
