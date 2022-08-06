@@ -15,6 +15,17 @@ local function get_short_cwd()
 end
 EOF
 
+let g:tex_flavor = 'latex'
+let g:vimtex_view_enabled = 1
+let g:vimtex_view_method = 'skim'
+let g:vimtex_view_skim_sync = 1
+let g:vimtex_view_skim_activate = 1
+let g:vimtex_compiler_method = 'tectonic'
+
+
+let g:mapleader = "<Space>"
+
+set signcolumn=yes
 
 
 set number

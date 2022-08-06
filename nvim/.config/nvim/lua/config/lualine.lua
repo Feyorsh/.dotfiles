@@ -11,15 +11,25 @@ local options = {
   },
   sections = {
       lualine_a = {'mode'},
-      lualine_b = {'branch', 'diff', 'diagnostics'},
-      lualine_c = { {
+      lualine_b = {
+		  {
+			  'branch',
+			  separator = "",
+			  padding = {
+				  right = 0,
+				  left = 1
+			  }
+		  },
+		  'diff',
+	  },
+      lualine_c = {{
           'filename',
           symbols = {
               unnamed = "[Untitled]"
           }
-      } },
-      lualine_x = {'filetype', 'encoding'},
-      lualine_y = {},
+      }},
+	  lualine_x = {'diagnostics'},
+      lualine_y = {'filetype', 'encoding'},
       lualine_z = {'location'}
   },
 }

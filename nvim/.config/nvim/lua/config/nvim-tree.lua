@@ -1,18 +1,19 @@
 local nt_event = require('nvim-tree.api').events
-nt_event.subscribe(nt_event.Event.TreeOpen, function() vim.api.nvim_win_set_option(0, "fillchars", "eob: ") end)
+nt_event.subscribe(nt_event.Event.Ready, function() vim.api.nvim_win_set_option(0, "fillchars", "eob: ") end)
 
 local options = {
   filters = {
 	  dotfiles = false,
 	  exclude = {
 		  vim.fn.stdpath "config" .. "/lua/custom",
+	  },
+	  custom = {
 		  "^.git$"
 	  }
   },
   disable_netrw = true,
   hijack_netrw = true,
   open_on_setup = true,
-  ignore_ft_on_setup = { "alpha" },
   hijack_cursor = true,
   hijack_unnamed_buffer_when_opening = false,
   update_cwd = true,
@@ -24,7 +25,6 @@ local options = {
 	  adaptive_size = true,
 	  side = "left",
 	  width = 25,
-	  hide_root_folder = true,
   },
   git = {
 	  enable = false,
@@ -47,7 +47,7 @@ local options = {
 	  icons = {
 		  show = {
 			  file = true,
-			  folder = true,
+			  folder = false,
 			  folder_arrow = true,
 			  git = false,
 		  },

@@ -7,12 +7,13 @@ local options = {
 	'rust',
 	'python',
 	'html',
-	'latex',
 	'markdown',
   },
-  auto_install = true,
   highlight = {
     enable = true,
+	disable = {
+		'latex'
+	},
     use_languagetree = true,
   },
 }
