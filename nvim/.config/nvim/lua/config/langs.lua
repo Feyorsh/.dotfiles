@@ -1,6 +1,8 @@
 local M = {}
 
 M.rust_tools = function()
+	local nvim_lsp = require('lspconfig')
+
 	local options = {
 		tools = {
 			autoSetHints = true,

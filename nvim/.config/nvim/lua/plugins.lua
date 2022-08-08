@@ -43,7 +43,8 @@ return require('packer').startup(function()
 	}
 	use {
 		'norcalli/nvim-colorizer.lua',
-		config = function() require('colorizer').setup() end
+		event = 'VimEnter',
+		config = function() require('config.others').colorizer() end
 	}
 	use 'connorholyday/vim-snazzy'
 
@@ -51,7 +52,7 @@ return require('packer').startup(function()
 	-- lsp / code completion
 	use {
 		'neovim/nvim-lspconfig',
-		config = function() require('config.lspconfig') end
+		config = function() require('config.lspconfig').config() end
 	}
 	use {
 		'nvim-treesitter/nvim-treesitter',
@@ -61,33 +62,41 @@ return require('packer').startup(function()
 
 	-- cmp
 	use {
-		'hrsh7th/nvim-cmp',
-		event = "InsertEnter",
-		wants = 'nvim-lspconfig',
-		config = function() require('config.cmp') end
-	}
-	use {
-		'hrsh7th/cmp-nvim-lsp',
-		after = 'nvim-cmp',
-	}
-
-	use {
 		'rafamadriz/friendly-snippets',
-		after = 'nvim-cmp',
+		event = "InsertEnter",
+	}
+	use {
+		'onsails/lspkind.nvim',
+		after = 'friendly-snippets'
 	}
 	use {
 		'L3MON4D3/LuaSnip',
 		wants = 'friendly-snippets',
-		after = 'nvim-cmp',
+		after = 'lspkind.nvim',
 		config = function() require('config.others').luasnip() end
 	}
 	use {
-		'saadparwaiz1/cmp_luasnip',
+		'hrsh7th/nvim-cmp',
 		after = 'LuaSnip',
+		config = function() require('config.cmp').setup() end
 	}
 	use {
+		'saadparwaiz1/cmp_luasnip',
+		after = 'nvim-cmp',
+	}
+	use {
+		'hrsh7th/cmp-nvim-lua',
+		after = 'cmp_luasnip',
+	}
+	use {
+		'hrsh7th/cmp-nvim-lsp',
+		after = 'cmp-nvim-lua',
+		config = function() require('config.cmp').lspconfig() end
+	}
+
+	use {
 		'hrsh7th/cmp-buffer',
-		after = 'friendly-snippets',
+		after = 'cmp-nvim-lsp',
 	}
 	use {
 		'hrsh7th/cmp-path',
@@ -122,7 +131,8 @@ return require('packer').startup(function()
 	}
 	use {
 		'simrat39/rust-tools.nvim',
-		ft = 'rs',
+		ft = 'rust',
+		wants = 'nvim-lspconfig',
 		config = function() require('config.langs').rust_tools() end
 	}
 end)
