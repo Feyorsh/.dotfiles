@@ -76,7 +76,7 @@ M.setup = function()
 			}),
 			['<CR>'] = cmp.mapping.confirm({
 				behavior = cmp.ConfirmBehavior.Insert,
-				select = true,
+				select = false
 			})
 		},
 		-- Installed sources

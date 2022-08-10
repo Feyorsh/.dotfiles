@@ -8,11 +8,7 @@ au VimLeave,VimSuspend * set guicursor=a:ver25-blinkon0
 
 let g:SnazzyTransparent = 1
 colorscheme snazzy
-
 lua << EOF
-local function get_short_cwd()
-	return vim.fn.fnamemodify(vim.fn.getcwd(), ':~')
-end
 vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent = true })
 EOF
 
@@ -29,7 +25,8 @@ set signcolumn=yes
 
 
 tnoremap <leader><Esc> <C-\><C-n>
-set completeopt=menuone,noselect
+set completeopt=menuone,noselect,noinsert
+set splitright " see https://github.com/kyazdani42/nvim-tree.lua/issues/1103
 set whichwrap+=<,>,[,]
 let &fcs='eob: '
 set number

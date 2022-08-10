@@ -1,12 +1,21 @@
-vim.cmd([[
-	augroup packer_user_config
-		autocmd!
-		autocmd BufWritePost plugins.lua source <afile> | PackerUpdate 
-	augroup end
-]])
+local packerGroup = vim.api.nvim_create_augroup("packer_user_config", { clear = true })
+vim.api.nvim_create_autocmd(
+	"BufWritePost", {
+		pattern = "plugins.lua",
+		command = [[source <afile> | PackerUpdate]],
+		group = packerGroup
+	}
+)
+vim.api.nvim_create_autocmd(
+	"User", {
+		pattern = "PackerComplete",
+		command = [[silent! !cd ~/.dotfiles && for f in nvim/.local/share/nvim/site/pack/packer/{opt,start}/*; do ./git_migrate.zsh $f; done]],
+		group = packerGroup
+	}
+)
 
 local use = require('packer').use
-return require('packer').startup(function()
+return require('packer').startup({function()
 	-- dependencies
 	use 'wbthomason/packer.nvim'
 	use 'nvim-lua/plenary.nvim'
@@ -135,4 +144,14 @@ return require('packer').startup(function()
 		wants = 'nvim-lspconfig',
 		config = function() require('config.langs').rust_tools() end
 	}
-end)
+
+	-- misc
+	use 'stsewd/gx-extended.vim'
+
+
+end,
+config = {
+	display = {
+		open_fn = require('packer.util').float,
+}}})
+

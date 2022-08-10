@@ -35,8 +35,17 @@ local servers = {
 	},
 }
 
-vim.cmd [[autocmd! ColorScheme * highlight NormalFloat guibg=#1f2335]]
-vim.cmd [[autocmd! ColorScheme * highlight FloatBorder guifg=white guibg=#1f2335]]
+local floatGroup = vim.api.nvim_create_augroup("float_hl", { clear = true })
+vim.api.nvim_create_autocmd("ColorScheme", {
+	pattern = "*",
+	command = [[highlight NormalFloat guibg=#1f2335]],
+	group = floatGroup
+})
+vim.api.nvim_create_autocmd("ColorScheme", {
+	pattern = "*",
+	command = [[highlight FloatBorder guifg=white guibg=#1f2335]],
+	group = floatGroup
+})
 
 local function border(hl_name)
   return {
@@ -68,7 +77,6 @@ local function goto_definition(split_cmd)
 
 		if vim.tbl_islist(result) then
 			util.jump_to_location(result[1])
-			print(frst)
 			if #result > 1 then
 				util.set_qflist(util.locations_to_items(result))
 				api.nvim_command("copen")
@@ -96,7 +104,7 @@ local lsp_defaults = {
 	handlers = {
 		["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = border("FloatBorder")}),
 		["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = border("FloatBorder")}),
-		["textDocument/definition"] = goto_definition("split") 
+		["textDocument/definition"] = goto_definition("split")
 	},
 	on_attach = function(client, bufnr)
 		-- Mappings.
@@ -139,20 +147,21 @@ local lsp_defaults = {
 		vim.keymap.set('n', ']d', vim.diagnostic.goto_next, bufopts)
 
 		-- autocmds
-		vim.api.nvim_create_autocmd("CursorHold", {
-			buffer = bufnr,
-			callback = function()
-				local opts = {
-					focusable = false,
-					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-					border = 'rounded',
-					source = 'always',
-					prefix = ' ',
-					scope = 'cursor',
-				}
-				vim.diagnostic.open_float(nil, opts)
-			end
-		})
+		-- SOL on CursorHold; see https://github.com/neovim/neovim/issues/12587
+--		vim.api.nvim_create_autocmd("CursorHold", {
+--			buffer = bufnr,
+--			callback = function()
+--				local opts = {
+--					focusable = false,
+--					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+--					border = 'rounded',
+--					source = 'always',
+--					prefix = ' ',
+--					scope = 'cursor',
+--				}
+--				vim.diagnostic.open_float(nil, opts)
+--			end
+--		})
 	end
 }
 
@@ -167,10 +176,10 @@ lspconfig.util.default_config = vim.tbl_deep_extend(
 
 vim.diagnostic.config({
 	virtual_text = {
-		source = "always",  -- Or "if_many"
+		source = "if_many",
 	},
 	float = {
-		source = "always",  -- Or "if_many"
+		source = "if_many",
 	},
 	underline = true,
 })
