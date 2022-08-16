@@ -90,6 +90,64 @@ local function goto_definition(split_cmd)
 	return handler
 end
 
+local on_attach = function(client, bufnr)
+	-- Mappings.
+	-- See `:help vim.lsp.*` for documentation on any of the below functions
+	local bufopts = { buffer=bufnr, silent=true }
+	vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+
+	-- Jump to the definition
+	vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+
+	-- Jump to declaration
+	vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+
+	-- Lists all the implementations for the symbol under the cursor
+	vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+
+	-- Jumps to the definition of the type symbol
+	vim.keymap.set('n', 'go', vim.lsp.buf.type_definition, bufopts)
+
+	-- Lists all the references 
+	vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
+
+	-- Displays a function's signature information
+	vim.keymap.set('n', '<F4>', vim.lsp.buf.signature_help, bufopts)
+
+	-- Renames all references to the symbol under the cursor
+	vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, bufopts)
+
+	-- Selects a code action available at the current cursor position
+	vim.keymap.set('n', '<C-k>', vim.lsp.buf.code_action, bufopts)
+	vim.keymap.set('x', '<C-k>', vim.lsp.buf.range_code_action, bufopts)
+
+	-- Show diagnostics in a floating window
+	vim.keymap.set('n', ';d', vim.diagnostic.open_float, bufopts)
+
+	-- Move to the previous diagnostic
+	vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, bufopts)
+
+	-- Move to the next diagnostic
+	vim.keymap.set('n', ']d', vim.diagnostic.goto_next, bufopts)
+
+	-- autocmds
+	-- SOL on CursorHold; see https://github.com/neovim/neovim/issues/12587
+	-- if one really wanted this, I could use the proposed extension
+	--		vim.api.nvim_create_autocmd("CursorHold", {
+		--			buffer = bufnr,
+		--			callback = function()
+			--				local opts = {
+				--					focusable = false,
+				--					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+				--					border = 'rounded',
+				--					source = 'always',
+				--					prefix = ' ',
+				--					scope = 'cursor',
+				--				}
+				--				vim.diagnostic.open_float(nil, opts)
+				--			end
+				--		})
+			end
 
 local opts = { noremap=true, silent=true }
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts)
@@ -106,63 +164,7 @@ local lsp_defaults = {
 		["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = border("FloatBorder")}),
 		["textDocument/definition"] = goto_definition("split")
 	},
-	on_attach = function(client, bufnr)
-		-- Mappings.
-		-- See `:help vim.lsp.*` for documentation on any of the below functions
-		local bufopts = { buffer=bufnr, silent=true }
-		vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
-
-		-- Jump to the definition
-		vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-
-		-- Jump to declaration
-		vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
-
-		-- Lists all the implementations for the symbol under the cursor
-		vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-
-		-- Jumps to the definition of the type symbol
-		vim.keymap.set('n', 'go', vim.lsp.buf.type_definition, bufopts)
-
-		-- Lists all the references 
-		vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-
-		-- Displays a function's signature information
-		vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
-
-		-- Renames all references to the symbol under the cursor
-		vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, bufopts)
-
-		-- Selects a code action available at the current cursor position
-		vim.keymap.set('n', '<F4>', vim.lsp.buf.code_action, bufopts)
-		vim.keymap.set('x', '<F4>', vim.lsp.buf.range_code_action, bufopts)
-
-		-- Show diagnostics in a floating window
-		vim.keymap.set('n', 'gl', vim.diagnostic.open_float, bufopts)
-
-		-- Move to the previous diagnostic
-		vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, bufopts)
-
-		-- Move to the next diagnostic
-		vim.keymap.set('n', ']d', vim.diagnostic.goto_next, bufopts)
-
-		-- autocmds
-		-- SOL on CursorHold; see https://github.com/neovim/neovim/issues/12587
---		vim.api.nvim_create_autocmd("CursorHold", {
---			buffer = bufnr,
---			callback = function()
---				local opts = {
---					focusable = false,
---					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
---					border = 'rounded',
---					source = 'always',
---					prefix = ' ',
---					scope = 'cursor',
---				}
---				vim.diagnostic.open_float(nil, opts)
---			end
---		})
-	end
+	on_attach = on_attach
 }
 
 
@@ -193,6 +195,7 @@ end
 
 local M = {
 	servers = servers,
-	config = config
+	config = config,
+	on_attach = on_attach
 }
 return M

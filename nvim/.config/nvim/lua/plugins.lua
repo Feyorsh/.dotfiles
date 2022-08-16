@@ -142,6 +142,7 @@ return require('packer').startup({function()
 		'simrat39/rust-tools.nvim',
 		ft = 'rust',
 		wants = 'nvim-lspconfig',
+		requires = { 'mfussenegger/nvim-dap', opt = true },
 		config = function() require('config.langs').rust_tools() end
 	}
 

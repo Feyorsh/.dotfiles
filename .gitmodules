@@ -94,6 +94,9 @@
 [submodule "nvim/.local/share/nvim/site/pack/packer/opt/nvim-colorizer.lua"]
 	path = nvim/.local/share/nvim/site/pack/packer/opt/nvim-colorizer.lua
 	url = https://github.com/norcalli/nvim-colorizer.lua.git
-[submodule "/Users/george/.dotfiles/nvim/.local/share/nvim/site/pack/packer/start/gx-extended.vim"]
-	path = /Users/george/.dotfiles/nvim/.local/share/nvim/site/pack/packer/start/gx-extended.vim
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/gx-extended.vim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/gx-extended.vim
 	url = https://github.com/stsewd/gx-extended.vim.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-dap"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-dap
+	url = https://github.com/mfussenegger/nvim-dap.git
