@@ -1,3 +1,6 @@
+# go is managed by path_helper
+export PATH="$PATH:/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env GOPATH)/bin:/Users/george/.gem/ruby/2.6.0/bin:/usr/local/bin:/usr/bin"
+
 [ -f "/Users/george/.ghcup/env" ] && source "/Users/george/.ghcup/env" # ghcup-env
 
 function better_man() {
@@ -35,11 +38,11 @@ function better_man() {
 		}
 	done
 }
-alias man='better_man'
+alias bman='better_man'
 alias diff='git diff'
+alias ls='echo "WRONG LS!\n"; ls'
+alias 128_compile='clang++ -std=c++20 -g -O0 -Wall -Wextra -Werror -pedantic'
 setopt interactivecomments
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 

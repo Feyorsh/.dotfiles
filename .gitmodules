@@ -4,9 +4,6 @@
 [submodule "zsh/.zsh/zsh-autosuggestions"]
 	path = zsh/.zsh/zsh-autosuggestions
 	url = https://github.com/zsh-users/zsh-autosuggestions
-[submodule "tmux/.config/tmux/plugins/tmux-sensible"]
-	path = tmux/.config/tmux/plugins/tmux-sensible
-	url = https://git::@github.com/tmux-plugins/tmux-sensible
 [submodule "tmux/.config/tmux/plugins/tpm"]
 	path = tmux/.config/tmux/plugins/tpm
 	url = https://git::@github.com/tmux-plugins/tpm
@@ -100,3 +97,11 @@
 [submodule "nvim/.local/share/nvim/site/pack/packer/start/nvim-dap"]
 	path = nvim/.local/share/nvim/site/pack/packer/start/nvim-dap
 	url = https://github.com/mfussenegger/nvim-dap.git
+[submodule "nvim/.local/share/nvim/site/pack/packer/opt/cmp-spell"]
+	path = nvim/.local/share/nvim/site/pack/packer/opt/cmp-spell
+	url = https://github.com/f3fora/cmp-spell.git
+	branch = branch
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/alpha-nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/alpha-nvim
+	url = https://github.com/goolord/alpha-nvim.git
+	branch = branch

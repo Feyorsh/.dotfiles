@@ -41,6 +41,12 @@ yabai -m rule --add app="^Da Vinci" manage=off
 yabai -m rule --add app="^Finder$" manage=off
 yabai -m rule --add app="^OmniDiskSweeper$" manage=off
 yabai -m rule --add app="^System Information$" manage=off
+yabai -m rule --add app="^Activity Monitor$" manage=off
+yabai -m rule --add app="^Font Book$" manage=off
+yabai -m rule --add app="^Calendar$" title="^$" manage=off # ignore popups
+yabai -m rule --add app="^Ghidra" manage=off
+yabai -m rule --add app="^QuickTime" manage=off
+yabai -m rule --add app="^Skim$" manage=on
 
 # min-width bullshittery
 # basically, whenever we detect that a min-width app (prime suspects being Electron apps like Spotify and Discord), we send a command to resize (one of) the other windows. I'm an idiot and I suck at shell scripting, so it will only work if there are 2 windows. Also god forbid you try to call this with 2 min-width windows...
@@ -52,6 +58,5 @@ yabai -m rule --add app="^System Information$" manage=off
 # -display_resized
 # -
 yabai -m signal --add app="^Spotify$" event=window_created action="echo \$YABAI_WINDOW_ID >> ~/Downloads/yabai-testing.txt" 
-yabai -m signal --add event=display_resized action="echo 'Display resized!' >> ~/Downloads/yabai-testing.txt"
 
 echo "yabai configuration loaded..."

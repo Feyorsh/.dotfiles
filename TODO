@@ -4,11 +4,18 @@ tmux
 	Add passthrough for tmux commands to work in iTerm integration mode
 	Get iTerm status bar to accept tmux symbols (might just need a reboot)
 nvim
-	Configure lightline (i.e. for terminal shrinkage and git status), see https://github.com/itchyny/lightline.vim
+	Write custom git dir diff for lualine
 	Figure out extensions for compiling/quickfix
-	Figure out how to use vim-fugitive
+		Trouble.nvim?
 	Change the highlight color of brackets/quotes (annoying)
-	coc config lives in .config proper... Should I leave it like this because it's just node_modules?
+	Extensions to setup:
+		GX extended: figure out how to interface with native vimscript, and change the handler to work with Packer (i.e. 'use' instead of 'Plug', easy regex fix)
+		which-key could be great (also my own which key website idea!)
+		figure out how to use telescope like a pro
+		figure out DAP and potentially dap ui later, it's broken in rust-tools anyway
+			sidenote: figure out an extension for gdb and/or get good at lldb
+		alpha.nvim: properly config welcome screen (random banner/quotes, layout, keybinds)
+
 starship
 	Potentially do some more prompt tweaking (fml why is git so weird)
 yabai
@@ -17,11 +24,16 @@ skhd
 	Add good combos to adjust yabai (alt seems like a good meta key)
 git
 	Poor fella doesn't have any config ;( (but does it need any though?)
+	Need to change deafult difftool to nvim
 	Note: Alternate OSs won't have macOS keychain manager, so this *might* need to be encrypted if I'm lazy enough to put PID in .gitconfig
 	Configure default .gitconfig (actually, I probably don't want a default) and project .gitconfig
 zsh
 	Potentially add zsh-vi-mode (https://github.com/jeffreytse/zsh-vi-mode)
-	Potentially spruce it up some more
+	Potentially spruce it up some more (like what's the deal with git autocompelte?)
 iterm
-	Potentially add iterm config to .dotfiles
+	Move all config info into .dotfiles (images, fonts)
+	Finish braille PR
 	(Tangential) Figure out how to provide escapes to use meta keys (yabai/skhd) in terminal
+misc
+	More waifus (DB4R)
+	Write extension to edit encfs filesystems
