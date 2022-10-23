@@ -12,17 +12,31 @@ lua << EOF
 vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent = true })
 EOF
 
+" I'm not super jazzed to be adding more Vimscript, but eh. Quickfix is
+" annoying enough.
+au BufEnter * call MyLastWindow()
+function! MyLastWindow()
+  " if the window is quickfix go on
+  if &buftype=="quickfix"
+    " if this window is last on screen quit without warning
+    if winbufnr(2) == -1
+      quit!
+    endif
+  endif
+endfunction
+
 let g:tex_flavor = 'latex'
 let g:vimtex_view_enabled = 1
 let g:vimtex_view_method = 'skim'
 let g:vimtex_view_skim_sync = 1
-let g:vimtex_view_skim_activate = 1
 let g:vimtex_compiler_method = 'tectonic'
 
 let g:mapleader = " "
 
 set signcolumn=yes
-
+set spellsuggest=best,5
+set spelllang=en,cjk
+nnoremap <silent> <leader>s :set spell!<cr>
 
 tnoremap <leader><Esc> <C-\><C-n>
 set completeopt=menuone,noselect,noinsert

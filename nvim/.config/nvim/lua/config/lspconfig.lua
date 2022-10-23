@@ -1,9 +1,9 @@
 local servers = {
-	ccls = {},
---	rust_analyzer = {},
-	pyright = {},
-	gopls = {},
-	texlab = {
+	ccls = {}, -- brew
+--	rust_analyzer = {}, -- downloaded binary
+	pyright = {}, -- python
+	gopls = {}, -- go
+	texlab = { -- cargo
 		settings = {
 			texlab = {
 				build = {
@@ -21,7 +21,7 @@ local servers = {
 			}
 		}
 	},
-	sumneko_lua = {
+	sumneko_lua = { -- brew
 		settings = {
 			Lua = {
 				runtime = {

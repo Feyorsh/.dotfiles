@@ -21,12 +21,22 @@ return require('packer').startup({function()
 	use 'nvim-lua/plenary.nvim'
 	use 'kyazdani42/nvim-web-devicons'
 
+	use {
+		'lewis6991/impatient.nvim',
+		config = function() require('impatient') end
+	}
+
 
 	-- essentials
 	use {
 		'nvim-telescope/telescope.nvim',
 		requires = { 'nvim-lua/plenary.nvim' },
-		config = function() require('config.telescope') end
+		config = function() require('config.telescope').main() end
+	}
+	use {
+		'nvim-telescope/telescope-fzy-native.nvim',
+		requires = { 'nvim-telescope/telescope.nvim' },
+		config = function() require('config.telescope').fzy() end
 	}
 
 
@@ -45,7 +55,11 @@ return require('packer').startup({function()
 		'akinsho/bufferline.nvim',
 		config = function() require('config.bufferline') end
 	}
-
+	use {
+		'goolord/alpha-nvim',
+		requires = { 'kyazdani42/nvim-web-devicons' },
+		config = function () require('config.others').alpha() end
+	}
 	use {
 		'lukas-reineke/indent-blankline.nvim',
 		config = function() require('config.others').blankline() end
@@ -111,6 +125,10 @@ return require('packer').startup({function()
 		'hrsh7th/cmp-path',
 		after = 'cmp-buffer',
 	}
+	use {
+		'f3fora/cmp-spell',
+		after = 'cmp-path',
+	}
 
 
 	-- editing
@@ -124,7 +142,7 @@ return require('packer').startup({function()
 	-- git
 	use {
 		'tpope/vim-fugitive',
-		cmd = { 'Git', 'Gstatus', 'Gblame', 'Gpush', 'Gpull' },
+		cmd = { 'Git', 'Gstatus', 'Gblame', 'Gpush', 'Gpull', 'Gdiff' },
 	}
 	use {
 		'lewis6991/gitsigns.nvim',
@@ -136,7 +154,8 @@ return require('packer').startup({function()
 	-- lang specific
 	use {
 		'lervag/vimtex',
-		ft = 'tex'
+		ft = 'tex',
+		config = function() require('config.langs').vimtex() end
 	}
 	use {
 		'simrat39/rust-tools.nvim',
@@ -147,10 +166,10 @@ return require('packer').startup({function()
 	}
 
 	-- misc
-	use 'stsewd/gx-extended.vim'
 
 
 end,
+
 config = {
 	display = {
 		open_fn = require('packer.util').float,

@@ -1,7 +1,7 @@
 local M = {}
-local rt = require('rust-tools')
 
 M.rust_tools = function()
+	local rt = require('rust-tools')
 	local options = {
 		tools = {
 			autoSetHints = true,
@@ -42,6 +42,29 @@ M.rust_tools = function()
 	}
 
 	rt.setup(options)
+end
+
+-- what does texlab actually contribute? lol
+M.vimtex = function()
+	local vtex = vim.api.nvim_create_augroup("vimtex_cmds", { clear = true })
+
+	vim.api.nvim_create_autocmd("BufWrite", {
+		pattern = "*.tex",
+		command = [[silent! VimtexCompile]],
+		group = vtex
+	})
+	-- this idea of auto-passing is cool in theory, it just doesn't work yet.
+--	vim.api.nvim_create_autocmd("User", {
+--		pattern = "VimtexEventCompileSuccess",
+--		callback = function()
+--			for _, v in pairs(vim.fn.getqflist()) do
+--				if string.find("rerun", string.lower(v['text'])) then
+--					vim.api.nvim_command("VimtexCompile")
+--				end
+--			end
+--		end,
+--		group = vtex
+--	})
 end
 
 return M
