@@ -42,6 +42,7 @@ yabai -m rule --add app="^Finder$" manage=off
 yabai -m rule --add app="^OmniDiskSweeper$" manage=off
 yabai -m rule --add app="^System Information$" manage=off
 yabai -m rule --add app="^Activity Monitor$" manage=off
+yabai -m rule --add app="^Archive Utility$" manage=off
 yabai -m rule --add app="^Font Book$" manage=off
 yabai -m rule --add app="^Calendar$" title="^$" manage=off # ignore popups
 yabai -m rule --add app="^Ghidra" manage=off
