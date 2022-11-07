@@ -18,6 +18,8 @@
 (setq straight-vc-git-default-clone-depth '(1 single-branch))
 (setq use-package-verbose nil)
 
+; need to reorganize at some point (refactor to other files? use org-mode?)
+
 (use-package pdf-tools
 			 :config 
 			 (pdf-tools-install)
@@ -26,7 +28,7 @@
 			 )
 (use-package magit)
 ; lol doesn't work because emacs 28 introduced a breaking change or something idk
-;(use-package slime)
+; (use-package slime)
 
 ; this is... weird
 ; don't bother spinning up daemon; instead, emacs just doesn't close the last frame
@@ -40,6 +42,30 @@
 			 :config
 			 (setq vterm-shell "fish")
 			 )
+
+(use-package prescient)
+(use-package ivy-prescient
+  :config
+  (ivy-prescient-mode 1)
+)
+
+(use-package counsel
+  :config
+  (setq ivy-use-virtual-buffers t
+            ivy-count-format "%d/%d ")
+  (ivy-mode 1)
+  )
+
+(use-package all-the-icons-ivy-rich
+  :init (all-the-icons-ivy-rich-mode 1)
+)
+
+(use-package ivy-rich
+  :config
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (ivy-rich-mode 1)
+)
+
 
 (use-package ledger-mode)
 
@@ -60,10 +86,29 @@
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-palenight t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  ; (doom-themes-neotree-config)
+  ;; or for treemacs users
+  ; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+  ; (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+
 (set-face-attribute 'default nil
 					:family "Jetbrains Mono"
 					:height 130
 					)
+(mac-auto-operator-composition-mode 1)
 
 (setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin"))
 (setq exec-path (append exec-path '("/opt/homebrew/bin")))
@@ -92,6 +137,7 @@
      ("reg" "%(binary) -f %(ledger-file) reg")
      ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
      ("account" "%(binary) -f %(ledger-file) reg %(account)")))
+ '(org-agenda-files '("~/emacs/org/agenda.org"))
  '(package-selected-packages '(auctex use-package slime pdf-tools magit))
  '(warning-suppress-types '((comp))))
 (custom-set-faces
