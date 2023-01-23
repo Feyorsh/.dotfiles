@@ -1,7 +1,11 @@
 # go is managed by path_helper
-export PATH="$PATH:/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env GOPATH)/bin:/Users/george/.gem/ruby/2.6.0/bin:/usr/local/bin:/usr/bin"
+export PATH="$PATH:/usr/bin:/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env GOPATH)/bin:/Users/george/.gem/ruby/2.6.0/bin:/usr/local/bin"
 
 [ -f "/Users/george/.ghcup/env" ] && source "/Users/george/.ghcup/env" # ghcup-env
+
+export DOOMDIR="~/emacs/emacs_profiles/doom/config"
+
+export LD_LIBRARY_PATH="$LIBRARY_PATH:`brew --prefix`/lib"
 
 function better_man() {
 	_V=0;
@@ -44,9 +48,10 @@ alias ls='echo "WRONG LS!\n"; ls'
 alias 128_compile='clang++ -std=c++20 -g -O0 -Wall -Wextra -Werror -pedantic'
 setopt interactivecomments
 
+bindkey -v
+
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 eval "$(starship init zsh)"
-

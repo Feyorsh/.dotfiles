@@ -21,3 +21,9 @@ function fish_prompt --description 'Write out the prompt; do not replace this. I
     printf "%b" (string join "\n" (vterm_old_fish_prompt))
     vterm_prompt_end
 end
+# THEME PURE #
+set fish_function_path /Users/george/.config/fish/functions/theme-pure/functions/ $fish_function_path
+source /Users/george/.config/fish/functions/theme-pure/conf.d/pure.fish
+
+# vi mode #
+fish_vi_key_bindings

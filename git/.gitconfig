@@ -4,7 +4,7 @@
 	process = git-lfs filter-process
 	required = true
 [user]
-	name = Borris-the-real-OG
+	name = Feyorsh
 	email = ghubs25@gmail.com
 [core]
 	editor = nvim
