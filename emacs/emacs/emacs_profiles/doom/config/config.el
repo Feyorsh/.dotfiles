@@ -4,10 +4,31 @@
 ;; sync' after modifying this file!
 
 
+(defun switch-profile ()
+  (interactive)
+  (let* ((profiles_dir "~/emacs/emacs_profiles")
+	 (chemacs "~/.config/chemacs/profile")
+	 (emacs_app "/opt/homebrew/Cellar/emacs-mac/emacs-28.2-mac-9.1/Emacs.app")
+	 (profiles (directory-files profiles_dir nil "^[^.].*"))
+	 (choice (completing-read "Choose profile: " profiles))
+	 (icon (file-name-concat profiles_dir (file-name-as-directory choice) (concat choice ".icns"))))
+    (if (and (file-readable-p chemacs) (file-writable-p chemacs))
+	(progn
+	  (call-process-shell-command (concat "echo \"" choice "\" > " chemacs) nil nil nil)
+	  (if (executable-find "fileicon")
+	      (progn
+		(call-process-shell-command (concat "fileicon set " emacs_app " " icon) nil nil nil)
+        (save-some-buffers)
+		(kill-emacs))
+	      (message (propertize "Error: fileicon not found" 'face '(:foreground "red")))))
+        (message (propertize "Error: Can't write to chemacs `profile`" 'face '(:foreground "red"))))))
+
+
+
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
-(setq user-full-name "John Doe"
-      user-mail-address "john@doe.com")
+(setq user-full-name "Spammon Salmon"
+      user-mail-address "spammonsalmon@gmail.com")
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -40,7 +61,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
+(setq org-directory "~/emacs/org/")
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
@@ -74,3 +95,38 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+
+(after! org
+  (setq org-src-preserve-indentation t
+
+        org-src-fontify-natively t
+
+        org-export-latex-listings t
+
+        org-export-with-smart-quotes t
+
+        org-latex-listings 'listings
+
+        org-latex-prefer-user-labels t
+
+        org-confirm-babel-evaluate nil
+
+        org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+
+        org-babel-python-command "/usr/bin/env python3"
+
+        org-startup-folded t
+
+        org-cycle-include-plain-lists 'integrate
+
+        org-agenda-skip-scheduled-if-done t
+        )
+
+  (add-to-list 'org-latex-packages-alist '("" "listings"))
+)
+
+
+(let ((find-file-visit-truename t))
+     (find-file "~/emacs/emacs_profiles/doom/config/config.el"))
+(find-file (expand-file-name "agenda.org" org-directory))
