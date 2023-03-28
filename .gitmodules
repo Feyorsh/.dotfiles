@@ -105,3 +105,15 @@
 	path = nvim/.local/share/nvim/site/pack/packer/start/alpha-nvim
 	url = https://github.com/goolord/alpha-nvim.git
 	branch = branch
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/impatient.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/impatient.nvim
+	url = https://github.com/lewis6991/impatient.nvim.git
+	branch = branch
+[submodule "nvim/.local/share/nvim/site/pack/packer/start/telescope-fzy-native.nvim"]
+	path = nvim/.local/share/nvim/site/pack/packer/start/telescope-fzy-native.nvim
+	url = https://github.com/nvim-telescope/telescope-fzy-native.nvim.git
+	branch = branch
+[submodule "nvim/.local/share/nvim/site/pack/packer/opt/zig.vim"]
+	path = nvim/.local/share/nvim/site/pack/packer/opt/zig.vim
+	url = https://github.com/ziglang/zig.vim.git
+	branch = branch
