@@ -164,6 +164,10 @@ return require('packer').startup({function()
 		requires = { 'mfussenegger/nvim-dap', opt = true },
 		config = function() require('config.langs').rust_tools() end
 	}
+	use {
+		'ziglang/zig.vim',
+        -- ft = 'zig',
+	}
 
 	-- misc
 

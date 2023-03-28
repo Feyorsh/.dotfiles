@@ -3,6 +3,10 @@ export PATH="$PATH:/usr/bin:/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env
 
 [ -f "/Users/george/.ghcup/env" ] && source "/Users/george/.ghcup/env" # ghcup-env
 
+source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
+source /opt/homebrew/opt/chruby/share/chruby/auto.sh
+chruby ruby-3.1.3
+
 export DOOMDIR="~/emacs/emacs_profiles/doom/config"
 
 export LD_LIBRARY_PATH="$LIBRARY_PATH:`brew --prefix`/lib"

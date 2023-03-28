@@ -8,6 +8,7 @@ au VimLeave,VimSuspend * set guicursor=a:ver25-blinkon0
 
 let g:SnazzyTransparent = 1
 colorscheme snazzy
+
 lua << EOF
 vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent = true })
 EOF

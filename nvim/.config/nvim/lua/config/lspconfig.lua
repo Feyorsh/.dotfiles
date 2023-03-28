@@ -1,8 +1,14 @@
 local servers = {
-	ccls = {}, -- brew
+--	ccls = {}, -- transition to clangd
+	clangd = {
+		cmd = {
+			"clangd",
+		}
+	},
 --	rust_analyzer = {}, -- downloaded binary
 	pyright = {}, -- python
 	gopls = {}, -- go
+	zls = {}, -- built from source, lives in /usr/local/bin
 	texlab = { -- cargo
 		settings = {
 			texlab = {
@@ -132,7 +138,7 @@ local on_attach = function(client, bufnr)
 
 	-- autocmds
 	-- SOL on CursorHold; see https://github.com/neovim/neovim/issues/12587
-	-- if one really wanted this, I could use the proposed extension
+	-- ifi one really wanted this, I could use the proposed extension
 	--		vim.api.nvim_create_autocmd("CursorHold", {
 		--			buffer = bufnr,
 		--			callback = function()
@@ -147,7 +153,7 @@ local on_attach = function(client, bufnr)
 				--				vim.diagnostic.open_float(nil, opts)
 				--			end
 				--		})
-			end
+end
 
 local opts = { noremap=true, silent=true }
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts)
