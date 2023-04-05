@@ -1,5 +1,5 @@
 # go is managed by path_helper
-export PATH="$PATH:/usr/bin:/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env GOPATH)/bin:/Users/george/.gem/ruby/2.6.0/bin:/usr/local/bin"
+export PATH="/opt/homebrew/bin/:/Users/george/.cargo/bin:$(go env GOPATH)/bin:$PATH"
 
 [ -f "/Users/george/.ghcup/env" ] && source "/Users/george/.ghcup/env" # ghcup-env
 

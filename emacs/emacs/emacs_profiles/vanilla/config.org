@@ -26,9 +26,6 @@
 (setenv "LSP_USE_PLISTS" "1")
 ;;(setenv "DOOMDIR" "~/emacs/emacs_profiles/doom/config")
 
-(setq custom-file (concat user-emacs-directory "custom.el"))
-(when (file-exists-p custom-file)
-  (load custom-file))
 
 ;;;; packages
 
@@ -106,11 +103,6 @@
 
 
 ;;; org mode
-(use-package org
-    :custom
-  (org-agenda-files '("~/emacs/org/agenda.org"))
-  )
-
 (setq org-src-preserve-indentation t
       org-src-fontify-natively t
       org-export-latex-listings t
@@ -123,85 +115,11 @@
       org-startup-folded t
       org-cycle-include-plain-lists 'integrate
       org-agenda-skip-scheduled-if-done t
-      ;; org-modern
-      org-auto-align-tags nil
-      org-tags-column 0
-      org-catch-invisible-edits 'show-and-error
-      org-special-ctrl-a/e t
-      org-insert-heading-respect-content t
-      org-hide-emphasis-markers t
-      org-pretty-entities t
-      org-ellipsis "…"
-      org-agenda-tags-column 0
-      org-agenda-block-separator ?─
-      org-agenda-time-grid
-      '((daily today require-timed)
-	(800 1000 1200 1400 1600 1800 2000)
-	" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-      org-agenda-current-time-string
-      "⭠ now ─────────────────────────────────────────────────")
-
-
+      org-startup-indented t)
 
 (add-to-list 'org-latex-packages-alist '("" "listings"))
 
 (setq org-directory "~/emacs/org/")
-;; TODO: add functionality that automatically symlinks files in org/
-
-
-
-(use-package org-modern
-    :config
-  (add-hook 'org-mode-hook #'org-modern-mode)
-  (add-hook 'org-agenda-finalize-hook #'org-modern-agenda)
-  :custom-face
-  (org-modern-block-name ((t (:weight light :height 0.9))))
-  )
-
-;; I confirmed that I can use text properties (not expensive) to do linenums with the fancy src blocks. Might look into this in the future.
-;;(add-text-properties 1 2 '(display-line-numbers-disable t) nil)
-
-;; tecosaur the goat for this one
-(defvar +org-mode-left-margin-width 1
-  "The `left-margin-width' to be used in `org-mode' buffers.")
-
-(defun +setup-org-mode-left-margin ()
-  (when (and (derived-mode-p 'org-mode)
-             (eq (current-buffer) ; Check current buffer is active.
-                 (window-buffer (frame-selected-window))))
-    (setq left-margin-width (if display-line-numbers
-                                0 +org-mode-left-margin-width))
-    (set-window-buffer (get-buffer-window (current-buffer))
-                       (current-buffer))))
-(add-hook 'window-configuration-change-hook #'+setup-org-mode-left-margin)
-(add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
-(add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
-
-;;(add-hook 'org-mode (lambda () (unless (equal "mono" (car (cdr (car (org-collect-keywords '("FONT")))))) (mixed-pitch-mode))))
-
-(add-hook 'text-mode-hook 'visual-line-mode)
-;; maybe get rid of this
-(add-hook 'prog-mode-hook 'visual-line-mode)
-
-(defun fonts/default ()
-  (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 13 :weight 'semi-bold))
-  (set-fontset-font "fontset-default" 'unicode (font-spec :family "Arial" :size 13))
-  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 20)))
-
-(defun fonts/org ()
-  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'variable-pitch nil :font (font-spec :family "" :size 13 :weight 'semi-bold)))
-;; note that I still need to set these in `custom` for org
-
-(defun fonts/literate-programming ()
-  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 17))
-  (set-fontset-font "fontset-default" 'symbol (font-spec :family "Latin Modern Math" :size 17)))
-
-(add-hook 'after-init-hook 'fonts/default)
-(add-hook 'server-after-make-frame-hook 'fonts/default)
 
 
 ;;; lsp
@@ -262,8 +180,6 @@
     :custom
     (company-minimum-prefix-length 2)
     (company-idle-delay 0.0))
-(use-package company-box
-    :hook (company-mode . company-box-mode))
 
 ;; cc-mode
 (setq-default c-default-style "k&r"
@@ -288,8 +204,6 @@
 
 ;; black magic icon removal
 ;; defaults write org.gnu.Emacs HideDocumentIcon YES
-;; black magic title transparency (with --natural-title-bar)
-;; defaults write org.gnu.Emacs TransparentTitleBar DARK
 
 ;; This doesn't work for emacs-mac, see https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529
 ;; (menu-bar-mode -1)
@@ -299,6 +213,10 @@
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 
+
+(set-face-attribute 'default nil
+		    :family "Jetbrains Mono"
+		    :height 130)
 (mac-auto-operator-composition-mode 1)
 
 
@@ -410,7 +328,7 @@ Null prefix argument turns off the mode."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-modern-done ((t (:inherit org-modern-label :background "bisque1" :foreground "gray10")))))
+ )
 
 
 
