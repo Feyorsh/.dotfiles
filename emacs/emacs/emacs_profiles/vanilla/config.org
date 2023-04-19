@@ -1,4 +1,19 @@
-;;; bootstrap straight.el
+#+TITLE: Lit(erate) Config
+#+AUTHOR: Shorden
+#+PROPERTY: header-args:elisp :tangle "~/emacs/emacs_profiles/vanilla/init.el"
+
+#+begin_quote
+These are your father's parentheses. Elegant weapons from a more... civilized era. --- xkcd
+#+end_quote
+I use Mitsuharu's Mac port of Emacs 28.2, with the following build flags:
+#+begin_src bash
+brew tap railwaycat/emacsmacport
+brew install emacs-mac --with-native-compilation --with-librsvg --with-natural-title-bar --with-xwidgets
+#+end_src
+gccemacs is a no-brainer, librsvg is supposedly faster, natural title bar looks sexy when not in fullscreen, and XWidgets "pop up" (ba-dum tss) a few places in the config.
+* ~straight.el~
+Bootstrapping code
+#+begin_src elisp
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -6,50 +21,179 @@
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
 	(url-retrieve-synchronously
-	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+"https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
 	 'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;; install use-package
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 (setq straight-vc-git-default-clone-depth '(1 single-branch))
 (setq use-package-verbose nil)
+#+end_src
+*** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/early-init.el"
+:END:
+#+begin_src elisp
+(setq package-enable-at-startup nil)
+(add-to-list 'native-comp-eln-load-path (expand-file-name "eln-cache/" user-emacs-directory))
+#+end_src
 
-
-
-;;; performance
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024)) ; 1mb
+* Emacs
+** Environment
+:PROPERTIES:
+:header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/early-init.el"
+:END:
+This whole thing is a clusterfuck... I don't use [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] because even my shell is a clusterfuck. Instead we use this jank shit.
+#+begin_src elisp
+(setenv "LIBRARY_PATH" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib")
+(setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/Users/george/.cargo/bin"))
+(setq exec-path (append exec-path '("/opt/homebrew/bin" "/Users/george/.cargo/bin")))
+#+end_src
+Ideally I can fix the libgccjit library issues by sticking these early enough in my config. Otherwise take the L and launch Emacs through the terminal like a doofus
+#+begin_src elisp
 (setenv "LSP_USE_PLISTS" "1")
-;;(setenv "DOOMDIR" "~/emacs/emacs_profiles/doom/config")
+#+end_src
+Recommended config from lsp-mode
+#+begin_src elisp
+(setq native-comp-driver-options '("-Wl,-w"))
+#+end_src
+To tame gccemacs on macOS
+** Backups
+Forgot where I sourced all this, but basically take a rather conservative approach to backups without littering current directory with lock files.
+#+begin_src elisp
+(setq backup-directory-alist `(("." . "~/emacs/saves/backups")))
+(setq auto-save-file-name-transforms `((".*" "~/emacs/saves/auto-saves/" t)))
+(setq backup-by-copying-when-linked t
+      version-control t
+      kept-new-versions 5
+      kept-old-versions 0
+      delete-old-versions t
+      vc-make-backup-files t)
+#+end_src
 
+** TODO Chemacs
+Add the "real" chemacs config that lives in ~\tilde/.config/emacs~.
+#+begin_src elisp
+#+end_src
+Scuffed profile switcher I made. Not gonna need it after I DELETE DOOM MWAHAHA
+#+begin_src elisp
+(defun switch-profile ()
+  (interactive)
+  (let* ((profiles_dir "~/emacs/emacs_profiles")
+	 (chemacs "~/.config/chemacs/profile")
+	 (emacs_app "/opt/homebrew/Cellar/emacs-mac/emacs-28.2-mac-9.1/Emacs.app")
+	 (profiles (directory-files profiles_dir nil "^[^.].*"))
+	 (choice (completing-read "Choose profile: " profiles))
+	 (icon (file-name-concat profiles_dir (file-name-as-directory choice) (concat choice ".icns"))))
+    (if (and (file-readable-p chemacs) (file-writable-p chemacs))
+	(progn
+	  (call-process-shell-command (concat "echo \"" choice "\" > " chemacs) nil t nil)
+	  (if (executable-find "fileicon")
+	      (progn
+		(call-process-shell-command (concat "fileicon set " emacs_app " " icon) nil nil nil)
+		(save-some-buffers)
+		(kill-emacs))
+	    (message (propertize "Error: fileicon not found" 'face '(:foreground "red")))))
+      (message (propertize "Error: Can't write to chemacs `profile`" 'face '(:foreground "red"))))))
+#+end_src
 
-;;;; packages
+** Config
+I was previously using file local variables at the end of ~config.org~, but they look /ugly AF/.
+#+begin_src elisp
+(defun config-reload ()
+  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
+    (if (y-or-n-p "Reload?")(load-file (expand-file-name "init.el" user-emacs-directory)))))
+(defun config-tangle ()
+  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
+    (if (y-or-n-p "Tangle?")(org-babel-tangle))))
 
-(use-package pdf-tools
-    :config 
-  (pdf-tools-install)
-  (setq pdf-view-use-scaling t)
-  (setq-default pdf-view-display-size 'fit-page))
+(add-hook 'after-save-hook 'config-reload)
+(add-hook 'after-save-hook 'config-tangle)
+#+end_src
+I think this will work; gets rid of "File changed" dialog
+#+begin_src elisp
+(add-hook 'after-init-hook 'global-auto-revert-mode)
+(setq debug-on-error t)
+#+end_src
+dOnT uSE tHe MoUSe!
+#+begin_src elisp
+(defun stop-using-minibuffer ()
+  "kill the minibuffer"
+  (when (and (>= (recursion-depth) 1) (active-minibuffer-window))
+    (abort-recursive-edit)))
 
-(use-package magit)
+(add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
+#+end_src
 
-;; lol doesn't work because emacs 28 introduced a breaking change or something idk
-;; (use-package slime)
+** TODO Custom
+:PROPERTIES:
+:header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/custom.el"
+:END:
+I will remove this... one day...
+#+begin_src elisp
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ledger-reports
+   '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
+     ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
+     ("bal" "%(binary) -f %(ledger-file) bal")
+     ("reg" "%(binary) -f %(ledger-file) reg")
+     ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+     ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+#+end_src
 
-;; don't bother spinning up daemon; instead, emacs just doesn't close the last frame
-;; consider using (server-start) so we can bind an Automator task to do some shizzle
-(use-package mac-pseudo-daemon
-    :config
-  (mac-pseudo-daemon-mode 1))
+#+begin_src elisp
+;;(setq custom-file (concat user-emacs-directory "custom.el"))
+;;(when (file-exists-p custom-file)
+;;  (load custom-file))
+#+end_src
 
-(use-package vterm
-    :config
-  (setq vterm-shell "fish"))
+* Packages
+** Performance
+Oldest trick in the book! (Not really.)
+#+begin_src elisp
+(use-package gcmh
+  :demand
+  :config
+  (setq gcmh-high-cons-threshold (* 16 1024 1024))
+  :hook
+  (after-init . gcmh-mode))
+#+end_src
+**** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/early-init.el"
+:END:
+This /should/ get reset by GCMH... right?
+#+begin_src elisp
+(setq gc-cons-threshold most-positive-fixnum)
+#+end_src
 
+** Completion
+**** TODO Company
+I think I need to add ~company-box~? Maybe?
+#+begin_src elisp
+(use-package company
+    :after lsp-mode
+    :hook (prog-mode . company-mode)
+    :bind (:map company-active-map
+		("<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+          ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 2)
+    (company-idle-delay 0.0))
+#+end_src
+
+**** TODO Other bullshit
+tbh I have no idea what all this junk is. I've heard vertico is better for some of this stuff.
+Also, I need to look into getting minibuffer search results saved across Emacs sessions. Also maybe using a different algorithm, like Mozilla's frecency
+#+begin_src elisp
 (use-package prescient)
 (use-package ivy-prescient
     :config
@@ -68,187 +212,22 @@
     :config
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (ivy-rich-mode 1))
+#+end_src
 
-
-(use-package ledger-mode)
-
-(use-package doom-themes
-    :ensure t
-    :config
-    ;; Global settings (defaults)
-    (setq doom-themes-enable-bold t     ; if nil, bold is universally disabled
-          doom-themes-enable-italic t)  ; if nil, italics is universally disabled
-    (load-theme 'doom-palenight t)
-
-    ;; Enable flashing mode-line on errors
-    (doom-themes-visual-bell-config)
-    ;; Enable custom neotree theme (all-the-icons must be installed!)
-					; (doom-themes-neotree-config)
-    ;; or for treemacs users
-					; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-					; (doom-themes-treemacs-config)
-    ;; Corrects (and improves) org-mode's native fontification.
-    (doom-themes-org-config))
-
-					; modeline
-(use-package doom-modeline
-    :ensure t
-    :hook (after-init . doom-modeline-mode))
-
-;; distinguish between "real" and "virtual" buffers
-(use-package solaire-mode
-    :ensure t
-    :config
-    (solaire-global-mode +1))
-
-
-;;; org mode
-(setq org-src-preserve-indentation t
-      org-src-fontify-natively t
-      org-export-latex-listings t
-      org-export-with-smart-quotes t
-      org-latex-listings 'listings
-      org-latex-prefer-user-labels t
-      org-confirm-babel-evaluate nil
-      org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
-      org-babel-python-command "/usr/bin/env python3"
-      org-startup-folded t
-      org-cycle-include-plain-lists 'integrate
-      org-agenda-skip-scheduled-if-done t
-      org-startup-indented t)
-
-(add-to-list 'org-latex-packages-alist '("" "listings"))
-
-(setq org-directory "~/emacs/org/")
-
-
-;;; lsp
-(use-package lsp-mode
-    :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "C-c l")
-  :hook (
-         (cc-mode . lsp-deferred)
-	 (python-mode . lsp-deferred)
-	 (zig-mode . lsp-deferred)
-	 (rustic-mode . lsp-deferred))
-  ;; If you want which-key integration
-  ;;(lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred)
-  :config
-  (setq lsp-enable-symbol-highlighting nil)
-  (setq lsp-headerline-breadcrumb-enable nil)
-  (setq lsp-ui-sideline-enable nil)
-  (setq lsp-modeline-code-actions-enable nil)
-  (setq lsp-modeline-diagnostics-enable nil)
-  )
-
-;; optionally
-(use-package lsp-ui
-    :commands lsp-ui-mode
-    :config
-    (setq lsp-ui-doc-use-webkit t))
-(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-
-;; lsp lang
-(use-package lsp-pyright
-    :ensure t
-    :hook (python-mode . (lambda ()
-			   (require 'lsp-pyright)
-			   (lsp-deferred))))  ; or lsp-deferred
-(use-package rustic
-    :custom
-  (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
-
-;; optionally if you want to use debugger
-(use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-
-;; optional if you want which-key integration
-;;(use-package which-key
-;;    :config
-;;    (which-key-mode))
-
-(use-package company
-    :after lsp-mode
-    :hook (prog-mode . company-mode)
-    :bind (:map company-active-map
-		("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 2)
-    (company-idle-delay 0.0))
-
-;; cc-mode
-(setq-default c-default-style "k&r"
-	      c-basic-offset 4)
-(setq-default lisp-indent-function 'common-lisp-indent-function)
-
-
-;;;; end packages
-
-(setq-default frame-title-format
-	      '((:eval (if (buffer-file-name)
-			   (file-name-nondirectory (buffer-file-name))
-			 "%b"))
-		(:eval (if (buffer-modified-p)
-			   " •" " -"))
-		 " Emacs"))
-
-;;(add-to-list 'default-frame-alist '(ns-appearance . dark)) ; nil for dark text
-;;(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
-
-;; brew install emacs-mac --with-native-compilation --with-librsvg --with-natural-title-bar --with-xwidgets
-
-;; black magic icon removal
-;; defaults write org.gnu.Emacs HideDocumentIcon YES
-
-;; This doesn't work for emacs-mac, see https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529
-;; (menu-bar-mode -1)
-(define-key global-map [menu-bar] nil)
-(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
-(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-
-
-(set-face-attribute 'default nil
-		    :family "Jetbrains Mono"
-		    :height 130)
-(mac-auto-operator-composition-mode 1)
-
-
-;; consider adding `env LIBRARY_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"` as a hack because of libgccjit weirdness
-;; actually, just launch emacs through terminal
-(setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/Users/george/.cargo/bin"))
-(setenv "LIBRARY_PATH" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib")
-(setq exec-path (append exec-path '("/opt/homebrew/bin" "/Users/george/.cargo/bin")))
-
-;; gnus
-(setq gnus-home-directory (concat user-emacs-directory "gnus/"))
-(setq gnus-directory gnus-home-directory)
-(setq gnus-init-file (concat gnus-home-directory ".gnus.el"))
-(setq gnus-startup-file (concat gnus-home-directory ".newsrc"))
-
-;; EasyPG
+** Apps
+*** Sundry
+**** TODO Crypto
+EasyPG stuff:
+#+begin_src elisp
 (require 'epa-file)
-(defvar epa-pinentry-mode)
 (setq epa-pinentry-mode 'loopback)
-
-(setq auth-sources (mapcar (lambda (x) (concat user-emacs-directory (string-remove-prefix "~/" x))) auth-sources))
-
-;; auto-save and backups
-(setq backup-directory-alist `(("." . "~/emacs/saves/backups")))
-(setq auto-save-file-name-transforms `((".*" "~/emacs/saves/auto-saves/" t)))
-(setq backup-by-copying-when-linked t
-      version-control t
-      kept-new-versions 5
-      kept-old-versions 0
-      delete-old-versions t
-      vc-make-backup-files t)
-
+#+end_src
+Authentication config (I want to move this to be profile independent)
+#+begin_src elisp
+(setq auth-sources (mapcar (lambda (x) (concat user-emacs-directory x)) '(".authinfo.gpg" ".authinfo" ".netrc")))
+#+end_src
+Sensitive minor mode to disable backups and autosave
+#+begin_src elisp
 (define-minor-mode sensitive-minor-mode
     "For sensitive files like password lists.
 It disables backup creation and auto saving.
@@ -276,60 +255,361 @@ Null prefix argument turns off the mode."
 	(auto-save-mode 1))))
 
 (setq auto-mode-alist
-      (append '(("\\.gpg$" . sensitive-minor-mode))
-              auto-mode-alist))
+      (append '(("\\.gpg$" . sensitive-minor-mode)) auto-mode-alist))
+#+end_src
 
-;; fancy-splash likely disabled because of yabai resizing, so we ignore initial screen size
+*** TODO Mail
+Right now I'm using Gnus, but I think I want to switch to something like mu4e.
+#+begin_src elisp
+(setq gnus-home-directory (concat user-emacs-directory "gnus/"))
+(setq gnus-directory gnus-home-directory)
+(setq gnus-init-file (concat gnus-home-directory ".gnus.el"))
+(setq gnus-startup-file (concat gnus-home-directory ".newsrc"))
+#+end_src
+I also need to absorb my Gnus config into here.
+*** TODO IRC
+I want to rice ERC... one day...
+** Language
+*** TODO Org
+There's not a particular reason I don't use Emacs built-ins, but caution must be exercised to avoid clobbering the built-in and MELPA versions of Org.
+#+begin_src elisp
+(use-package org
+    :config
+  (setq org-directory "~/emacs/org"
+	org-src-preserve-indentation t
+	org-src-fontify-natively t
+	org-export-latex-listings t
+	org-export-with-smart-quotes t
+	org-latex-listings 'listings
+	org-latex-prefer-user-labels t
+	org-confirm-babel-evaluate nil
+	org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+	org-startup-folded t
+	org-cycle-include-plain-lists 'integrate
+	org-agenda-skip-scheduled-if-done t
+	org-use-sub-superscripts "{}"
+	;; org-modern
+	org-auto-align-tags nil
+	org-tags-column 0
+	org-catch-invisible-edits 'show-and-error
+	org-special-ctrl-a/e t
+	org-insert-heading-respect-content t
+	org-hide-emphasis-markers t
+	org-pretty-entities t
+	org-ellipsis "…"
+	org-agenda-tags-column 0
+	org-agenda-block-separator ?─
+	org-agenda-time-grid
+	'((daily today require-timed)
+	  (800 1000 1200 1400 1600 1800 2000)
+	  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+	org-agenda-current-time-string
+	"⭠ now ─────────────────────────────────────────────────")
+  (add-to-list 'org-latex-packages-alist '("" "listings"))
+  :custom
+  (org-agenda-files '("~/emacs/org/agenda.org")))
+(add-hook 'emacs-startup-hook
+	  (lambda ()
+	    (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+		   (find-file-noselect "~/.dotfiles/emacs/emacs/emacs_profiles/vanilla/config.org"))))
+#+end_src
+And now to make it *pretty*
+#+begin_src elisp
+(use-package org-modern
+    :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
+  (org-modern-mode . fonts/org)
+  (org-cdlatex-mode . fonts/literate-programming)
+  :config
+  (setq org-modern-todo-faces
+	'(("WAIT" :background "orange red" :foreground "white")
+		("PAST" :background "dark red" :foreground "white")))
+  (setq org-todo-keyword-faces '(("TODO" . org-todo)
+				 ("WAIT" . "orange red")
+				 ("DONE" . org-done)
+				 ("PAST" . "dark red"))))
+  ;;:custom-face
+  ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
+
+;; I confirmed that I can use text properties (not expensive) to do linenums with the fancy src blocks. Might look into this in the future.
+;;(add-text-properties 1 2 '(display-line-numbers-disable t) nil)
+
+;; tecosaur the goat for this one
+(defvar +org-mode-left-margin-width 1
+  "The `left-margin-width' to be used in `org-mode' buffers.")
+
+(defun +setup-org-mode-left-margin ()
+  (when (and (derived-mode-p 'org-mode)
+             (eq (current-buffer) ; Check current buffer is active.
+                 (window-buffer (frame-selected-window))))
+    (setq left-margin-width (if display-line-numbers
+                                0 +org-mode-left-margin-width))
+    (set-window-buffer (get-buffer-window (current-buffer))
+                       (current-buffer))))
+(add-hook 'window-configuration-change-hook #'+setup-org-mode-left-margin)
+(add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
+(add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
+#+end_src
+
+*** Python
+#+begin_src elisp
+(use-package lsp-pyright
+    :ensure t
+    :hook (python-mode . (lambda ()
+			   (require 'lsp-pyright)
+			   (lsp-deferred))))
+#+end_src
+
+*** Zig
+*** TODO Rust
+Add DAP stuff + make sure rustic works
+#+begin_src elisp
+(use-package rustic
+    :custom
+  (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
+#+end_src
+
+*** TODO Lisp
+Slime? Improve scratch?
+#+begin_src elisp
+(setq-default lisp-indent-function 'common-lisp-indent-function)
+#+end_src
+
+*** TODO C/C++
+I realized I don't actually use an "official" style. Everyone else is just uglier than me.
+Add label indentation + DAP stuff
+#+begin_src elisp
+(setq-default c-default-style "k&r"
+	      c-basic-offset 4)
+#+end_src
+
+** Tools
+*** Terminal
+Vterm works really well; I could always switch to eshell but I like fishy
+#+begin_src elisp
+(use-package vterm
+    :config
+  (setq vterm-shell "fish"))
+#+end_src
+
+*** TODO Ledger
+So I can commit tax fraud productively.
+#+begin_src elisp
+(use-package ledger-mode)
+#+end_src
+
+*** TODO Magit
+#+begin_src elisp
+(use-package magit)
+#+end_src
+
+*** TODO Debugger
+Woah boy, this is gonna be a long one.
+I started off trying to build lldb-vscode from source, only to immediately realize that's a /terrible/ idea. Instead, I admitted to myself that I'm still suckling the teat of VSCode and (ashamedly) installed Lanza's lldb-vscode.
+#+begin_src elisp
+(use-package dap-mode
+    :config
+  (setq dap-auto-configure-mode t)
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (require 'dap-lldb)
+  (setq dap-lldb-debug-program '("/opt/homebrew/opt/llvm/bin/lldb-vscode"))
+  (setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+
+  ;;; default debug template for (c++)
+  (dap-register-debug-template
+   "C++ LLDB dap"
+   (list :type "lldb-vscode"
+         :cwd nil
+         :args nil
+         :request "launch"
+         :program nil))
+  
+  (defun dap-debug-create-or-edit-json-template ()
+    "Edit the C++ debugging configuration or create + edit if none exists yet."
+    (interactive)
+    (let ((filename (concat (lsp-workspace-root) "/launch.json"))
+	  (default "~/.emacs.d/default-launch.json"))
+      (unless (file-exists-p filename)
+	(copy-file default filename))
+      (find-file-existing filename)))
+)
+#+end_src
+
+*** TODO LSP
+Check to see if lsp-ui webkit uses markdown or not
+#+begin_src elisp
+(use-package lsp-mode
+    :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "C-c l")
+  :hook ((cc-mode . lsp-deferred)
+	 (python-mode . lsp-deferred)
+	 (zig-mode . lsp-deferred)
+	 (rustic-mode . lsp-deferred))
+  ;; If you want which-key integration
+  ;;(lsp-mode . lsp-enable-which-key-integration))
+  :commands (lsp lsp-deferred)
+  :config
+  (setq read-process-output-max (* 1024 1024)) ; 1mb
+  
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-ui-sideline-enable nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-modeline-diagnostics-enable nil))
+
+(use-package lsp-ui
+    :commands lsp-ui-mode
+    :config
+    (setq lsp-ui-doc-use-webkit t))
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs
+    :commands lsp-treemacs-errors-list
+    :config
+    (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** Treesitter
+I FUCKING LOVE SYNTAX HIGHLIGHTING
+I WANT TO FUCKING PARSE MY CODE'S AST AS FAST AS POSSIBLE
+#+begin_src elisp
+(use-package tree-sitter
+    :config
+  (global-tree-sitter-mode))
+(use-package tree-sitter-langs)
+#+end_src
+
+** UI
+*** Title Bar
+Prettifies the window title. Might be problematic for yabai, though...
+#+begin_src elisp
+(setq-default frame-title-format
+	      '((:eval (if (buffer-file-name)
+			   (file-name-nondirectory
+			    (buffer-file-name)) "%b"))
+		(:eval (if (buffer-modified-p)
+			   " •" " -")) " Emacs"))
+#+end_src
+This is required to get the compilation flag ~--with-transparent-title-bar~ to behave properly.
+#+begin_src bash
+ defaults write org.gnu.Emacs HideDocumentIcon YES
+#+end_src
+
+*** TODO Theme
+I make liberal use of Doom's themes but not ~evil-mode~. I still need to properly configure the modeline.
+#+begin_src elisp
+(use-package doom-themes
+    :ensure t
+    :config
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    (load-theme 'doom-palenight t)
+    (doom-themes-visual-bell-config)
+    (setq doom-themes-treemacs-theme "doom-colors")
+    (doom-themes-treemacs-config)
+    (doom-themes-org-config))
+
+(use-package doom-modeline
+    :ensure t
+    :hook (after-init . doom-modeline-mode))
+
+;; distinguish between "real" and "virtual" buffers
+(use-package solaire-mode
+    :ensure t
+    :config
+    (solaire-global-mode +1))
+#+end_src
+
+*** TODO GUI
+Or lack thereof...
+#+begin_src elisp
+(define-key global-map [menu-bar] nil)
+(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
+(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+#+end_src
+~menu-bar-mode~ must be configured for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]], so we do this instead:
+#+begin_src elisp
+(define-key global-map [menu-bar] nil)
+(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
+(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
+#+end_src
+
+**** TODO Fonts
+I still need to rice Org fonts, and test LaTeX fonts out. Defaults should be sane, though.
+For ligatures
+For visual-line-mode
+#+begin_src elisp
+(mac-auto-operator-composition-mode 1)
+
+(add-hook 'text-mode-hook 'visual-line-mode)
+(add-hook 'prog-mode-hook 'visual-line-mode)
+
+
+(defun fonts/default ()
+  (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
+  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
+  (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
+  (set-fontset-font "fontset-default" 'unicode (font-spec :family "Arial" :size 15))
+  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 20)))
+
+(defun fonts/org ()
+  (if org-modern-mode
+  (progn
+    (setq fonts/org-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+    (setq fonts/org-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Sarasa Mono J" :size 15 :weight 'normal)))
+    (variable-pitch-mode +1))
+  (progn
+    (face-remap-remove-relative fonts/org-fixed-cookie)
+    (face-remap-remove-relative fonts/org-variable-cookie)
+    (variable-pitch-mode -1))))
+;; note that I still need to set these in `custom` for org
+
+(defun fonts/literate-programming ()
+  (if org-cdlatex-mode
+  (progn
+    (setq fonts/literate-programming-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+    (setq fonts/literate-programming-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 15 :weight 'normal)))
+    (variable-pitch-mode +1))
+  (progn
+    (face-remap-remove-relative fonts/literate-programming-fixed-cookie)
+    (face-remap-remove-relative fonts/literate-programming-variable-cookie)
+    (variable-pitch-mode -1))))
+
+(add-hook 'after-init-hook 'fonts/default)
+#+end_src
+Ok, something in my Emacs config is definitely messing up native scroll.
+We add rainbow-mode to color hex codes, like #003b6f.
+#+begin_src elisp
+(use-package rainbow-mode
+    :config
+  (rainbow-mode 1))
+#+end_src
+
+**** TODO Splash Screen
+I use this because of yabai weirdness. Also, I want to add a proper splash screen.
+#+begin_src elisp
 (defun use-fancy-splash-screens-p () t)
+#+end_src
 
-;; user-init-file is mangled by chemacs
-(let ((find-file-visit-truename t))
-  (find-file-noselect (expand-file-name "init.el" user-emacs-directory)))
-(find-file-noselect (expand-file-name "agenda.org" org-directory))
-
-;; scuffed chemacs switcher by me
-(defun switch-profile ()
-  (interactive)
-  (let* ((profiles_dir "~/emacs/emacs_profiles")
-	 (chemacs "~/.config/chemacs/profile")
-	 (emacs_app "/opt/homebrew/Cellar/emacs-mac/emacs-28.2-mac-9.1/Emacs.app")
-	 (profiles (directory-files profiles_dir nil "^[^.].*"))
-	 (choice (completing-read "Choose profile: " profiles))
-	 (icon (file-name-concat profiles_dir (file-name-as-directory choice) (concat choice ".icns"))))
-    (if (and (file-readable-p chemacs) (file-writable-p chemacs))
-	(progn
-	  (call-process-shell-command (concat "echo \"" choice "\" > " chemacs) nil t nil)
-	  (if (executable-find "fileicon")
-	      (progn
-		(call-process-shell-command (concat "fileicon set " emacs_app " " icon) nil nil nil)
-		(save-some-buffers)
-		(kill-emacs))
-	    (message (propertize "Error: fileicon not found" 'face '(:foreground "red")))))
-      (message (propertize "Error: Can't write to chemacs `profile`" 'face '(:foreground "red"))))))
+** TODO Deprecated
+To be replaced with EAF
+#+begin_src elisp
+(use-package pdf-tools
+    :config 
+  (pdf-tools-install)
+  (setq pdf-view-use-scaling t)
+  (setq-default pdf-view-display-size 'fit-page))
+#+end_src
+Emacs daemon doesn't work on macOS because... reasons. I have this shitty hack installed, but I never close Emacs anyway, so this is superfluous.
+#+begin_src elisp
+;; don't bother spinning up daemon; instead, emacs just doesn't close the last frame
+;; consider using (server-start) so we can bind an Automator task to do some shizzle
+;;(use-package mac-pseudo-daemon
+;;    :config
+;;  (mac-pseudo-daemon-mode 1))
+#+end_src
 
 
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ledger-reports
-   '(("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
-     ("report1" "ledger -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card -b 2022/08/11 -e 2022/09/07")
-     ("bal" "%(binary) -f %(ledger-file) bal")
-     ("reg" "%(binary) -f %(ledger-file) reg")
-     ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
-     ("account" "%(binary) -f %(ledger-file) reg %(account)")))
- '(org-agenda-files '("~/emacs/org/agenda.org"))
- '(warning-suppress-types '((comp))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
-
-
-;;; need to reorganize at some point (refactor to other files? use org-mode?)
