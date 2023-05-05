@@ -26,4 +26,10 @@ set fish_function_path /Users/george/.config/fish/functions/theme-pure/functions
 source /Users/george/.config/fish/functions/theme-pure/conf.d/pure.fish
 
 # vi mode #
-fish_vi_key_bindings
+# I only use fish in Emacs, so ironically I had to disable Vi mode to enable Vi mode.
+# make sure to run `fish_default_key_bindings` to switch back and forth
+if begin; [ -n "$INSIDE_EMACS" ] ; end
+	fish_default_key_bindings
+else
+	fish_vi_key_bindings
+end

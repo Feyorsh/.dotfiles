@@ -11,9 +11,17 @@ brew tap railwaycat/emacsmacport
 brew install emacs-mac --with-native-compilation --with-librsvg --with-natural-title-bar --with-xwidgets
 #+end_src
 gccemacs is a no-brainer, librsvg is supposedly faster, natural title bar looks sexy when not in fullscreen, and XWidgets "pop up" (ba-dum tss) a few places in the config.
-* ~straight.el~
-Bootstrapping code
+* Straight
+Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el/issues/305#issuecomment-417952067][broken]] or something?
 #+begin_src elisp
+;;; init.el --- Personal configuration file -*- lexical-binding: t; -*-
+
+(setq straight-recipes-gnu-elpa-use-mirror t)
+(setq straight-check-for-modifications '(check-on-save find-when-checking))
+(setq straight-use-package-by-default t)
+(setq straight-vc-git-default-clone-depth '(1 single-branch))
+(setq use-package-verbose nil)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -28,15 +36,14 @@ Bootstrapping code
   (load bootstrap-file nil 'nomessage))
 
 (straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
-(setq straight-vc-git-default-clone-depth '(1 single-branch))
-(setq use-package-verbose nil)
 #+end_src
 *** Early Init
 :PROPERTIES:
 :header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/early-init.el"
 :END:
 #+begin_src elisp
+;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
+
 (setq package-enable-at-startup nil)
 (add-to-list 'native-comp-eln-load-path (expand-file-name "eln-cache/" user-emacs-directory))
 #+end_src
@@ -127,6 +134,19 @@ dOnT uSE tHe MoUSe!
 
 (add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
 #+end_src
+This should be fine, right?
+#+begin_src elisp
+(setq vc-follow-symlinks t)
+#+end_src
+Ok, ok, I'll switch to 29 soon, I promise...
+#+begin_src elisp
+(use-package compat
+    :demand t)
+#+end_src
+Get native comp to shut up, but not so we can't debug a problem
+#+begin_src elisp
+(setq native-comp-async-report-warnings-errors 'silent)
+#+end_src
 
 ** TODO Custom
 :PROPERTIES:
@@ -155,6 +175,50 @@ I will remove this... one day...
 #+end_src
 
 * Packages
+** Keybinds
+After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
+#+begin_src elisp
+(use-package general
+    :demand t
+    :config
+    (general-evil-setup))
+#+end_src
+#+begin_src elisp
+(use-package evil
+    :demand t
+    :after general
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    ;;(setq evil-want-minibuffer t)
+    (setq evil-undo-system 'undo-redo)
+    ;; disable state change echo
+    (setq evil-normal-state-message nil)
+    (setq evil-insert-state-message nil)
+    (setq evil-visual-state-message nil)
+    (setq evil-replace-state-message nil)
+    (setq evil-emacs-state-message nil)
+    :config 
+    (evil-mode 1))
+
+(use-package evil-collection
+    :after evil
+	:demand
+	:config
+    (evil-collection-init))
+#+end_src
+I ran into a weird issue where the recipe on MELPA differed from the Git repo (straight doesn't use the MELPA version but instead the recipe). Running ~straight-pull-package~ fixed this issue.
+#+begin_src elisp
+(use-package evil-org
+    :after org
+    :hook (org-mode . evil-org-mode)
+    :config
+(evil-org-set-key-theme '(textobjects insert navigation additional calendar))
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
+#+end_src
+
 ** Performance
 Oldest trick in the book! (Not really.)
 #+begin_src elisp
@@ -177,7 +241,7 @@ This /should/ get reset by GCMH... right?
 ** Completion
 **** TODO Company
 I think I need to add ~company-box~? Maybe?
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package company
     :after lsp-mode
     :hook (prog-mode . company-mode)
@@ -189,29 +253,138 @@ I think I need to add ~company-box~? Maybe?
     (company-minimum-prefix-length 2)
     (company-idle-delay 0.0))
 #+end_src
+Mwahaha, time to suck the life out of poor Minad
+#+begin_src elisp
+(use-package corfu
+    :straight (:files (:defaults "extensions/*")
+					  :includes (
+								 corfu-popupinfo
+								 corfu-history
+								 ))
+    :init
+    (global-corfu-mode)
+    :hook ((minibuffer-setup . corfu-enable-always-in-minibuffer)
+		   (corfu-history-mode . savehist-mode))
+    :config
+	(general-define-key
+	 :states 'insert
+	 :keymaps 'corfu-map
+	 "C-u" #'corfu-scroll-down
+	 "C-d" #'corfu-scroll-up
+	 "M-k" #'corfu-popupinfo-scroll-down
+	 "M-j" #'corfu-popupinfo-scroll-up
+	 )
+
+	(defun corfu-enable-always-in-minibuffer ()
+	  "Enable Corfu in the minibuffer if Vertico is not active."
+	  (unless (or (bound-and-true-p vertico--input)
+				  (eq (current-local-map) read-passwd-map))
+		(corfu-mode 1)))
+
+	(setq corfu-auto t)
+	(setq tab-always-indent 'complete)
+	(setq completion-cycle-threshold nil)
+	(setq corfu-min-width 20)
+	(setq corfu-max-width 40)
+
+	(corfu-history-mode)
+    ;;(add-to-list 'savehist-additional-variables 'corfu-history)
+
+	(corfu-popupinfo-mode)
+	(setq corfu-popupinfo-delay 0.5)
+	(setq corfu-popupinfo-max-width 40)
+	(setq corfu-popupinfo-min-height 4)
+    )
+#+end_src
 
 **** TODO Other bullshit
-tbh I have no idea what all this junk is. I've heard vertico is better for some of this stuff.
+At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
 Also, I need to look into getting minibuffer search results saved across Emacs sessions. Also maybe using a different algorithm, like Mozilla's frecency
+Gotta figure out how to add minibuffer bindings so I can scroll (see [[https://github.com/doomemacs/doomemacs/blob/master/modules/config/default/+evil-bindings.el][Doom]])
 #+begin_src elisp
 (use-package prescient)
-(use-package ivy-prescient
-    :config
-  (ivy-prescient-mode 1))
 
-(use-package counsel
-    :config
-  (setq ivy-use-virtual-buffers t
-        ivy-count-format "%d/%d ")
-  (ivy-mode 1))
+(use-package vertico
+    :straight (vertico :files (:defaults "extensions/*")
+					   :includes (
+								  vertico-directory
+								  vertico-repeat
+								  ;; vertico-indexed
+								  ;; vertico-flat
+								  ;; vertico-grid
+								  ;; vertico-mouse
+								  ;; vertico-quick
+								  ;; vertico-buffer
+								  ;; vertico-reverse
+								  ;; vertico-multiform
+								  ;; vertico-unobtrusive
+								  ))
+	:demand t
+	:hook ((minibuffer-setup . vertico-repeat-save)
+		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
-(use-package all-the-icons-ivy-rich
-    :init (all-the-icons-ivy-rich-mode 1))
-
-(use-package ivy-rich
+    :init
+    (setq vertico-cycle nil)
+    (setq read-file-name-completion-ignore-case t
+		  read-buffer-completion-ignore-case t
+		  completion-ignore-case t)
+    (setq read-extended-command-predicate #'command-completion-default-include-p)
     :config
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-  (ivy-rich-mode 1))
+	(general-define-key
+	 :keymaps 'vertico-map
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "<escape>" #'minibuffer-keyboard-quit
+	 "RET" #'vertico-directory-enter
+	 "DEL" #'vertico-directory-delete-char
+	 )
+    (vertico-mode))
+
+(use-package consult)
+
+(use-package marginalia
+    :ensure t
+    :init
+    (marginalia-mode))
+
+(use-package all-the-icons)
+
+(use-package all-the-icons-completion
+    :after (marginalia all-the-icons)
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+	:init
+	(all-the-icons-completion-mode))
+
+(use-package embark
+    :ensure t
+    :bind
+    (("C-." . embark-act)         ;; pick some comfortable binding
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+    :init
+
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+
+    ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+    ;; strategy, if you want to see the documentation from multiple providers.
+    (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+    ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+				 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+				   nil
+				   (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+    :ensure t ; only need to install it, embark loads it after consult if found
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 ** Apps
@@ -259,7 +432,7 @@ Null prefix argument turns off the mode."
 #+end_src
 
 *** TODO Mail
-Right now I'm using Gnus, but I think I want to switch to something like mu4e.
+Right now I'm using Gnus, but I think I want to switch to something like mu4e. Or notmuch.
 #+begin_src elisp
 (setq gnus-home-directory (concat user-emacs-directory "gnus/"))
 (setq gnus-directory gnus-home-directory)
@@ -274,44 +447,45 @@ I want to rice ERC... one day...
 There's not a particular reason I don't use Emacs built-ins, but caution must be exercised to avoid clobbering the built-in and MELPA versions of Org.
 #+begin_src elisp
 (use-package org
-    :config
-  (setq org-directory "~/emacs/org"
-	org-src-preserve-indentation t
-	org-src-fontify-natively t
-	org-export-latex-listings t
-	org-export-with-smart-quotes t
-	org-latex-listings 'listings
-	org-latex-prefer-user-labels t
-	org-confirm-babel-evaluate nil
-	org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
-	org-startup-folded t
-	org-cycle-include-plain-lists 'integrate
-	org-agenda-skip-scheduled-if-done t
-	org-use-sub-superscripts "{}"
-	;; org-modern
-	org-auto-align-tags nil
-	org-tags-column 0
-	org-catch-invisible-edits 'show-and-error
-	org-special-ctrl-a/e t
-	org-insert-heading-respect-content t
-	org-hide-emphasis-markers t
-	org-pretty-entities t
-	org-ellipsis "…"
-	org-agenda-tags-column 0
-	org-agenda-block-separator ?─
-	org-agenda-time-grid
-	'((daily today require-timed)
-	  (800 1000 1200 1400 1600 1800 2000)
-	  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-	org-agenda-current-time-string
-	"⭠ now ─────────────────────────────────────────────────")
-  (add-to-list 'org-latex-packages-alist '("" "listings"))
-  :custom
-  (org-agenda-files '("~/emacs/org/agenda.org")))
-(add-hook 'emacs-startup-hook
-	  (lambda ()
-	    (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-		   (find-file-noselect "~/.dotfiles/emacs/emacs/emacs_profiles/vanilla/config.org"))))
+    :init
+  (setq org-directory "~/emacs/org")
+	:config
+	(setq org-src-preserve-indentation t
+	      org-src-fontify-natively t
+	      org-export-latex-listings t
+	      org-export-with-smart-quotes t
+	      org-latex-listings 'listings
+	      org-latex-prefer-user-labels t
+	      org-confirm-babel-evaluate nil
+	      org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+	      org-startup-folded t
+	      org-cycle-include-plain-lists 'integrate
+	      org-agenda-skip-scheduled-if-done t
+	      org-use-sub-superscripts "{}"
+	      ;; org-modern
+	      org-auto-align-tags nil
+	      org-tags-column 0
+	      org-catch-invisible-edits 'show-and-error
+	      org-special-ctrl-a/e t
+	      org-insert-heading-respect-content t
+	      org-hide-emphasis-markers t
+	      org-pretty-entities t
+	      org-ellipsis "…"
+	      org-agenda-tags-column 0
+	      org-agenda-block-separator ?─
+	      org-agenda-time-grid
+	      '((daily today require-timed)
+		(800 1000 1200 1400 1600 1800 2000)
+		" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+	      org-agenda-current-time-string
+	      "⭠ now ─────────────────────────────────────────────────")
+	(add-to-list 'org-latex-packages-alist '("" "listings"))
+	:custom
+	(org-agenda-files '("~/emacs/org/agenda.org")))
+  (add-hook 'emacs-startup-hook
+	    (lambda ()
+	      (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+		     (find-file-noselect "~/.dotfiles/emacs/emacs/emacs_profiles/vanilla/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -351,6 +525,45 @@ And now to make it *pretty*
 (add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
 (add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
 #+end_src
+Here's a hack for the annoying org fast todo popup:
+#+begin_src elisp :tangle no
+; Macro which creates advice 'template'
+(defmacro my/with-advice (adlist &rest body)
+  "Execute BODY with temporary advice in ADLIST.
+
+Each element of ADLIST should be a list of the form
+  (SYMBOL WHERE FUNCTION [PROPS])
+suitable for passing to `advice-add'.  The BODY is wrapped in an
+`unwind-protect' form, so the advice will be removed even in the
+event of an error or nonlocal exit."
+  (declare (debug ((&rest (&rest form)) body))
+           (indent 1))
+  `(progn
+     ,@(mapcar (lambda (adform)
+                 (cons 'advice-add adform))
+               adlist)
+     (unwind-protect (progn ,@body)
+       ,@(mapcar (lambda (adform)
+                   `(advice-remove ,(car adform) ,(nth 2 adform)))
+                 adlist))))
+
+;;Function which replaces org-switch-to-buffer-other-window with emacs' original switch-to-buffer-other-window
+(defun hd/org-todo-same-window (orig-fn)
+  "Advice to fix window placement in `org-fast-todo-selection'."
+  (let  ((override
+      '("\\*Org todo\\*|\\*Org Note\\*"
+        (display-buffer-use-some-window)
+        (inhibit-same-window . nil)))) ;locally sets variable "override" as key-value pair for display-buffer-alist entry
+    (add-to-list 'display-buffer-alist override) ;adds the contents of the above defined variable to display-buffer-alist
+    (my/with-advice
+        ((#'org-switch-to-buffer-other-window :override #'switch-to-buffer-other-window))
+      (unwind-protect (funcall orig-fn)
+        (setq display-buffer-alist
+              (delete override display-buffer-alist))))))
+
+; Injecting the relevant advice into the org-fast-todo-selection function
+(advice-add #'org-fast-todo-selection :around #'hd/org-todo-same-window)
+#+end_src
 
 *** Python
 #+begin_src elisp
@@ -380,8 +593,11 @@ Slime? Improve scratch?
 I realized I don't actually use an "official" style. Everyone else is just uglier than me.
 Add label indentation + DAP stuff
 #+begin_src elisp
-(setq-default c-default-style "k&r"
-	      c-basic-offset 4)
+(setq-default indent-tabs-mode t)
+(setq-default tab-width 4)
+(defvaralias 'c-basic-offset 'tab-width)
+(defvaralias 'cperl-indent-level 'tab-width)
+(setq-default c-default-style "k&r")
 #+end_src
 
 ** Tools
@@ -391,6 +607,45 @@ Vterm works really well; I could always switch to eshell but I like fishy
 (use-package vterm
     :config
   (setq vterm-shell "fish"))
+#+end_src
+
+*** TODO Dired
+Switched to Dirvish, haven't looked back. Ty to Sun I for reccing ranger
+Need to make an evil mode map for dirvish (add to evil-collection)
+#+begin_src elisp
+(use-package dirvish
+    :custom
+  (dirvish-quick-access-entries
+   '(("h" "~/" "Home")
+     ("d" "~/Downloads/" "Downloads")
+     ("t" "~/.Trash" "TrashCan")))
+  :init
+  (dirvish-override-dired-mode)
+  :config
+  (setq delete-by-moving-to-trash t)
+  (setq dirvish-preview-dispatchers
+	(cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
+  (setq dirvish-attributes '(vc-state file-size git-msg subtree-state all-the-icons collapse file-time))
+  (setq dired-listing-switches
+	"-l --almost-all --human-readable --group-directories-first --no-group")
+  ;;(setq dirvish-open-with-programs '(".mp4" . ()))
+  (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
+  (setq dirvish-header-line-height '(25 . 35))
+  (setq dirvish-side-width 38)
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
+  (dirvish-peek-mode)
+  )
+#+end_src
+Got to make sure all these goodies are installed:
+#+begin_src bash
+brew install coreutils fd poppler ffmpegthumbnailer mediainfo imagemagick
+#+end_src
+And here's stuff for vanilla Dired:
+- freeBSD moment
+- Also I am too dumb to be trusted with enabling /all/ of the disabled commands
+#+begin_src elisp :tangle no
+(setq insert-directory-program "gls")
+(put 'dired-find-alternate-file 'disabled nil)
 #+end_src
 
 *** TODO Ledger
@@ -506,15 +761,17 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
           doom-themes-enable-italic t)
     (load-theme 'doom-palenight t)
     (doom-themes-visual-bell-config)
-    (setq doom-themes-treemacs-theme "doom-colors")
+    (setq doom-themes-treemacs-theme "doom-atom")
     (doom-themes-treemacs-config)
     (doom-themes-org-config))
 
 (use-package doom-modeline
     :ensure t
-    :hook (after-init . doom-modeline-mode))
+    :config
+    (setq doom-modeline-modal-icon t)
+    :hook
+    (after-init . doom-modeline-mode))
 
-;; distinguish between "real" and "virtual" buffers
 (use-package solaire-mode
     :ensure t
     :config
@@ -527,14 +784,41 @@ Or lack thereof...
 (define-key global-map [menu-bar] nil)
 (add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
 (add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
 #+end_src
-~menu-bar-mode~ must be configured for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]], so we do this instead:
+~menu-bar-mode~ must be enabled for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]], so we do this instead:
 #+begin_src elisp
 (define-key global-map [menu-bar] nil)
 (add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
 (add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
+#+end_src
+Add Centaur Tabs at some point. Or maybe not.
+
+**** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/emacs/emacs_profiles/vanilla/early-init.el"
+:END:
+#+begin_src elisp
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
+
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(setq use-file-dialog nil)
+#+end_src
+
+**** Treemacs
+#+begin_src elisp
+(use-package treemacs
+	:after solaire-mode
+	:config
+	(push '(treemacs-window-background-face . solaire-default-face) solaire-mode-remap-alist)
+	(push '(treemacs-hl-line-face . solaire-hl-line-face) solaire-mode-remap-alist)
+	)
 #+end_src
 
 **** TODO Fonts
