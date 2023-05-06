@@ -191,8 +191,8 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
     (setq evil-want-C-u-scroll t)
-    ;;(setq evil-want-minibuffer t)
     (setq evil-undo-system 'undo-redo)
+	(setq evil-want-minibuffer t)
     ;; disable state change echo
     (setq evil-normal-state-message nil)
     (setq evil-insert-state-message nil)
@@ -201,20 +201,105 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
     (setq evil-emacs-state-message nil)
     :config 
     (evil-mode 1))
-
+#+end_src
+This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
+#+begin_src elisp
 (use-package evil-collection
     :after evil
 	:demand
 	:config
+	;;(delete 'corfu evil-collection-mode-list)
+	(setq evil-collection-setup-minibuffer t)
     (evil-collection-init))
 #+end_src
 I ran into a weird issue where the recipe on MELPA differed from the Git repo (straight doesn't use the MELPA version but instead the recipe). Running ~straight-pull-package~ fixed this issue.
+Stole ~+org--insert-item~ from Doom.
 #+begin_src elisp
 (use-package evil-org
     :after org
     :hook (org-mode . evil-org-mode)
+	:init
+	(defun +org--insert-item (direction)
+      (let ((context (org-element-lineage
+                      (org-element-context)
+                      '(table table-row headline inlinetask item plain-list)
+                      t)))
+		(pcase (org-element-type context)
+          ;; Add a new list item (carrying over checkboxes if necessary)
+          ((or `item `plain-list)
+           ;; Position determines where org-insert-todo-heading and org-insert-item
+           ;; insert the new list item.
+           (if (eq direction 'above)
+               (org-beginning-of-item)
+			 (org-end-of-item)
+			 (backward-char))
+           (org-insert-item (org-element-property :checkbox context))
+           ;; Handle edge case where current item is empty and bottom of list is
+           ;; flush against a new heading.
+           (when (and (eq direction 'below)
+                      (eq (org-element-property :contents-begin context)
+                          (org-element-property :contents-end context)))
+			 (org-end-of-item)
+			 (org-end-of-line)))
+
+          ;; Add a new table row
+          ((or `table `table-row)
+           (pcase direction
+			 ('below (save-excursion (org-table-insert-row t))
+					 (org-table-next-row))
+			 ('above (save-excursion (org-shiftmetadown))
+					 (+org/table-previous-row))))
+
+          ;; Otherwise, add a new heading, carrying over any todo state, if
+          ;; necessary.
+          (_
+           (let ((level (or (org-current-level) 1)))
+			 ;; I intentionally avoid `org-insert-heading' and the like because they
+			 ;; impose unpredictable whitespace rules depending on the cursor
+			 ;; position. It's simpler to express this command's responsibility at a
+			 ;; lower level than work around all the quirks in org's API.
+			 (pcase direction
+               (`below
+				(let (org-insert-heading-respect-content)
+                  (goto-char (line-end-position))
+                  (org-end-of-subtree)
+                  (insert "\n" (make-string level ?*) " ")))
+               (`above
+				(org-back-to-heading)
+				(insert (make-string level ?*) " ")
+				(save-excursion (insert "\n"))))
+			 (when-let* ((todo-keyword (org-element-property :todo-keyword context))
+						 (todo-type    (org-element-property :todo-type context)))
+               (org-todo
+				(cond ((eq todo-type 'done)
+                       ;; Doesn't make sense to create more "DONE" headings
+                       (car (+org-get-todo-keywords-for todo-keyword)))
+                      (todo-keyword)
+                      ('todo)))))))
+
+		(when (org-invisible-p)
+          (org-show-hidden-entry))
+		(when (and (bound-and-true-p evil-local-mode)
+                   (not (evil-emacs-state-p)))
+          (evil-insert 1))))
+
+	(defun +org/insert-item-below (count)
+      "Inserts a new heading, table cell or item below the current one."
+      (interactive "p")
+      (dotimes (_ count) (+org--insert-item 'below)))
+
+	(defun +org/insert-item-above (count)
+      "Inserts a new heading, table cell or item above the current one."
+	  (interactive "p")
+	  (dotimes (_ count) (+org--insert-item 'above)))
     :config
-(evil-org-set-key-theme '(textobjects insert navigation additional calendar))
+	(general-define-key
+	 :keymaps 'org-mode-map
+	 :state 'insert
+	 "C-<return>"  #'+org/insert-item-below
+	 "C-S-<return>"  #'+org/insert-item-above)
+
+	(evil-org-set-key-theme '(textobjects insert navigation additional calendar))
     (require 'evil-org-agenda)
     (evil-org-agenda-set-keys))
 #+end_src
@@ -239,8 +324,8 @@ This /should/ get reset by GCMH... right?
 #+end_src
 
 ** Completion
-**** TODO Company
-I think I need to add ~company-box~? Maybe?
+**** Corfu
+GOODBYE, JOJO!
 #+begin_src elisp :tangle no
 (use-package company
     :after lsp-mode
@@ -253,7 +338,6 @@ I think I need to add ~company-box~? Maybe?
     (company-minimum-prefix-length 2)
     (company-idle-delay 0.0))
 #+end_src
-Mwahaha, time to suck the life out of poor Minad
 #+begin_src elisp
 (use-package corfu
     :straight (:files (:defaults "extensions/*")
@@ -265,6 +349,8 @@ Mwahaha, time to suck the life out of poor Minad
     (global-corfu-mode)
     :hook ((minibuffer-setup . corfu-enable-always-in-minibuffer)
 		   (corfu-history-mode . savehist-mode))
+	:custom
+	(corfu-current ((t (:background "#4E5579"))))
     :config
 	(general-define-key
 	 :states 'insert
@@ -274,6 +360,10 @@ Mwahaha, time to suck the life out of poor Minad
 	 "M-k" #'corfu-popupinfo-scroll-down
 	 "M-j" #'corfu-popupinfo-scroll-up
 	 )
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'minibuffer-mode-map
+	 "<escape>" #'abort-recursive-edit)
 
 	(defun corfu-enable-always-in-minibuffer ()
 	  "Enable Corfu in the minibuffer if Vertico is not active."
@@ -295,6 +385,54 @@ Mwahaha, time to suck the life out of poor Minad
 	(setq corfu-popupinfo-max-width 40)
 	(setq corfu-popupinfo-min-height 4)
     )
+
+(use-package kind-icon
+	:after corfu
+	:custom
+	(kind-icon-use-icons t)
+	(kind-icon-default-face 'corfu-default)
+	(kind-icon-blend-background nil)
+	(kind-icon-blend-frac 0.08)
+	(kind-icon-mapping
+	 '((array          "a"   :icon "symbol-array"       :face font-lock-type-face              :collection "vscode")
+       (boolean        "b"   :icon "symbol-boolean"     :face font-lock-builtin-face           :collection "vscode")
+       (color          "#"   :icon "symbol-color"       :face success                          :collection "vscode")
+       (command        "cm"  :icon "chevron-right"      :face default                          :collection "vscode")
+       (constant       "co"  :icon "symbol-constant"    :face font-lock-constant-face          :collection "vscode")
+       (class          "c"   :icon "symbol-class"       :face font-lock-type-face              :collection "vscode")
+       (constructor    "cn"  :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
+       (enum           "e"   :icon "symbol-enum"        :face font-lock-builtin-face           :collection "vscode")
+       (enummember     "em"  :icon "symbol-enum-member" :face font-lock-builtin-face           :collection "vscode")
+       (enum-member    "em"  :icon "symbol-enum-member" :face font-lock-builtin-face           :collection "vscode")
+       (event          "ev"  :icon "symbol-event"       :face font-lock-warning-face           :collection "vscode")
+       (field          "fd"  :icon "symbol-field"       :face font-lock-variable-name-face     :collection "vscode")
+       (file           "f"   :icon "symbol-file"        :face font-lock-string-face            :collection "vscode")
+       (folder         "d"   :icon "folder"             :face font-lock-doc-face               :collection "vscode")
+       (function       "f"   :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
+       (interface      "if"  :icon "symbol-interface"   :face font-lock-type-face              :collection "vscode")
+       (keyword        "kw"  :icon "symbol-keyword"     :face font-lock-keyword-face           :collection "vscode")
+       (macro          "mc"  :icon "lambda"             :face font-lock-keyword-face)
+       (magic          "ma"  :icon "lightbulb-autofix"  :face font-lock-builtin-face           :collection "vscode")
+       (method         "m"   :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
+       (module         "{"   :icon "file-code-outline"  :face font-lock-preprocessor-face)
+       (numeric        "nu"  :icon "symbol-numeric"     :face font-lock-builtin-face           :collection "vscode")
+       (operator       "op"  :icon "symbol-operator"    :face font-lock-comment-delimiter-face :collection "vscode")
+       (param          "pa"  :icon "gear"               :face default                          :collection "vscode")
+       (property       "pr"  :icon "symbol-property"    :face font-lock-variable-name-face     :collection "vscode")
+       (reference      "rf"  :icon "library"            :face font-lock-variable-name-face     :collection "vscode")
+       (snippet        "S"   :icon "symbol-snippet"     :face font-lock-string-face            :collection "vscode")
+       (string         "s"   :icon "symbol-string"      :face font-lock-string-face            :collection "vscode")
+       (struct         "%"   :icon "symbol-structure"   :face font-lock-variable-name-face     :collection "vscode")
+       (text           "tx"  :icon "symbol-key"         :face font-lock-doc-face               :collection "vscode")
+       (typeparameter  "tp"  :icon "symbol-parameter"   :face font-lock-type-face              :collection "vscode")
+       (type-parameter "tp"  :icon "symbol-parameter"   :face font-lock-type-face              :collection "vscode")
+       (unit           "u"   :icon "symbol-ruler"       :face font-lock-constant-face          :collection "vscode")
+       (value          "v"   :icon "symbol-enum"        :face font-lock-builtin-face           :collection "vscode")
+       (variable       "va"  :icon "symbol-variable"    :face font-lock-variable-name-face     :collection "vscode")
+       (t              "."   :icon "question"           :face font-lock-warning-face           :collection "vscode")))
+	:config
+	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+	)
 #+end_src
 
 **** TODO Other bullshit
@@ -332,11 +470,18 @@ Gotta figure out how to add minibuffer bindings so I can scroll (see [[https://g
     :config
 	(general-define-key
 	 :keymaps 'vertico-map
+	 :states 'insert
 	 "C-j" #'vertico-next
 	 "C-k" #'vertico-previous
-	 "<escape>" #'minibuffer-keyboard-quit
 	 "RET" #'vertico-directory-enter
 	 "DEL" #'vertico-directory-delete-char
+	 )
+	(general-define-key
+	 :keymaps 'vertico-map
+	 :states 'normal
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "<escape>" #'abort-recursive-edit
 	 )
     (vertico-mode))
 
@@ -449,43 +594,43 @@ There's not a particular reason I don't use Emacs built-ins, but caution must be
 (use-package org
     :init
   (setq org-directory "~/emacs/org")
-	:config
-	(setq org-src-preserve-indentation t
-	      org-src-fontify-natively t
-	      org-export-latex-listings t
-	      org-export-with-smart-quotes t
-	      org-latex-listings 'listings
-	      org-latex-prefer-user-labels t
-	      org-confirm-babel-evaluate nil
-	      org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
-	      org-startup-folded t
-	      org-cycle-include-plain-lists 'integrate
-	      org-agenda-skip-scheduled-if-done t
-	      org-use-sub-superscripts "{}"
-	      ;; org-modern
-	      org-auto-align-tags nil
-	      org-tags-column 0
-	      org-catch-invisible-edits 'show-and-error
-	      org-special-ctrl-a/e t
-	      org-insert-heading-respect-content t
-	      org-hide-emphasis-markers t
-	      org-pretty-entities t
-	      org-ellipsis "…"
-	      org-agenda-tags-column 0
-	      org-agenda-block-separator ?─
-	      org-agenda-time-grid
-	      '((daily today require-timed)
-		(800 1000 1200 1400 1600 1800 2000)
-		" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-	      org-agenda-current-time-string
-	      "⭠ now ─────────────────────────────────────────────────")
-	(add-to-list 'org-latex-packages-alist '("" "listings"))
-	:custom
-	(org-agenda-files '("~/emacs/org/agenda.org")))
-  (add-hook 'emacs-startup-hook
-	    (lambda ()
-	      (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-		     (find-file-noselect "~/.dotfiles/emacs/emacs/emacs_profiles/vanilla/config.org"))))
+  :config
+  (setq org-src-preserve-indentation t
+	    org-src-fontify-natively t
+	    org-export-latex-listings t
+	    org-export-with-smart-quotes t
+	    org-latex-listings 'listings
+	    org-latex-prefer-user-labels t
+	    org-confirm-babel-evaluate nil
+	    org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+	    org-startup-folded t
+	    org-cycle-include-plain-lists 'integrate
+	    org-agenda-skip-scheduled-if-done t
+	    org-use-sub-superscripts "{}"
+	    ;; org-modern
+	    org-auto-align-tags nil
+	    org-tags-column 0
+	    org-catch-invisible-edits 'show-and-error
+	    org-special-ctrl-a/e t
+	    org-insert-heading-respect-content t
+	    org-hide-emphasis-markers t
+	    org-pretty-entities t
+	    org-ellipsis "…"
+	    org-agenda-tags-column 0
+	    org-agenda-block-separator ?─
+	    org-agenda-time-grid
+	    '((daily today require-timed)
+		  (800 1000 1200 1400 1600 1800 2000)
+		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+	    org-agenda-current-time-string
+	    "⭠ now ─────────────────────────────────────────────────")
+  (add-to-list 'org-latex-packages-alist '("" "listings"))
+  :custom
+  (org-agenda-files '("~/emacs/org/agenda.org")))
+(add-hook 'emacs-startup-hook
+	      (lambda ()
+			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+				   (find-file-noselect "~/.dotfiles/emacs/emacs/emacs_profiles/vanilla/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -566,7 +711,7 @@ event of an error or nonlocal exit."
 #+end_src
 
 *** Python
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package lsp-pyright
     :ensure t
     :hook (python-mode . (lambda ()
@@ -692,37 +837,42 @@ I started off trying to build lldb-vscode from source, only to immediately reali
 #+end_src
 
 *** TODO LSP
-Check to see if lsp-ui webkit uses markdown or not
+Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Corfu wiki]] for setup)
 #+begin_src elisp
 (use-package lsp-mode
-    :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "C-c l")
-  :hook ((cc-mode . lsp-deferred)
-	 (python-mode . lsp-deferred)
-	 (zig-mode . lsp-deferred)
-	 (rustic-mode . lsp-deferred))
-  ;; If you want which-key integration
-  ;;(lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred)
-  :config
-  (setq read-process-output-max (* 1024 1024)) ; 1mb
-  
-  (setq lsp-enable-symbol-highlighting nil)
-  (setq lsp-headerline-breadcrumb-enable nil)
-  (setq lsp-ui-sideline-enable nil)
-  (setq lsp-modeline-code-actions-enable nil)
-  (setq lsp-modeline-diagnostics-enable nil))
+	:init
+  (defun shor/lsp-mode-setup-completion ()
+	(setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+		  '(flex)))
+  :hook
+  (lsp-completion-mode . my/lsp-mode-setup-completion)
+;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+;;  (setq lsp-keymap-prefix "C-c l")
+;;:hook ((cc-mode . lsp-deferred)
+;;	   (python-mode . lsp-deferred)
+;;	   (zig-mode . lsp-deferred)
+;;	   (rustic-mode . lsp-deferred))
+;;:commands (lsp lsp-deferred)
+:custom
+(lsp-completion-provider :none) ;; corfu
+:config
+(setq read-process-output-max (* 1024 1024)) ; 1mb
 
-(use-package lsp-ui
-    :commands lsp-ui-mode
-    :config
-    (setq lsp-ui-doc-use-webkit t))
-(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs
-    :commands lsp-treemacs-errors-list
-    :config
-    (lsp-treemacs-sync-mode 1))
+(setq lsp-enable-symbol-highlighting nil)
+(setq lsp-headerline-breadcrumb-enable nil)
+(setq lsp-ui-sideline-enable nil)
+(setq lsp-modeline-code-actions-enable nil)
+(setq lsp-modeline-diagnostics-enable nil))
+
+;;(use-package lsp-ui
+;;    :commands lsp-ui-mode
+;;    :config
+;;    (setq lsp-ui-doc-use-webkit t))
+;;(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+;;(use-package lsp-treemacs
+;;    :commands lsp-treemacs-errors-list
+;;    :config
+;;    (lsp-treemacs-sync-mode 1))
 #+end_src
 
 *** Treesitter
@@ -865,8 +1015,11 @@ For visual-line-mode
 (add-hook 'after-init-hook 'fonts/default)
 #+end_src
 Ok, something in my Emacs config is definitely messing up native scroll.
-We add rainbow-mode to color hex codes, like #003b6f.
 #+begin_src elisp
+(setq fast-but-imprecise-scrolling t)
+#+end_src
+We add rainbow-mode to color hex codes, like #003b6f.
+#+begin_src elisp :tangle no
 (use-package rainbow-mode
     :config
   (rainbow-mode 1))
@@ -874,9 +1027,43 @@ We add rainbow-mode to color hex codes, like #003b6f.
 
 **** TODO Splash Screen
 I use this because of yabai weirdness. Also, I want to add a proper splash screen.
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (defun use-fancy-splash-screens-p () t)
 #+end_src
+Inspired by [[https://xenodium.com/emacs-a-welcoming-experiment/][Xenodium]].
+#+begin_src elisp
+(defun shor/show-welcome-buffer ()
+  "Show *Dash* buffer."
+  (with-current-buffer (get-buffer-create "*Dash*")
+    (setq truncate-lines t)
+    (let* ((buffer-read-only)
+           (image-path "~/emacs/banner.svg")
+           (image (create-image image-path))
+           (size (image-size image))
+           (height (cdr size))
+           (width (car size))
+           (top-margin (floor (/ (- (window-height) height) 2)))
+           (left-margin (floor (/ (- (window-width) width) 2)))
+           (prompt-title "Welcome to Emacs!"))
+      (erase-buffer)
+      (setq mode-line-format nil)
+      (goto-char (point-min))
+      (insert (make-string top-margin ?\n ))
+      (insert (make-string left-margin ?\ ))
+      (insert-image image)
+      (insert "\n\n\n")
+      (insert (make-string (floor (/ (- (window-width) (string-width prompt-title)) 2)) ?\ ))
+      (insert prompt-title))
+    (read-only-mode +1)
+    (switch-to-buffer (current-buffer))))
+
+(setq initial-scratch-message nil)
+(setq inhibit-startup-screen t)
+
+(add-hook 'emacs-startup-hook (lambda ()
+								(when (display-graphic-p)
+								  (shor/show-welcome-buffer))))
+									#+end_src
 
 ** TODO Deprecated
 To be replaced with EAF
