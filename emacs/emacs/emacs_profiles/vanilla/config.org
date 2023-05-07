@@ -3,10 +3,10 @@
 #+PROPERTY: header-args:elisp :tangle "~/emacs/emacs_profiles/vanilla/init.el"
 
 #+begin_quote
-These are your father's parentheses. Elegant weapons from a more... civilized era. --- xkcd
+These are your father's parentheses. Elegant weapons for a more... civilized age. --- xkcd
 #+end_quote
 I use Mitsuharu's Mac port of Emacs 28.2, with the following build flags:
-#+begin_src bash
+#+begin_src zsh
 brew tap railwaycat/emacsmacport
 brew install emacs-mac --with-native-compilation --with-librsvg --with-natural-title-bar --with-xwidgets
 #+end_src
@@ -191,16 +191,20 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
     (setq evil-want-C-u-scroll t)
-    (setq evil-undo-system 'undo-redo)
+	(setq evil-move-cursor-back nil)
+	(setq evil-undo-system 'undo-redo)
 	(setq evil-want-minibuffer t)
-    ;; disable state change echo
+	;; disable state change echo
+	;; consider actually unbinding the echo
     (setq evil-normal-state-message nil)
     (setq evil-insert-state-message nil)
     (setq evil-visual-state-message nil)
     (setq evil-replace-state-message nil)
     (setq evil-emacs-state-message nil)
     :config 
-    (evil-mode 1))
+	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
+	(evil-ex-define-cmd "bk" "bkill")
+	(evil-mode 1))
 #+end_src
 This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
 #+begin_src elisp
@@ -208,7 +212,6 @@ This has caused a huge pain in my backside because of how damn hard it is to ove
     :after evil
 	:demand
 	:config
-	;;(delete 'corfu evil-collection-mode-list)
 	(setq evil-collection-setup-minibuffer t)
     (evil-collection-init))
 #+end_src
@@ -325,19 +328,6 @@ This /should/ get reset by GCMH... right?
 
 ** Completion
 **** Corfu
-GOODBYE, JOJO!
-#+begin_src elisp :tangle no
-(use-package company
-    :after lsp-mode
-    :hook (prog-mode . company-mode)
-    :bind (:map company-active-map
-		("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 2)
-    (company-idle-delay 0.0))
-#+end_src
 #+begin_src elisp
 (use-package corfu
     :straight (:files (:defaults "extensions/*")
@@ -345,13 +335,14 @@ GOODBYE, JOJO!
 								 corfu-popupinfo
 								 corfu-history
 								 ))
-    :init
-    (global-corfu-mode)
-    :hook ((minibuffer-setup . corfu-enable-always-in-minibuffer)
+    :hook ((after-init . global-corfu-mode)
+		   (minibuffer-setup . corfu-enable-always-in-minibuffer)
 		   (corfu-history-mode . savehist-mode))
-	:custom
-	(corfu-current ((t (:background "#4E5579"))))
     :config
+	(with-eval-after-load 'doom-themes
+	  (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
+	(with-eval-after-load 'savehist
+	  (add-to-list 'savehist-additional-variables 'corfu-history))
 	(general-define-key
 	 :states 'insert
 	 :keymaps 'corfu-map
@@ -378,13 +369,73 @@ GOODBYE, JOJO!
 	(setq corfu-max-width 40)
 
 	(corfu-history-mode)
-    ;;(add-to-list 'savehist-additional-variables 'corfu-history)
 
 	(corfu-popupinfo-mode)
 	(setq corfu-popupinfo-delay 0.5)
 	(setq corfu-popupinfo-max-width 40)
 	(setq corfu-popupinfo-min-height 4)
     )
+#+end_src
+
+**** Vertico
+#+begin_src elisp
+(use-package vertico
+    :straight (vertico :files (:defaults "extensions/*")
+					   :includes (
+								  vertico-directory
+								  vertico-repeat
+								  ;; vertico-indexed
+								  ;; vertico-flat
+								  ;; vertico-grid
+								  ;; vertico-mouse
+								  ;; vertico-quick
+								  ;; vertico-buffer
+								  ;; vertico-reverse
+								  ;; vertico-multiform
+								  ;; vertico-unobtrusive
+								  ))
+	:demand t
+	:hook ((minibuffer-setup . vertico-repeat-save)
+		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+    :init
+    (setq vertico-cycle nil)
+    (setq read-file-name-completion-ignore-case t
+		  read-buffer-completion-ignore-case t
+		  completion-ignore-case t)
+    (setq read-extended-command-predicate #'command-completion-default-include-p)
+    :config
+	(general-define-key
+	 :keymaps 'vertico-map
+	 :states 'insert
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "C-u" #'vertico-scroll-down
+	 "C-d" #'vertico-scroll-up
+	 "RET" #'vertico-directory-enter
+	 "DEL" #'vertico-directory-delete-char
+	 )
+	(general-define-key
+	 :keymaps 'vertico-map
+	 :states 'normal
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "C-u" #'vertico-scroll-down
+	 "C-d" #'vertico-scroll-up
+	 "<escape>" #'abort-recursive-edit
+	 )
+    (vertico-mode))
+#+end_src
+
+**** Icons
+#+begin_src elisp
+(use-package all-the-icons)
+
+(use-package all-the-icons-completion
+    :after (marginalia all-the-icons)
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+	:init
+	(all-the-icons-completion-mode))
 
 (use-package kind-icon
 	:after corfu
@@ -395,7 +446,7 @@ GOODBYE, JOJO!
 	(kind-icon-blend-frac 0.08)
 	(kind-icon-mapping
 	 '((array          "a"   :icon "symbol-array"       :face font-lock-type-face              :collection "vscode")
-       (boolean        "b"   :icon "symbol-boolean"     :face font-lock-builtin-face           :collection "vscode")
+	   (boolean        "b"   :icon "symbol-boolean"     :face font-lock-builtin-face           :collection "vscode")
        (color          "#"   :icon "symbol-color"       :face success                          :collection "vscode")
        (command        "cm"  :icon "chevron-right"      :face default                          :collection "vscode")
        (constant       "co"  :icon "symbol-constant"    :face font-lock-constant-face          :collection "vscode")
@@ -435,80 +486,25 @@ GOODBYE, JOJO!
 	)
 #+end_src
 
-**** TODO Other bullshit
+**** TODO Other Stuff
 At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
-Also, I need to look into getting minibuffer search results saved across Emacs sessions. Also maybe using a different algorithm, like Mozilla's frecency
-Gotta figure out how to add minibuffer bindings so I can scroll (see [[https://github.com/doomemacs/doomemacs/blob/master/modules/config/default/+evil-bindings.el][Doom]])
+Marginalia supposedly must be loaded at init.
 #+begin_src elisp
 (use-package prescient)
-
-(use-package vertico
-    :straight (vertico :files (:defaults "extensions/*")
-					   :includes (
-								  vertico-directory
-								  vertico-repeat
-								  ;; vertico-indexed
-								  ;; vertico-flat
-								  ;; vertico-grid
-								  ;; vertico-mouse
-								  ;; vertico-quick
-								  ;; vertico-buffer
-								  ;; vertico-reverse
-								  ;; vertico-multiform
-								  ;; vertico-unobtrusive
-								  ))
-	:demand t
-	:hook ((minibuffer-setup . vertico-repeat-save)
-		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
-
-    :init
-    (setq vertico-cycle nil)
-    (setq read-file-name-completion-ignore-case t
-		  read-buffer-completion-ignore-case t
-		  completion-ignore-case t)
-    (setq read-extended-command-predicate #'command-completion-default-include-p)
-    :config
-	(general-define-key
-	 :keymaps 'vertico-map
-	 :states 'insert
-	 "C-j" #'vertico-next
-	 "C-k" #'vertico-previous
-	 "RET" #'vertico-directory-enter
-	 "DEL" #'vertico-directory-delete-char
-	 )
-	(general-define-key
-	 :keymaps 'vertico-map
-	 :states 'normal
-	 "C-j" #'vertico-next
-	 "C-k" #'vertico-previous
-	 "<escape>" #'abort-recursive-edit
-	 )
-    (vertico-mode))
 
 (use-package consult)
 
 (use-package marginalia
-    :ensure t
     :init
     (marginalia-mode))
 
-(use-package all-the-icons)
-
-(use-package all-the-icons-completion
-    :after (marginalia all-the-icons)
-    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-	:init
-	(all-the-icons-completion-mode))
-
 (use-package embark
-    :ensure t
     :bind
     (("C-." . embark-act)         ;; pick some comfortable binding
      ("C-;" . embark-dwim)        ;; good alternative: M-.
      ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
 
     :init
-
     ;; Optionally replace the key help with a completing-read interface
     (setq prefix-help-command #'embark-prefix-help-command)
 
@@ -525,9 +521,8 @@ Gotta figure out how to add minibuffer bindings so I can scroll (see [[https://g
 				   nil
 				   (window-parameters (mode-line-format . none)))))
 
-;; Consult users will also want the embark-consult package.
 (use-package embark-consult
-    :ensure t ; only need to install it, embark loads it after consult if found
+    :ensure t
     :hook
     (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
@@ -586,7 +581,80 @@ Right now I'm using Gnus, but I think I want to switch to something like mu4e. O
 #+end_src
 I also need to absorb my Gnus config into here.
 *** TODO IRC
-I want to rice ERC... one day...
+Well, I see IRC hasn't gotten any easier to use.
+#+begin_src elisp
+(use-package erc
+	:commands (erc erc-tls)
+	:config
+	(defvar erc-server-list
+	  `(,`("Libera.Chat" :server "irc.libera.chat"
+						 :port 6697
+						 :client-certificate ,(expand-file-name "erc/libera.pem" user-emacs-directory))
+		  ,`("OFTC" :server "irc.oftc.net"
+					:port 6697
+					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
+
+	(defun erc-join-server ()
+	  (interactive)
+	  (let* ((server (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list)))
+			 (server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
+			 (certs (plist-get server-args :client-certificate)))
+		(if-let ((erc-buffer (get-buffer server)))
+			(switch-to-buffer erc-buffer)
+		  (progn
+			(unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
+			  (plist-put server-args :client-certificate (list certs certs)))
+			(apply 'erc-tls server-args)))))
+
+	(general-define-key
+	 :keymaps 'erc-mode-map
+	 "<up>" #'erc-previous-command
+	 "<down>" #'erc-next-command)
+	(define-advice erc-previous-command (:before-while () no-cycle)
+	  (or (not erc-input-ring-index) (not (equal (ring-length erc-input-ring) (+ 1 erc-input-ring-index)))))
+	(define-advice erc-next-command (:before-while () no-cycle)
+	  erc-input-ring-index)
+
+	(use-package erc-sasl
+		:straight (:type built-in)
+		:config
+		(setq erc-sasl-mechanism 'external))
+	(use-package erc-services
+		:straight (:type built-in)
+		:init
+		;;(setq erc-prompt-for-nickserv-password nil)
+		;;(setq erc-use-auth-source-for-nickserv-password nil)
+		(erc-services-mode 1)
+		)
+
+	(setq erc-nick "Shorden")
+	(setq erc-autojoin-timing 'ident)
+	(setq erc-kill-buffer-on-part t)
+	(setq erc-kill-queries-on-quit t)
+	(setq erc-kill-server-buffer-on-quit t)
+;;	(setq erc-auth-source-server-function nil)
+	;(setq erc-prompt-for-password nil)
+	(setq erc-autojoin-channels-alist '(("libera" "#emacs") ("oftc" "#llvm"))))
+#+end_src
+Instead of gnarsty password-based auth, we can use a certificate to authenticate. For some reason, OFTC has to use SHA-1 instead of SHA-256.
+#+begin_src zsh :dir "~/emacs/emacs_profiles/vanilla" :eval no
+mkdir -p erc
+cd erc
+openssl req -x509 -new -newkey rsa:4096 -sha256 -days 1825 -nodes -out libera.pem -keyout libera.pem
+openssl req -x509 -new -newkey rsa:2048 -sha1 -days 1825 -nodes -out oftc.pem -keyout oftc.pem
+#+end_src
+And then once connected, run
+#+begin_src erc :eval no
+/msg NickServ CERT ADD
+#+end_src
+Unrelated: figure out a better place to stick this
+#+begin_src elisp
+(defun advice-unadvice (sym)
+  "Remove all advices from symbol SYM."
+  (interactive "aFunction symbol: ")
+  (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
+#+end_src
+
 ** Language
 *** TODO Org
 There's not a particular reason I don't use Emacs built-ins, but caution must be exercised to avoid clobbering the built-in and MELPA versions of Org.
@@ -595,6 +663,7 @@ There's not a particular reason I don't use Emacs built-ins, but caution must be
     :init
   (setq org-directory "~/emacs/org")
   :config
+
   (setq org-src-preserve-indentation t
 	    org-src-fontify-natively t
 	    org-export-latex-listings t
@@ -625,6 +694,7 @@ There's not a particular reason I don't use Emacs built-ins, but caution must be
 	    org-agenda-current-time-string
 	    "⭠ now ─────────────────────────────────────────────────")
   (add-to-list 'org-latex-packages-alist '("" "listings"))
+
   :custom
   (org-agenda-files '("~/emacs/org/agenda.org")))
 (add-hook 'emacs-startup-hook
@@ -641,13 +711,13 @@ And now to make it *pretty*
   (org-modern-mode . fonts/org)
   (org-cdlatex-mode . fonts/literate-programming)
   :config
-  (setq org-modern-todo-faces
-	'(("WAIT" :background "orange red" :foreground "white")
-		("PAST" :background "dark red" :foreground "white")))
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
 				 ("WAIT" . "orange red")
 				 ("DONE" . org-done)
 				 ("PAST" . "dark red"))))
+  (setq org-modern-todo-faces
+	'(("WAIT" :background "orange red" :foreground "white")
+		("PAST" :background "dark red" :foreground "white")))
   ;;:custom-face
   ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
@@ -709,9 +779,20 @@ event of an error or nonlocal exit."
 ; Injecting the relevant advice into the org-fast-todo-selection function
 (advice-add #'org-fast-todo-selection :around #'hd/org-todo-same-window)
 #+end_src
+Now for Babel:
+#+begin_src elisp
+(use-package org
+	:config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '(
+	 (emacs-lisp . t)
+	 (shell . t)
+	 )))
+#+end_src
 
 *** Python
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package lsp-pyright
     :ensure t
     :hook (python-mode . (lambda ()
@@ -743,6 +824,14 @@ Add label indentation + DAP stuff
 (defvaralias 'c-basic-offset 'tab-width)
 (defvaralias 'cperl-indent-level 'tab-width)
 (setq-default c-default-style "k&r")
+#+end_src
+
+*** Markdown
+#+begin_src elisp
+(use-package markdown-mode
+	:config
+(with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1)))))))
+)
 #+end_src
 
 ** Tools
@@ -844,25 +933,24 @@ Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Cor
   (defun shor/lsp-mode-setup-completion ()
 	(setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
 		  '(flex)))
+  :custom
+  (lsp-completion-provider :none) ;; corfu
   :hook
-  (lsp-completion-mode . my/lsp-mode-setup-completion)
-;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-;;  (setq lsp-keymap-prefix "C-c l")
-;;:hook ((cc-mode . lsp-deferred)
-;;	   (python-mode . lsp-deferred)
-;;	   (zig-mode . lsp-deferred)
-;;	   (rustic-mode . lsp-deferred))
-;;:commands (lsp lsp-deferred)
-:custom
-(lsp-completion-provider :none) ;; corfu
-:config
-(setq read-process-output-max (* 1024 1024)) ; 1mb
+  (lsp-completion-mode . shor/lsp-mode-setup-completion)
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  ;;  (setq lsp-keymap-prefix "C-c l")
+  ;;:hook ((cc-mode . lsp-deferred)
+  ;;	   (python-mode . lsp-deferred)
+  ;;	   (zig-mode . lsp-deferred)
+  ;;	   (rustic-mode . lsp-deferred))
+  :commands (lsp lsp-deferred)
+  :config
+  (setq read-process-output-max (* 1024 1024)) ; 1mb
 
-(setq lsp-enable-symbol-highlighting nil)
-(setq lsp-headerline-breadcrumb-enable nil)
-(setq lsp-ui-sideline-enable nil)
-(setq lsp-modeline-code-actions-enable nil)
-(setq lsp-modeline-diagnostics-enable nil))
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-modeline-diagnostics-enable nil))
 
 ;;(use-package lsp-ui
 ;;    :commands lsp-ui-mode
@@ -885,16 +973,24 @@ I WANT TO FUCKING PARSE MY CODE'S AST AS FAST AS POSSIBLE
 (use-package tree-sitter-langs)
 #+end_src
 
+*** Help
+TODO move elsewhere (maybe an editor group?)
+#+begin_src elisp
+(use-package helpful
+	:general (:keymaps 'global
+					   "C-h f" #'helpful-callable
+					   "C-h F" #'helpful-function
+					   "C-h v" #'helpful-variable
+					   "C-h k" #'helpful-key
+					   "C-h x" #'helpful-command)
+	:config
+	(setq helpful-max-buffers 1))
+#+end_src
+
 ** UI
 *** Title Bar
-Prettifies the window title. Might be problematic for yabai, though...
-#+begin_src elisp
-(setq-default frame-title-format
-	      '((:eval (if (buffer-file-name)
-			   (file-name-nondirectory
-			    (buffer-file-name)) "%b"))
-		(:eval (if (buffer-modified-p)
-			   " •" " -")) " Emacs"))
+#+begin_src elisp :tangle no
+(setq-default frame-title-format "Emacs")
 #+end_src
 This is required to get the compilation flag ~--with-transparent-title-bar~ to behave properly.
 #+begin_src bash
