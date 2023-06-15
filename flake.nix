@@ -11,14 +11,9 @@
 
 		hyprland.url = "github:hyprwm/Hyprland";
 
-		sops-nix = {
-			url = "github:Mic92/sops-nix";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
-
 		emacs-overlay.url = "github:nix-community/emacs-overlay";
-	}; #outputs = { self, nixpkgs, ... }@attrs:	I've also seen inputs@ in use
-	outputs = inputs @ { self, nixpkgs, home-manager, hyprland, ... }: #, sops-nix }:
+	};
+	outputs = inputs @ { self, nixpkgs, home-manager, hyprland, ... }:
 		let 
 			pkgs = import nixpkgs {
 				config.allowUnfree = true;

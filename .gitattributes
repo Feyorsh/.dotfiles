@@ -1,0 +1,3 @@
+secrets/** filter=git-crypt diff=git-crypt
+hosts/ruby/work.nix filter=git-crypt diff=git-crypt
+hosts/ruby/firmware/** filter=git-crypt diff=git-crypt
