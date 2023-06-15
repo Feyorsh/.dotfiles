@@ -3,25 +3,33 @@
 
 	inputs = {
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-		#t2-hardware.url = "github:kekrby/nixos-hardware?dir=apple/t2";
-	};
 
-	outputs = { self, nixpkgs, ... }@attrs:
-		let 
-			system = "x86_64-linux";
-		pkgs = import nixpkgs {
-			inherit system;
-			config.allowUnfree = true;
+		home-manager = {
+			url = "github:nix-community/home-manager";
+			inputs.nixpkgs.follows = "nixpkgs";
 		};
-		lib = nixpkgs.lib;
-		in {
-			nixosConfigurations = {
-				ruby = lib.nixosSystem {
-					inherit system;
-					#specialArgs = attrs;
-					modules = [ ./configuration.nix ];
-				};
-			};
 
+		hyprland.url = "github:hyprwm/Hyprland";
+
+		sops-nix = {
+			url = "github:Mic92/sops-nix";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+		emacs-overlay.url = "github:nix-community/emacs-overlay";
+	}; #outputs = { self, nixpkgs, ... }@attrs:	I've also seen inputs@ in use
+	outputs = inputs @ { self, nixpkgs, home-manager, hyprland, ... }: #, sops-nix }:
+		let 
+			pkgs = import nixpkgs {
+				config.allowUnfree = true;
+				overlays = [ (import self.inputs.emacs-overlay) ];
+			};
+			lib = nixpkgs.lib;
+		in {
+			nixosConfigurations =
+				import ./hosts {
+					inherit (nixpkgs) lib;
+					inherit inputs pkgs home-manager hyprland;
+				};
 		};
 }

@@ -1,0 +1,86 @@
+#+TITLE: NixOS Rice
+#+AUTHOR: Shorden
+#+begin_quote
+If the words "declarative", "generational", and "immutable" don't make you fully erect, you're considering NixOS for the wrong reasons. -- hlissner
+#+end_quote
+
+* GUI
+** eww
+see Aylur's dotfiles
+see end-4's dotfiles
+
+** rofi
+Add a theme, icons
+
+** dunst
+Fix browser notifications (icons, sounds, duration)
+My cursor appears larger on dunst and rofi, which are rendered as layers, not windows. Check if I can repro this on sway
+
+* hyprland
+** trackpad
+change acceleration profile
+see libinput-gestures or fusuma only if hypr-native solution doesn't work
+get rid of mouse usage in nvim
+
+** keybindings
+kmonad, actkbd for future reference
+	
+* Services
+** ssh
+Figure out ssh-agent (pretty sure we just add ssh-agent to either hyprland (boo) or login shell)
+
+** Audio
+Dogshit whenever we start pavucontrol (maybe try installing permanently?)
+Actually use Easyeffects
+Firefox fucks up the default audio source, so bye bye firefox!
+
+* NixOS
+Create good flake structure (for multiple hosts, for config, etc)
+Figure out how to use home-manager
+
+** Packages
+- Shell (probably zsh)
+- Emacs
+  - Compiled binaries like vterm and pdf-tools
+- Git config
+- Terminal emulator rice (consider switching to kitty) (lol jk consider switching back to wezterm)
+- Tmux?
+
+** Secrets
+Tried sops, it was annoying. Try agenix next
+Tried agenix, it was somehow even more annoying
+Now using git-crypt, because I really only care about encrypting things on this (public) repo. Solutions like sops-nix and agenix are more Hashicorp Vault-esque in that they cater to secret strings. With git-crypt, I can encrypt any file and use it at build time (including Nix files).
+
+** Work
+Kerberos: krb5 nix package
+
+
+* How to...
+** VPN
+*** OpenVPN:
+#+begin_src shell
+sudo openvpn <CONFIG_FILE>
+#+end_src
+
+*** NetworkManager
+#+begin_src shell
+sudo nmcli connection import type openvpn file <CONFIG_FILE>
+nmcli con up id <CONFIG_FILE_PREFIX> --ask
+#+end_src
+
+** Bluetooth
+#+begin_src shell
+[bluetoothctl] default-agent
+[bluetoothctl] power on
+[bluetoothctl] scan on
+<find device MAC>
+[bluetoothctl] scan off
+[bluetoothctl] pair <>
+[bluetoothctl] connect <>
+[bluetoothctl] (optional) trust <>
+#+end_src
+
+** SSH
+#+begin_src shell
+exec ssh-agent bash
+#+end_src
