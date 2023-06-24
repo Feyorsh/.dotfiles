@@ -5,9 +5,10 @@ If the words "declarative", "generational", and "immutable" don't make you fully
 #+end_quote
 
 * GUI
-** eww
+** TODO eww
 see Aylur's dotfiles
 see end-4's dotfiles
+eww no longer builds in nixpkgs due to the deprecation of ~box_syntax~ in Rust nightly (see [[https://github.com/elkowar/eww/commit/fba770255dd72db8301b5f51ef50ab59e7746515][eww]] for details), so use eww's flake instead
 
 ** rofi
 Add a theme, icons
@@ -54,8 +55,11 @@ Now using git-crypt, because I really only care about encrypting things on this 
 ** Work
 Kerberos: krb5 nix package
 
+* Emacs
+(yes I know I have a separate config.org with TODOs, this is for more pressing concerns)
+[[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][ligatures]]
 
-* How to...
+* How to
 ** VPN
 *** OpenVPN:
 #+begin_src shell

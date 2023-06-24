@@ -142,6 +142,16 @@ I will remove this... one day...
 ;;  (load custom-file))
 #+end_src
 
+** Sane Defaults
+#+begin_src elisp
+(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
+  "Create parent directory if not exists while visiting file."
+  (unless (file-exists-p filename)
+    (let ((dir (file-name-directory filename)))
+      (unless (file-exists-p dir)
+        (make-directory dir t)))))
+#+end_src
+
 * Packages
 ** Keybinds
 I feel like this is a really cool package, I just don't have the elisp-fu to take full advantage of it.
@@ -389,8 +399,7 @@ Mwahaha, time to suck the life out of poor Minad
        (variable       "va"  :icon "symbol-variable"    :face font-lock-variable-name-face     :collection "vscode")
        (t              "."   :icon "question"           :face font-lock-warning-face           :collection "vscode")))
 	:config
-	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-	)
+	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 #+end_src
 
 **** TODO Other stuff
@@ -400,34 +409,37 @@ Marginalia supposedly must be loaded at init.
 #+begin_src elisp
 (use-package prescient)
 
-(use-package consult)
+(use-package consult
+	:general
+  (:keymaps 'global
+			"C-x b" #'consult-buffer))
 
 (use-package marginalia
     :init
-    (marginalia-mode))
+  (marginalia-mode))
 
 (use-package embark
     :bind
-    (("C-." . embark-act)         ;; pick some comfortable binding
-     ("C-;" . embark-dwim)        ;; good alternative: M-.
-     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
 
-    :init
-    ;; Optionally replace the key help with a completing-read interface
-    (setq prefix-help-command #'embark-prefix-help-command)
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
 
-    ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
-    ;; strategy, if you want to see the documentation from multiple providers.
-    (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
-    ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
 
-    :config
+  :config
 
-    ;; Hide the mode line of the Embark live/completions buffers
-    (add-to-list 'display-buffer-alist
-				 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-				   nil
-				   (window-parameters (mode-line-format . none)))))
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+			   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+				 nil
+				 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
     :ensure t
@@ -700,7 +712,7 @@ Now for Babel:
 #+end_src
 
 *** Python
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package lsp-pyright
     :ensure t
     :hook (python-mode . (lambda ()
@@ -708,8 +720,13 @@ Now for Babel:
 			   (lsp-deferred))))
 #+end_src
 
-*** Zig
+*** TODO Zig
 Panic because chals are due soon 😰
+Add a setting such that ~zig run~ creates an exe in the expected place, not the .cache directory
+#+begin_src elisp
+(use-package zig-mode)
+#+end_src
+
 *** TODO Rust
 Add DAP stuff + make sure rustic works
 #+begin_src elisp
@@ -743,9 +760,16 @@ Add label indentation + DAP stuff
 )
 #+end_src
 
+*** TODO Nix
+#+begin_src elisp
+(use-package nix-mode
+	:init
+  (add-hook 'nix-mode-hook (lambda () (indent-tabs-mode -1))))
+#+end_src
+
 ** Tools
 *** Terminal
-Vterm works really well; I could always switch to eshell but I like fishy
+Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
     :config
@@ -753,9 +777,9 @@ Vterm works really well; I could always switch to eshell but I like fishy
 #+end_src
 
 *** TODO Dired
-Switched to Dirvish, haven't looked back. Ty to Sun I for reccing ranger
+Switched to Dirvish, +haven't looked back+ haven't seen much lol. Ty to Sun I for reccing ranger
 Need to make an evil mode map for dirvish (add to evil-collection)
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package dirvish
     :custom
   (dirvish-quick-access-entries
@@ -784,11 +808,27 @@ Got to make sure all these goodies are installed:
 brew install coreutils fd poppler ffmpegthumbnailer mediainfo imagemagick
 #+end_src
 And here's stuff for vanilla Dired:
-- freeBSD moment
 - Also I am too dumb to be trusted with enabling /all/ of the disabled commands
-#+begin_src elisp :tangle no
-(setq insert-directory-program "gls")
+#+begin_src elisp
 (put 'dired-find-alternate-file 'disabled nil)
+#+end_src
+
+*** Ibuffer
+#+begin_src elisp
+(use-package ibuffer
+	:general
+  (:keymaps 'global
+			"C-x C-b" #'ibuffer))
+#+end_src
+
+*** Direnv
+For usage with nix-direnv (and maybe lorri in the future?)
+#+begin_src elisp
+(use-package direnv
+	;;:hook
+  ;;(prog-mode . #'direnv-update-environment)
+  :config
+  (direnv-mode))
 #+end_src
 
 *** TODO Ledger
@@ -849,7 +889,6 @@ Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Cor
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   ;;  (setq lsp-keymap-prefix "C-c l")
   ;;:hook ((cc-mode . lsp-deferred)
-  ;;	   (python-mode . lsp-deferred)
   ;;	   (zig-mode . lsp-deferred)
   ;;	   (rustic-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
@@ -940,7 +979,8 @@ Or lack thereof...
 #+begin_src elisp
 (setq menu-bar-mode nil
       tool-bar-mode nil
-      scroll-bar-mode nil)
+	  ;; for some reason, this is the only one that doesn't work. Issue with the GTK branch?
+	  scroll-bar-mode nil)
 
 ;; Resizing the Emacs frame can be a terribly expensive part of changing the
 ;; font. By inhibiting this, we easily halve startup times with fonts that are
