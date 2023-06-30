@@ -58,6 +58,11 @@ rev = "e964f9f56c01992263c0b8040f989996aa870741";
   #services.udev.extraRules = ''
     #ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usb", ATTR{power/wakeup}="enabled"
   #'';
+  services.upower.enable = true;
+#  services.udev.extraRules = ''
+#    SUBSYSTEM=="power_supply", ATTR{online}=="0", RUN+="/path/to/your/script true"
+#
+#  '';
 
   # for some reason this is slow AF
   #boot.plymouth.enable = true;
@@ -153,8 +158,8 @@ rev = "e964f9f56c01992263c0b8040f989996aa870741";
       }
     '';
   };
-  programs.fish.enable = true;
-  environment.shells = [ pkgs.fish ];
+  #programs.fish.enable = true;
+  #environment.shells = [ pkgs.fish ];
   environment.variables.EDITOR = "nvim";
 
   environment.loginShellInit = ''

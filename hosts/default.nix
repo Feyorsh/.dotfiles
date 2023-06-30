@@ -3,7 +3,7 @@
 {
 	ruby = lib.nixosSystem {
 		system = "x86_64-linux";
-		#specialArgs = attrs; idk man figure out how to use nix first
+		#specialArgs = inputs; #idk man figure out how to use nix first
 		modules = [
 			./configuration.nix
 			./ruby
