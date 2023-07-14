@@ -32,8 +32,7 @@
 
       pinentry
 
-      zig
-      python312
+      python312 # 1 for 2 projects where this hasn't caused compat issues :P
       nodePackages.pyright
 
       openshift
@@ -92,6 +91,8 @@
           vterm_prompt_end
       end
 
+      set -g async_prompt_functions _pure_prompt_git
+
       direnv hook fish | source
 
       set fish_cursor_default     block      blink
@@ -106,7 +107,6 @@
       end
     '';
     functions = {
-      # this currently prints up to and _including_ the "sentinel" package.
       nix_shell_packages = ''
         if [ $SHLVL -ge 3 ]
             for p in $PATH
@@ -120,6 +120,7 @@
     };
     plugins = [
       { name = "pure"; src = pkgs.fishPlugins.pure.src; }
+      { name = "fishplugin-async-prompt"; src = pkgs.fishPlugins.async-prompt.src; }
     ];
   };
   
@@ -153,7 +154,16 @@
     #extraConfig = '' pinentry-program ${pkgs.pinentry-rofi.outPath} '';
   };
 
-
+  nix.registry.templates = {
+    from = {
+      id = "templates";
+      type = "indirect";
+    };
+    to = {
+      path = "${config.home.homeDirectory}/.dotfiles/templates";
+      type = "path";
+    };
+  };
   nixpkgs.config = {
     allowUnfree = true;
   };
