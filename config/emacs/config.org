@@ -173,6 +173,8 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 	(setq evil-move-cursor-back nil)
 	(setq evil-undo-system 'undo-redo)
 	(setq evil-want-minibuffer t)
+	(setq evil-ex-visual-char-range t)
+	(setq evil-v$-excludes-newline t)
 	;; disable state change echo
 	;; consider actually unbinding the echo
     (setq evil-normal-state-message nil)
@@ -708,9 +710,17 @@ Now for Babel:
    '(
 	 (emacs-lisp . t)
 	 (shell . t)
+	 (python . t)
 	 )))
 #+end_src
-
+And inline images:
+#+begin_src elisp
+(use-package org-remoteimg
+	:straight (org-remoteimg :type git :host github :repo "gaoDean/org-remoteimg")
+	:config
+	(setq url-cache-directory "~/.cache/emacs/url")
+	(setq org-display-remote-inline-images 'cache))
+#+end_src
 *** Python
 #+begin_src elisp
 (use-package lsp-pyright
@@ -773,7 +783,9 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 #+begin_src elisp
 (use-package vterm
     :config
-  (setq vterm-shell "fish"))
+  (setq vterm-shell "fish")
+  (setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
+  )
 #+end_src
 
 *** TODO Dired
@@ -978,9 +990,10 @@ Or lack thereof...
 :END:
 #+begin_src elisp
 (setq menu-bar-mode nil
-      tool-bar-mode nil
-	  ;; for some reason, this is the only one that doesn't work. Issue with the GTK branch?
-	  scroll-bar-mode nil)
+      tool-bar-mode nil)
+;; for some reason, scroll bar behaves really weirdly. Issue with PGTK branch perhaps?
+(add-to-list 'default-frame-alist
+             '(vertical-scroll-bars . nil))
 
 ;; Resizing the Emacs frame can be a terribly expensive part of changing the
 ;; font. By inhibiting this, we easily halve startup times with fonts that are
@@ -988,6 +1001,7 @@ Or lack thereof...
 (setq frame-inhibit-implied-resize t)
 
 (setq use-file-dialog nil)
+(defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
 **** Treemacs
@@ -1057,7 +1071,7 @@ I use this because of yabai weirdness. Also, I want to add a proper splash scree
 
 ** TODO Deprecated
 I may want to keep this actually, but at the moment idk how to use this with Nix
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package pdf-tools
     :config 
   (pdf-tools-install)

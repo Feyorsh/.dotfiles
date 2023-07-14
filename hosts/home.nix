@@ -50,6 +50,9 @@
 
     # I'm not symlinking this, because init.el should exist independently of HM and Nix
     #file.".config/emacs".source = config.lib.file.mkOutOfStoreSymlink ../config/emacs;
+
+    # https://github.com/python-poetry/poetry/issues/5929
+    file.".config/fish/completions/poetry.fish".source = config.lib.file.mkOutOfStoreSymlink config.home.homeDirectory + /.dotfiles/config/fish/completions/poetry.fish;
   };
   programs.home-manager.enable = true;
 
@@ -61,7 +64,7 @@
 
   programs.fish = {
     enable = true;
-    interactiveShellInit = ''
+    shellInit = ''
       function vterm_printf;
           if begin; [  -n "$TMUX" ]  ; and  string match -q -r "screen|tmux" "$TERM"; end 
               # tell tmux to pass the escape sequences through
@@ -74,6 +77,9 @@
           end
       end
 
+      set -g SHELL ${config.home.profileDirectory}${config.programs.fish.package.shellPath}
+    '';
+    interactiveShellInit = ''
       function vterm_prompt_end;
           vterm_printf '51;A'(whoami)'@'(hostname)':'(pwd)
       end
@@ -86,24 +92,54 @@
           vterm_prompt_end
       end
 
-
       direnv hook fish | source
+
+      set fish_cursor_default     block      blink
+      set fish_cursor_insert      line       blink
+      set fish_cursor_replace_one underscore blink
+      set fish_cursor_visual      block
 
       if begin; [ -n "$INSIDE_EMACS" ] ; end
          fish_default_key_bindings
       else
         fish_vi_key_bindings
       end
-
-      set -g SHELL ${config.home.profileDirectory}${config.programs.fish.package.shellPath}
     '';
+    functions = {
+      # this currently prints up to and _including_ the "sentinel" package.
+      nix_shell_packages = ''
+        if [ $SHLVL -ge 3 ]
+            for p in $PATH
+                if not string match -qgr "/nix/store/.*?-(?<pname>.*)-\d*\.\d*\.\d*/" $p; or [ $pname = "kitty" ]
+                    break
+                end
+                echo $pname
+            end
+        end
+      '';
+    };
     plugins = [
       { name = "pure"; src = pkgs.fishPlugins.pure.src; }
     ];
   };
+  
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
+  };
+
+  programs.vim = {
+    enable = true;
+    extraConfig = ''
+      if $INSIDE_EMACS == "vterm"
+        silent! !vterm_printf "51;Eevil-emacs-state"
+        autocmd VimLeave * :!vterm_printf "51;Eevil-insert-state"
+      endif
+
+      set number
+      set relativenumber
+      syntax enable
+    '';
   };
 
   programs.gpg = {
