@@ -454,11 +454,14 @@ Marginalia supposedly must be loaded at init.
 **** TODO Crypto
 EasyPG stuff:
 #+begin_src elisp
-(require 'epa-file)
-(setq epa-pinentry-mode 'loopback)
+(use-package epa-file
+	:straight (:type built-in)
+	:config
+	(setq epg-pinentry-mode 'loopback))
+(use-package pinentry :commands pinentry-start)
 #+end_src
-Authentication config (I want to move this to be profile independent)
-#+begin_src elisp
+Authentication config
+#+begin_src elisp :tangle no
 (setq auth-sources (mapcar (lambda (x) (concat user-emacs-directory x)) '(".authinfo.gpg" ".authinfo" ".netrc")))
 #+end_src
 Sensitive minor mode to disable backups and autosave
@@ -494,14 +497,189 @@ Null prefix argument turns off the mode."
 #+end_src
 
 *** TODO Mail
-Right now I'm using Gnus, but I think I want to switch to something like mu4e. Or notmuch.
+Support for thread folding coming soon!
 #+begin_src elisp
-(setq gnus-home-directory (concat user-emacs-directory "gnus/"))
-(setq gnus-directory gnus-home-directory)
-(setq gnus-init-file (concat gnus-home-directory ".gnus.el"))
-(setq gnus-startup-file (concat gnus-home-directory ".newsrc"))
+(use-package mu4e
+	:straight (:type built-in)
+	:hook ((mu4e-headers-mode mu4e-view-mode)
+		   . (lambda () (add-hook
+						 'window-configuration-change-hook
+						 (lambda ()
+						   (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
+						 (add-to-list 'fringe-indicator-alist '(continuation . nil))))
+						 nil :local)))
+	:hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
+	:commands mu4e
+	:config
+	(pinentry-start)
+	;; these have to be set, but there should be no defaults
+	(setq mu4e-drafts-folder "/.mu4e"
+		  mu4e-trash-folder "/.mu4e"
+		  mu4e-sent-folder "/.mu4e"
+		  mu4e-attachment-dir "~/Downloads")
+
+
+	(setq mu4e-context-policy 'pick-first
+		  mu4e-compose-context-policy 'ask-if-none
+		  mu4e-contexts
+		  `(,(make-mu4e-context
+			  :name "Work"
+			  :match-func (lambda (msg)
+							(when msg
+							  (mu4e-message-contact-field-matches msg '(:to :cc :from) "ghuebner@redhat.com")))
+			  ;; don't set imap trash tag, just move to trash
+			  :enter-func (lambda ()
+							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
+								  (lambda (docid msg target)
+									(mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
+			  :leave-func (lambda ()
+							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
+								  (lambda (docid msg target)
+									(mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
+
+			  :vars '((user-full-name . "George Huebner")
+					  (user-mail-address . "ghuebner@redhat.com")
+                      (mu4e-index-cleanup nil)
+					  (mu4e-index-lazy-check t)
+					  (mu4e-sent-messages-behavior . delete)
+					  (mu4e-drafts-folder . "/work/[Gmail].Drafts")
+					  (mu4e-trash-folder . "/work/[Gmail].Trash")
+					  (mu4e-sent-folder . "/work/[Gmail].Sent Mail")
+					  (mu4e-refile-folder . "/work/[Gmail].All Mail")
+					  (message-sendmail-extra-arguments . ("-a" "work"))
+					  (mu4e-maildir-shortcuts . (
+												 (:name "Inbox" :maildir "/work/INBOX" :key ?i)
+												 (:name "Sent" :maildir "/work/[Gmail].Sent Mail" :key ?s)
+												 (:name "Drafts" :maildir "/work/[Gmail].Drafts" :key ?d)
+												 (:name "Trash" :maildir "/work/[Gmail].Trash" :key ?t)
+												 (:name "All Mail" :maildir "/work/[Gmail].All Mail" :key ?a)
+												 ))
+					  (mu4e-bookmarks . (
+										 (:name "Unread" :query "flag:unread" :key ?u)
+										 (:name "memo-list" :query "list:memo-list.redhat.com" :key ?m)
+										 ))
+					  ))))
+
+	(setq mu4e-get-mail-command "mbsync -a"
+		  sendmail-program "msmtp"
+		  send-mail-function 'sendmail-send-it
+		  mu4e-update-interval 120
+		  mu4e-change-filenames-when-moving t)
+
+	(setq message-kill-buffer-on-exit t
+		  message-sendmail-envelope-from 'header
+		  mu4e-compose-dont-reply-to-self t
+		  mu4e-compose-format-flowed t
+		  message-citation-line-format "On %a, %b %-e, %Y at %T EST %N wrote:\n"
+		  message-citation-line-function 'message-insert-formatted-citation-line
+		  gnus-article-date-headers '(combined-local-lapsed)
+		  gnus-boring-article-headers '(empty followup-to reply-to to-list long-to)
+		  gnus-treat-hide-boring-headers 'head
+mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
+
+	(setq mu4e-modeline-show-global nil)
+	(setq mu4e-confirm-quit nil)
+	(setq mu4e-hide-index-messages t)
+
+	(setq mu4e-headers-draft-mark '("D" . "📝")
+		  mu4e-headers-flagged-mark '("F" . "⭐")
+		  mu4e-headers-new-mark '("N" . "🆕")
+		  mu4e-headers-passed-mark '("P" . "↪️")
+		  mu4e-headers-replied-mark '("R" . "↩️")
+		  mu4e-headers-seen-mark '("S" . "✅")
+		  mu4e-headers-trashed-mark '("T" . "🗑️")
+		  mu4e-headers-attach-mark '("a" . "📎")
+		  mu4e-headers-encrypted-mark '("x" . "🔐")
+		  mu4e-headers-signed-mark '("s" . "🔏")
+		  mu4e-headers-unread-mark '("u" . "☑️")
+		  mu4e-headers-list-mark '("l" . "🗒️")
+		  mu4e-headers-personal-mark '("p" . "🫵")
+		  mu4e-headers-calendar-mark '("a" . "🗓️")
+
+		  mu4e-headers-thread-orphan-prefix '("<>" . nil)
+		  mu4e-headers-thread-single-orphan-prefix '("<>" . nil)
+		  mu4e-headers-thread-child-prefix '("o " . "├ ")
+		  mu4e-headers-thread-first-child-prefix '("o " . "├ "))
+
+	(setq mu4e-headers-visible-flags '(attach encrypted signed)
+		  mu4e-split-view 'vertical
+		  mu4e-headers-visible-columns (+ 15 10 12 22)
+		  mu4e-use-fancy-chars t
+		  mu4e-headers-precise-alignment t
+		  mu4e-headers-include-related nil)
+
+	(add-to-list 'mu4e-header-info '(:flags :name "Flags" :shortname "Flags" :help "Flags for the message" :sortable nil))
+	(setq mu4e-headers-fields '((:human-date . 15)
+								(:flags . 10)
+								(:mailing-list . 12)
+								(:from . 22)
+								(:subject . nil)))
+
+	(define-advice mu4e~headers-human-date (:filter-return (ret) pretty-date)
+	  (if (equal (format-time-string "%Y") (substring ret -4 nil))
+		  (let*
+			  ((timestamp (if (ignore-errors (equal "en_US" (substring (getenv "LANG") nil 5)))
+							  (string-join (list (substring ret -4 nil) (substring ret nil 2) (substring ret 3 5)) "-")
+							(string-join (list (substring ret -4 nil) (substring ret 3 5) (substring ret nil 2)) "-")))
+			   (delta (time-subtract (date-to-day (format-time-string "%F")) (date-to-day timestamp))))
+			(format-time-string (cond
+								  ((= 1 delta) "Yesterday")
+								  ((> 7 delta) "%A")
+								  (t "%b %-e"))
+								(date-to-time timestamp)))
+		ret))
+
+	:hook (evil-collection-setup . (lambda (&rest _) (general-define-key
+													  :keymaps 'mu4e-headers-mode-map
+													  :states 'normal
+													  "j"  'evil-next-line
+													  "k" 'evil-previous-line
+													  )))
+	)
 #+end_src
-I also need to absorb my Gnus config into here.
+There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
+#+begin_src conf :tangle ~/.mbsyncrc
+IMAPAccount work
+Host imap.gmail.com
+User ghuebner@redhat.com
+PassCmd "PINENTRY_USER_DATA=\"emacs\" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\\s\"\\([[:alpha:]]*\\)\"/\\1/p'"
+Port 993
+SSLType IMAPS
+AuthMechs LOGIN
+
+IMAPStore work-remote
+Account work
+
+MaildirStore work-local
+Path ~/Mail/work/
+Inbox ~/Mail/work/INBOX
+Flatten .
+
+Channel work
+Far :work-remote:
+Near :work-local:
+Create Both
+Expunge Both
+Patterns * !"[Gmail]/Important" !"[Gmail]/Starred"
+SyncState *
+#+end_src
+#+begin_src conf :tangle ~/.config/msmtp/config
+defaults
+logfile ~/Mail/msmtp.log
+protocol smtp
+tls on
+
+account work
+host smtp.gmail.com
+port 465
+auth on
+tls_starttls off
+from ghuebner@redhat.com
+user ghuebner@redhat.com
+passwordeval PINENTRY_USER_DATA="emacs" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\s"\([[:alpha:]]*\)"/\1/p'
+
+account default : work
+#+end_src
 *** TODO IRC
 Well, I see IRC hasn't gotten any easier to use.
 
@@ -1018,6 +1196,8 @@ Or lack thereof...
 I still need to rice Org fonts, and test LaTeX fonts out. Defaults should be sane, though.
 For ligatures
 For visual-line-mode
+
+Trying to patch swathes of Unicode blocks is... a losing battle. Consider using [[https://github.com/rolandwalker/unicode-fonts][Unicode Fonts]] instead.
 #+begin_src elisp
 (add-hook 'text-mode-hook 'visual-line-mode)
 (add-hook 'prog-mode-hook 'visual-line-mode)
@@ -1027,8 +1207,8 @@ For visual-line-mode
   (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
   (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
   (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
-  (set-fontset-font "fontset-default" 'unicode (font-spec :family "Arial" :size 15))
-  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 20)))
+  (set-fontset-font "fontset-default" 'symbol (font-spec :family "Sarasa UI J" :size 15))
+  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 15)))
 
 (defun fonts/org ()
   (if org-modern-mode

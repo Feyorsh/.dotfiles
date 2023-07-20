@@ -12,7 +12,7 @@
       firefox-wayland # deprecated
 
       #emacs29-pgtk
-      ((emacsPackagesFor emacs29-pgtk).emacsWithPackages (epkgs: [ epkgs.vterm epkgs.pdf-tools ]))
+      ((emacsPackagesFor emacs29-pgtk).emacsWithPackages (epkgs: [ epkgs.vterm epkgs.pdf-tools pkgs.mu ]))
       aspell
       aspellDicts.en
 
@@ -34,6 +34,11 @@
 
       python312 # 1 for 2 projects where this hasn't caused compat issues :P
       nodePackages.pyright
+
+      # mail
+      mu
+      isync
+      msmtp
 
       openshift
     ];
@@ -145,13 +150,40 @@
 
   programs.gpg = {
     enable = true;
+    package = pkgs.gnupg.overrideAttrs (previous: rec {
+                pname = "gnupg";
+                version = "2.4.0";
+                src = pkgs.fetchurl {
+                    url = "mirror://gnupg/gnupg/${pname}-${version}.tar.bz2";
+                    hash = "sha256-HXkVjdAdmSQx3S4/rLif2slxJ/iXhOosthDGAPsMFIM=";
+                };
+              });
     mutableKeys = true;
     mutableTrust = true;
   };
   services.gpg-agent = {
     enable = true;
-    pinentryFlavor = "tty";
-    #extraConfig = '' pinentry-program ${pkgs.pinentry-rofi.outPath} '';
+    defaultCacheTtl = 1200;
+    maxCacheTtl = 86400;
+    pinentryFlavor = null;
+    extraConfig = ''
+      pinentry-program '' +
+    pkgs.writeShellScript "custom-pinentry" ''
+      case $PINENTRY_USER_DATA in
+      emacs)
+          exec ${pkgs.pinentry.emacs}/bin/pinentry "$@"
+          ;;
+      gtk)
+          exec ${pkgs.pinentry.gtk2}/bin/pinentry "$@"
+          ;;
+      *)
+          exec ${pkgs.pinentry.tty}/bin/pinentry "$@"
+      esac
+    '' + ''
+
+      allow-emacs-pinentry
+      allow-loopback-pinentry
+    '';
   };
 
   nix.registry.templates = {

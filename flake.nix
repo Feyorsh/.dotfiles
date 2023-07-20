@@ -16,8 +16,8 @@
 	outputs = inputs @ { self, nixpkgs, home-manager, hyprland, ... }:
 		let 
 			pkgs = import nixpkgs {
+        # pretty sure this is useless
 				config.allowUnfree = true;
-				overlays = [ (import self.inputs.emacs-overlay) ];
 			};
 			lib = nixpkgs.lib;
 		in {
