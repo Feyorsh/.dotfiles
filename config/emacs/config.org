@@ -1029,7 +1029,27 @@ So I can commit tax fraud productively.
 
 *** TODO Magit
 #+begin_src elisp
-(use-package magit)
+(use-package magit
+	:init
+  (dir-locals-set-class-variables
+   'huge-git-repository
+   '((nil
+	  . ((magit-refresh-buffers . nil)
+		 (magit-revision-insert-related-refs . nil)))
+	 (magit-status-mode
+	  . ((eval . (magit-disable-section-inserter 'magit-insert-tags-header))
+		 (eval . (magit-disable-section-inserter 'magit-insert-recent-commits))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream))
+		 ))
+	 ))
+  (dir-locals-set-directory-class
+   (concat (getenv "HOME") "/Personal/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class
+   (concat (getenv "HOME") "/Work/linux") 'huge-git-repository)
+  )
 #+end_src
 
 *** TODO Debugger
