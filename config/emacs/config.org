@@ -68,8 +68,10 @@ Not sure I need this anymore on NixOS
 ** Backups
 Forgot where I sourced all this, but basically take a rather conservative approach to backups without littering current directory with lock files.
 #+begin_src elisp
-(setq backup-directory-alist `(("." . "~/emacs/saves/backups")))
-(setq auto-save-file-name-transforms `((".*" "~/emacs/saves/auto-saves/" t)))
+(setq backup-directory-alist `(("." . ,(expand-file-name "saves/backups" user-emacs-directory))))
+(setq auto-save-file-name-transforms `((".*" ,(expand-file-name "saves/auto-saves" user-emacs-directory) t)))
+(setq lock-file-name-transforms `((".*" ,(expand-file-name "saves/locks" user-emacs-directory) t))
+	  remote-file-name-inhibit-locks t)
 (setq backup-by-copying-when-linked t
       version-control t
       kept-new-versions 5
