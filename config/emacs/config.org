@@ -1057,6 +1057,45 @@ And here's stuff for vanilla Dired:
 			"C-x C-b" #'ibuffer))
 #+end_src
 
+*** Perspective
+consult-perspective (uses persp-switch to preview different perspectives)
+Well, poop. `persp-save` is basically useless because it only saves file-visiting buffers. I know what I want, so instead we'll hook into `persp-mode` to create a bunch of perspectives populated with mail, irc, etc
+Even better: custom function to open a directory and populate a perspective with a vterm, magit or dired (if it's a git repo), and the README if it exists
+#+begin_src elisp
+(use-package perspective
+	:general
+  (:keymaps 'global
+			"C-x p" #'persp-switch
+			)
+  :commands (persp-new persp-switch persp-state-save)
+  :hook (ibuffer . (lambda () (persp-ibuffer-set-filter-groups)))
+  :hook (persp-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (persp-name (persp-curr))))))
+  :init
+  (setq persp-state-default-file (expand-file-name ".persp" user-emacs-directory))
+  (setq persp-suppress-no-prefix-key-warning t)
+  (setq persp-sort 'access)
+  (setq persp-modestring-short t)
+  (setq persp-initial-frame-name "emacs")
+  (setq persp-purge-initial-persp-on-save t)
+  :config
+  (persp-setup-for "mail" (mu4e) () (persp-set-buffer 'mu4e-main-buffer-name))
+  ;;(persp-setup-for "irc" (erc-join-server "Libera.Chat"))
+(defun open-directory-in-perspective (dir)
+(interactive "DOpen directory: ")
+)
+  ;;(define-advice consult--buffer-preview (:around (fn &rest args) fysh/persp-tamer)
+  ;;  ;;(ad-disable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
+  ;;(ad-deactivate-regexp "^persp-.*")
+  ;;  (apply fn args)
+  ;;(ad-activate-regexp "^persp-.*")
+  ;;  ;;(ad-enable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
+  ;;  )
+  (use-package consult :demand t)
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (add-to-list 'consult-buffer-sources persp-consult-source)
+  )
+#+end_src
+
 *** Direnv
 For usage with nix-direnv (and maybe lorri in the future?)
 #+begin_src elisp
