@@ -172,6 +172,7 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
     (setq evil-want-C-u-scroll t)
+    (setq evil-want-Y-yank-to-eol t)
 	(setq evil-move-cursor-back nil)
 	(setq evil-undo-system 'undo-redo)
 	(setq evil-want-minibuffer t)
@@ -1061,8 +1062,20 @@ For usage with nix-direnv (and maybe lorri in the future?)
 #+begin_src elisp
 (use-package direnv
 	;;:hook
-  ;;(prog-mode . #'direnv-update-environment)
-  :config
+	;;(prog-mode . #'direnv-update-environment)
+	:config
+;; ignore summary because it's useless on nix
+  (defun direnv--show-summary (summary old-directory new-directory)
+	"Show a SUMMARY message.
+
+OLD-DIRECTORY and NEW-DIRECTORY are the directories before and after
+the environment changes."
+	(let ((paths
+           (when direnv-show-paths-in-summary
+			 (direnv--format-paths old-directory new-directory))))
+      (if paths
+          (message "direnv: %s" paths)
+		(message "direnv: changed"))))
   (direnv-mode))
 #+end_src
 
@@ -1323,11 +1336,11 @@ I use this because of yabai weirdness. Also, I want to add a proper splash scree
 #+end_src
 
 ** TODO Deprecated
-I may want to keep this actually, but at the moment idk how to use this with Nix
+Hmmmm... to use or not to use EAF...
 #+begin_src elisp
 (use-package pdf-tools
     :config 
-  (pdf-tools-install)
+  (pdf-loader-install)
   (setq pdf-view-use-scaling t)
   (setq-default pdf-view-display-size 'fit-page))
 #+end_src
