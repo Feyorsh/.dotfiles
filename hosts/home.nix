@@ -39,8 +39,6 @@
       mu
       isync
       msmtp
-
-      openshift
     ];
 
 

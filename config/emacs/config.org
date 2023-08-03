@@ -26,19 +26,19 @@ Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el
   (let ((bootstrap-file
 	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
 	(bootstrap-version 6))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
+	(unless (file-exists-p bootstrap-file)
+	  (with-current-buffer
 	  (url-retrieve-synchronously
   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
 	   'silent 'inhibit-cookies)
 	(goto-char (point-max))
 	(eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+	(load bootstrap-file nil 'nomessage))
 
   (straight-use-package 'use-package)
 
-  (setq  x-meta-keysym 'super
-       x-super-keysym 'meta)
+  (setq	 x-meta-keysym 'super
+	   x-super-keysym 'meta)
 #+end_src
 *** Early Init
 :PROPERTIES:
@@ -73,11 +73,11 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 (setq lock-file-name-transforms `((".*" ,(expand-file-name "saves/locks" user-emacs-directory) t))
 	  remote-file-name-inhibit-locks t)
 (setq backup-by-copying-when-linked t
-      version-control t
-      kept-new-versions 5
-      kept-old-versions 0
-      delete-old-versions t
-      vc-make-backup-files t)
+	  version-control t
+	  kept-new-versions 5
+	  kept-old-versions 0
+	  delete-old-versions t
+	  vc-make-backup-files t)
 #+end_src
 
 ** Config
@@ -85,10 +85,10 @@ I was previously using file local variables at the end of ~config.org~, but they
 #+begin_src elisp
 (defun config-reload ()
   (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
-    (if (y-or-n-p "Reload?")(load-file (expand-file-name "init.el" user-emacs-directory)))))
+	(if (y-or-n-p "Reload?")(load-file (expand-file-name "init.el" user-emacs-directory)))))
 (defun config-tangle ()
   (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
-    (if (y-or-n-p "Tangle?")(org-babel-tangle))))
+	(if (y-or-n-p "Tangle?")(org-babel-tangle))))
 
 (add-hook 'after-save-hook 'config-reload)
 (add-hook 'after-save-hook 'config-tangle)
@@ -103,7 +103,7 @@ dOnT uSE tHe MoUSe!
 (defun stop-using-minibuffer ()
   "kill the minibuffer"
   (when (and (>= (recursion-depth) 1) (active-minibuffer-window))
-    (abort-recursive-edit)))
+	(abort-recursive-edit)))
 
 (add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
 #+end_src
@@ -114,7 +114,7 @@ This should be fine, right?
 Ok, ok, I'll switch to 29 soon, I promise...
 #+begin_src elisp
 (use-package compat
-    :demand t)
+	:demand t)
 #+end_src
 Get native comp to shut up, but not so we can't debug a problem
 #+begin_src elisp
@@ -131,17 +131,17 @@ I will remove this... one day...
  ;; If there is more than one, they won't work right.
  '(ledger-reports
    '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
-     ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
-     ("bal" "%(binary) -f %(ledger-file) bal")
-     ("reg" "%(binary) -f %(ledger-file) reg")
-     ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
-     ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+	 ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
+	 ("bal" "%(binary) -f %(ledger-file) bal")
+	 ("reg" "%(binary) -f %(ledger-file) reg")
+	 ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+	 ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
 #+end_src
 
 #+begin_src elisp
 ;;(setq custom-file (concat user-emacs-directory "custom.el"))
 ;;(when (file-exists-p custom-file)
-;;  (load custom-file))
+;;	(load custom-file))
 #+end_src
 
 ** Sane Defaults
@@ -149,9 +149,9 @@ I will remove this... one day...
 (defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
   "Create parent directory if not exists while visiting file."
   (unless (file-exists-p filename)
-    (let ((dir (file-name-directory filename)))
-      (unless (file-exists-p dir)
-        (make-directory dir t)))))
+	(let ((dir (file-name-directory filename)))
+	  (unless (file-exists-p dir)
+		(make-directory dir t)))))
 #+end_src
 
 * Packages
@@ -159,20 +159,20 @@ I will remove this... one day...
 I feel like this is a really cool package, I just don't have the elisp-fu to take full advantage of it.
 #+begin_src elisp
 (use-package general
-    :demand t
-    :config
-    (general-evil-setup))
+	:demand t
+	:config
+	(general-evil-setup))
 #+end_src
 After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 #+begin_src elisp
 (use-package evil
-    :demand t
-    :after general
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-Y-yank-to-eol t)
+	:demand t
+	:after general
+	:init
+	(setq evil-want-integration t)
+	(setq evil-want-keybinding nil)
+	(setq evil-want-C-u-scroll t)
+	(setq evil-want-Y-yank-to-eol t)
 	(setq evil-move-cursor-back nil)
 	(setq evil-undo-system 'undo-redo)
 	(setq evil-want-minibuffer t)
@@ -180,12 +180,12 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 	(setq evil-v$-excludes-newline t)
 	;; disable state change echo
 	;; consider actually unbinding the echo
-    (setq evil-normal-state-message nil)
-    (setq evil-insert-state-message nil)
-    (setq evil-visual-state-message nil)
-    (setq evil-replace-state-message nil)
-    (setq evil-emacs-state-message nil)
-    :config 
+	(setq evil-normal-state-message nil)
+	(setq evil-insert-state-message nil)
+	(setq evil-visual-state-message nil)
+	(setq evil-replace-state-message nil)
+	(setq evil-emacs-state-message nil)
+	:config
 	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
 	(evil-ex-define-cmd "bk" "bkill")
 	(evil-mode 1))
@@ -193,26 +193,26 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
 #+begin_src elisp
 (use-package evil-collection
-    :after evil
+	:after evil
 	:demand
 	:config
 	(setq evil-collection-setup-minibuffer t)
-    (evil-collection-init))
+	(evil-collection-init))
 #+end_src
 I ran into a weird issue where the recipe on MELPA differed from the Git repo (straight doesn't use the MELPA version but instead the recipe). Running ~straight-pull-package~ fixed this issue.
 #+begin_src elisp
 (use-package evil-org
-    :after org
-    :hook (org-mode . evil-org-mode)
-    :config
+	:after org
+	:hook (org-mode . evil-org-mode)
+	:config
 (evil-org-set-key-theme '(textobjects insert navigation additional calendar))
-    (require 'evil-org-agenda)
-    (evil-org-agenda-set-keys))
+	(require 'evil-org-agenda)
+	(evil-org-agenda-set-keys))
 #+end_src
 I don't really know why, but my xkb layout binds the Command key to SUPER instead of META, and the Hyprland author has a strong aversion to META.
 #+begin_src elisp
 (setq  x-meta-keysym 'super
-     x-super-keysym 'meta)
+	 x-super-keysym 'meta)
 #+end_src
 
 ** Performance
@@ -239,28 +239,28 @@ This /should/ get reset by GCMH... right?
 I think I need to add ~company-box~? Maybe?
 #+begin_src elisp :tangle no
 (use-package company
-    :after lsp-mode
-    :hook (prog-mode . company-mode)
-    :bind (:map company-active-map
+	:after lsp-mode
+	:hook (prog-mode . company-mode)
+	:bind (:map company-active-map
 		("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 2)
-    (company-idle-delay 0.0))
+	(:map lsp-mode-map
+		  ("<tab>" . company-indent-or-complete-common))
+	:custom
+	(company-minimum-prefix-length 2)
+	(company-idle-delay 0.0))
 #+end_src
 Mwahaha, time to suck the life out of poor Minad
 #+begin_src elisp
 (use-package corfu
-    :straight (:files (:defaults "extensions/*")
+	:straight (:files (:defaults "extensions/*")
 					  :includes (
 								 corfu-popupinfo
 								 corfu-history
 								 ))
-    :hook ((after-init . global-corfu-mode)
+	:hook ((after-init . global-corfu-mode)
 		   (minibuffer-setup . corfu-enable-always-in-minibuffer)
 		   (corfu-history-mode . savehist-mode))
-    :config
+	:config
 	(with-eval-after-load 'doom-themes
 	  (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
 	(with-eval-after-load 'savehist
@@ -296,13 +296,13 @@ Mwahaha, time to suck the life out of poor Minad
 	(setq corfu-popupinfo-delay 0.5)
 	(setq corfu-popupinfo-max-width 40)
 	(setq corfu-popupinfo-min-height 4)
-    )
+	)
 #+end_src
 
 **** Vertico
 #+begin_src elisp
 (use-package vertico
-    :straight (vertico :files (:defaults "extensions/*")
+	:straight (vertico :files (:defaults "extensions/*")
 					   :includes (
 								  vertico-directory
 								  vertico-repeat
@@ -320,13 +320,13 @@ Mwahaha, time to suck the life out of poor Minad
 	:hook ((minibuffer-setup . vertico-repeat-save)
 		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
-    :init
-    (setq vertico-cycle nil)
-    (setq read-file-name-completion-ignore-case t
+	:init
+	(setq vertico-cycle nil)
+	(setq read-file-name-completion-ignore-case t
 		  read-buffer-completion-ignore-case t
 		  completion-ignore-case t)
-    (setq read-extended-command-predicate #'command-completion-default-include-p)
-    :config
+	(setq read-extended-command-predicate #'command-completion-default-include-p)
+	:config
 	(general-define-key
 	 :keymaps 'vertico-map
 	 :states 'insert
@@ -346,7 +346,7 @@ Mwahaha, time to suck the life out of poor Minad
 	 "C-d" #'vertico-scroll-up
 	 "<escape>" #'abort-recursive-edit
 	 )
-    (vertico-mode))
+	(vertico-mode))
 #+end_src
 
 **** Icons
@@ -354,8 +354,8 @@ Mwahaha, time to suck the life out of poor Minad
 (use-package all-the-icons)
 
 (use-package all-the-icons-completion
-    :after (marginalia all-the-icons)
-    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+	:after (marginalia all-the-icons)
+	:hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
 	:init
 	(all-the-icons-completion-mode))
 
@@ -367,50 +367,48 @@ Mwahaha, time to suck the life out of poor Minad
 	(kind-icon-blend-background nil)
 	(kind-icon-blend-frac 0.08)
 	(kind-icon-mapping
-	 '((array          "a"   :icon "symbol-array"       :face font-lock-type-face              :collection "vscode")
-	   (boolean        "b"   :icon "symbol-boolean"     :face font-lock-builtin-face           :collection "vscode")
-       (color          "#"   :icon "symbol-color"       :face success                          :collection "vscode")
-       (command        "cm"  :icon "chevron-right"      :face default                          :collection "vscode")
-       (constant       "co"  :icon "symbol-constant"    :face font-lock-constant-face          :collection "vscode")
-       (class          "c"   :icon "symbol-class"       :face font-lock-type-face              :collection "vscode")
-       (constructor    "cn"  :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
-       (enum           "e"   :icon "symbol-enum"        :face font-lock-builtin-face           :collection "vscode")
-       (enummember     "em"  :icon "symbol-enum-member" :face font-lock-builtin-face           :collection "vscode")
-       (enum-member    "em"  :icon "symbol-enum-member" :face font-lock-builtin-face           :collection "vscode")
-       (event          "ev"  :icon "symbol-event"       :face font-lock-warning-face           :collection "vscode")
-       (field          "fd"  :icon "symbol-field"       :face font-lock-variable-name-face     :collection "vscode")
-       (file           "f"   :icon "symbol-file"        :face font-lock-string-face            :collection "vscode")
-       (folder         "d"   :icon "folder"             :face font-lock-doc-face               :collection "vscode")
-       (function       "f"   :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
-       (interface      "if"  :icon "symbol-interface"   :face font-lock-type-face              :collection "vscode")
-       (keyword        "kw"  :icon "symbol-keyword"     :face font-lock-keyword-face           :collection "vscode")
-       (macro          "mc"  :icon "lambda"             :face font-lock-keyword-face)
-       (magic          "ma"  :icon "lightbulb-autofix"  :face font-lock-builtin-face           :collection "vscode")
-       (method         "m"   :icon "symbol-method"      :face font-lock-function-name-face     :collection "vscode")
-       (module         "{"   :icon "file-code-outline"  :face font-lock-preprocessor-face)
-       (numeric        "nu"  :icon "symbol-numeric"     :face font-lock-builtin-face           :collection "vscode")
-       (operator       "op"  :icon "symbol-operator"    :face font-lock-comment-delimiter-face :collection "vscode")
-       (param          "pa"  :icon "gear"               :face default                          :collection "vscode")
-       (property       "pr"  :icon "symbol-property"    :face font-lock-variable-name-face     :collection "vscode")
-       (reference      "rf"  :icon "library"            :face font-lock-variable-name-face     :collection "vscode")
-       (snippet        "S"   :icon "symbol-snippet"     :face font-lock-string-face            :collection "vscode")
-       (string         "s"   :icon "symbol-string"      :face font-lock-string-face            :collection "vscode")
-       (struct         "%"   :icon "symbol-structure"   :face font-lock-variable-name-face     :collection "vscode")
-       (text           "tx"  :icon "symbol-key"         :face font-lock-doc-face               :collection "vscode")
-       (typeparameter  "tp"  :icon "symbol-parameter"   :face font-lock-type-face              :collection "vscode")
-       (type-parameter "tp"  :icon "symbol-parameter"   :face font-lock-type-face              :collection "vscode")
-       (unit           "u"   :icon "symbol-ruler"       :face font-lock-constant-face          :collection "vscode")
-       (value          "v"   :icon "symbol-enum"        :face font-lock-builtin-face           :collection "vscode")
-       (variable       "va"  :icon "symbol-variable"    :face font-lock-variable-name-face     :collection "vscode")
-       (t              "."   :icon "question"           :face font-lock-warning-face           :collection "vscode")))
+	 '((array		   "a"	 :icon "symbol-array"		:face font-lock-type-face			   :collection "vscode")
+	   (boolean		   "b"	 :icon "symbol-boolean"		:face font-lock-builtin-face		   :collection "vscode")
+	   (color		   "#"	 :icon "symbol-color"		:face success						   :collection "vscode")
+	   (command		   "cm"	 :icon "chevron-right"		:face default						   :collection "vscode")
+	   (constant	   "co"	 :icon "symbol-constant"	:face font-lock-constant-face		   :collection "vscode")
+	   (class		   "c"	 :icon "symbol-class"		:face font-lock-type-face			   :collection "vscode")
+	   (constructor	   "cn"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (enum		   "e"	 :icon "symbol-enum"		:face font-lock-builtin-face		   :collection "vscode")
+	   (enummember	   "em"	 :icon "symbol-enum-member" :face font-lock-builtin-face		   :collection "vscode")
+	   (enum-member	   "em"	 :icon "symbol-enum-member" :face font-lock-builtin-face		   :collection "vscode")
+	   (event		   "ev"	 :icon "symbol-event"		:face font-lock-warning-face		   :collection "vscode")
+	   (field		   "fd"	 :icon "symbol-field"		:face font-lock-variable-name-face	   :collection "vscode")
+	   (file		   "f"	 :icon "symbol-file"		:face font-lock-string-face			   :collection "vscode")
+	   (folder		   "d"	 :icon "folder"				:face font-lock-doc-face			   :collection "vscode")
+	   (function	   "f"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (interface	   "if"	 :icon "symbol-interface"	:face font-lock-type-face			   :collection "vscode")
+	   (keyword		   "kw"	 :icon "symbol-keyword"		:face font-lock-keyword-face		   :collection "vscode")
+	   (macro		   "mc"	 :icon "lambda"				:face font-lock-keyword-face)
+	   (magic		   "ma"	 :icon "lightbulb-autofix"	:face font-lock-builtin-face		   :collection "vscode")
+	   (method		   "m"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (module		   "{"	 :icon "file-code-outline"	:face font-lock-preprocessor-face)
+	   (numeric		   "nu"	 :icon "symbol-numeric"		:face font-lock-builtin-face		   :collection "vscode")
+	   (operator	   "op"	 :icon "symbol-operator"	:face font-lock-comment-delimiter-face :collection "vscode")
+	   (param		   "pa"	 :icon "gear"				:face default						   :collection "vscode")
+	   (property	   "pr"	 :icon "symbol-property"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (reference	   "rf"	 :icon "library"			:face font-lock-variable-name-face	   :collection "vscode")
+	   (snippet		   "S"	 :icon "symbol-snippet"		:face font-lock-string-face			   :collection "vscode")
+	   (string		   "s"	 :icon "symbol-string"		:face font-lock-string-face			   :collection "vscode")
+	   (struct		   "%"	 :icon "symbol-structure"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (text		   "tx"	 :icon "symbol-key"			:face font-lock-doc-face			   :collection "vscode")
+	   (typeparameter  "tp"	 :icon "symbol-parameter"	:face font-lock-type-face			   :collection "vscode")
+	   (type-parameter "tp"	 :icon "symbol-parameter"	:face font-lock-type-face			   :collection "vscode")
+	   (unit		   "u"	 :icon "symbol-ruler"		:face font-lock-constant-face		   :collection "vscode")
+	   (value		   "v"	 :icon "symbol-enum"		:face font-lock-builtin-face		   :collection "vscode")
+	   (variable	   "va"	 :icon "symbol-variable"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode")))
 	:config
 	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 #+end_src
 
 **** TODO Other stuff
 At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
-
-Marginalia supposedly must be loaded at init.
 #+begin_src elisp
 (use-package prescient)
 
@@ -420,20 +418,20 @@ Marginalia supposedly must be loaded at init.
 			"C-x b" #'consult-buffer))
 
 (use-package marginalia
-    :init
+	:init
   (marginalia-mode))
 
 (use-package embark
-    :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
+	:bind
+  (("C-." . embark-act)			;; pick some comfortable binding
+   ("C-;" . embark-dwim)		;; good alternative: M-.
    ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
 
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
 
-  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; Show the Embark target at point via Eldoc.	 You may adjust the Eldoc
   ;; strategy, if you want to see the documentation from multiple providers.
   (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
   ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
@@ -447,9 +445,9 @@ Marginalia supposedly must be loaded at init.
 				 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
-    :ensure t
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode))
+	:ensure t
+	:hook
+	(embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 ** Apps
@@ -470,7 +468,7 @@ Authentication config
 Sensitive minor mode to disable backups and autosave
 #+begin_src elisp
 (define-minor-mode sensitive-minor-mode
-    "For sensitive files like password lists.
+	"For sensitive files like password lists.
 It disables backup creation and auto saving.
 
 With no argument, this command toggles the mode.
@@ -483,20 +481,20 @@ Null prefix argument turns off the mode."
   ;; The minor mode bindings.
   :keymap nil
   (if (symbol-value sensitive-minor-mode)
-      (progn
+	  (progn
 	;; disable backups
 	(set (make-local-variable 'backup-inhibited) t)	
 	;; disable auto-save
 	(if auto-save-default
-	    (auto-save-mode -1)))
-    ;; resort to default value of backup-inhibited
-    (kill-local-variable 'backup-inhibited)
-    ;; resort to default auto save setting
-    (if auto-save-default
+		(auto-save-mode -1)))
+	;; resort to default value of backup-inhibited
+	(kill-local-variable 'backup-inhibited)
+	;; resort to default auto save setting
+	(if auto-save-default
 	(auto-save-mode 1))))
 
 (setq auto-mode-alist
-      (append '(("\\.gpg$" . sensitive-minor-mode)) auto-mode-alist))
+	  (append '(("\\.gpg$" . sensitive-minor-mode)) auto-mode-alist))
 #+end_src
 
 *** TODO Mail
@@ -545,7 +543,7 @@ Change bookmarks to not use trash
 
 			  :vars '((user-full-name . "George Huebner")
 					  (user-mail-address . "ghuebner@redhat.com")
-                      (mu4e-index-cleanup nil)
+					  (mu4e-index-cleanup nil)
 					  (mu4e-index-lazy-check t)
 					  (mu4e-sent-messages-behavior . delete)
 					  (mu4e-drafts-folder . "/work/[Gmail].Drafts")
@@ -671,15 +669,15 @@ Change bookmarks to not use trash
 													  )))
 	)
 ;; TODO: this sends a duplicate email:
-;; Re: Accepted: Test   <-- bad, this should not be sent
-;; Accepted: Test @ 11:59 PM   <-- correct
+;; Re: Accepted: Test	<>-- bad, this should not be sent
+;; Accepted: Test @ 11:59 PM   <>-- correct
 ;; (use-package mu4e-icalendar
-;; 	:straight (:type built-in)
-;; 	:after mu4e
-;; 	:demand t
-;; 	:config
-;; 	;;(setq mu4e-icalendar-trash-after-reply t)
-;;     (mu4e-icalendar-setup))
+;;	:straight (:type built-in)
+;;	:after mu4e
+;;	:demand t
+;;	:config
+;;	;;(setq mu4e-icalendar-trash-after-reply t)
+;;	   (mu4e-icalendar-setup))
 #+end_src
 There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
 It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
@@ -735,6 +733,7 @@ My company doesn't use TLS for... reasons. I guess they don't really use IRC tha
 (use-package erc
 	:commands (erc erc-tls)
 	:config
+;; this should probably be an alist...
 	(defvar erc-server-list
 	  `(,`("Libera.Chat" :server "irc.libera.chat"
 						 :port 6697
@@ -808,50 +807,50 @@ Unrelated: figure out a better place to stick this
 There's not a particular reason I don't use Emacs built-ins, but caution must be exercised to avoid clobbering the built-in and MELPA versions of Org.
 #+begin_src elisp
 (use-package org
-    :init
+	:init
   (setq org-directory "~/emacs/org")
 	:config
 	(setq org-src-preserve-indentation t
-	      org-src-fontify-natively t
-	      org-export-latex-listings t
-	      org-export-with-smart-quotes t
-	      org-latex-listings 'listings
-	      org-latex-prefer-user-labels t
-	      org-confirm-babel-evaluate nil
-	      org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
-	      org-startup-folded t
-	      org-cycle-include-plain-lists 'integrate
-	      org-agenda-skip-scheduled-if-done t
-	      org-use-sub-superscripts "{}"
-	      ;; org-modern
-	      org-auto-align-tags nil
-	      org-tags-column 0
-	      org-catch-invisible-edits 'show-and-error
-	      org-special-ctrl-a/e t
-	      org-insert-heading-respect-content t
-	      org-hide-emphasis-markers t
-	      org-pretty-entities t
-	      org-ellipsis "…"
-	      org-agenda-tags-column 0
-	      org-agenda-block-separator ?─
-	      org-agenda-time-grid
-	      '((daily today require-timed)
+		  org-src-fontify-natively t
+		  org-export-latex-listings t
+		  org-export-with-smart-quotes t
+		  org-latex-listings 'listings
+		  org-latex-prefer-user-labels t
+		  org-confirm-babel-evaluate nil
+		  org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+		  org-startup-folded t
+		  org-cycle-include-plain-lists 'integrate
+		  org-agenda-skip-scheduled-if-done t
+		  org-use-sub-superscripts "{}"
+		  ;; org-modern
+		  org-auto-align-tags nil
+		  org-tags-column 0
+		  org-catch-invisible-edits 'show-and-error
+		  org-special-ctrl-a/e t
+		  org-insert-heading-respect-content t
+		  org-hide-emphasis-markers t
+		  org-pretty-entities t
+		  org-ellipsis "…"
+		  org-agenda-tags-column 0
+		  org-agenda-block-separator ?─
+		  org-agenda-time-grid
+		  '((daily today require-timed)
 		(800 1000 1200 1400 1600 1800 2000)
 		" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-	      org-agenda-current-time-string
-	      "⭠ now ─────────────────────────────────────────────────")
+		  org-agenda-current-time-string
+		  "⭠ now ─────────────────────────────────────────────────")
 	(add-to-list 'org-latex-packages-alist '("" "listings"))
 	:custom
 	(org-agenda-files '("~/emacs/org/agenda.org")))
   (add-hook 'emacs-startup-hook
-	    (lambda ()
-	      (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-		     (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
+		(lambda ()
+		  (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+			 (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
 (use-package org-modern
-    :hook
+	:hook
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
   (org-modern-mode . fonts/org)
@@ -860,10 +859,10 @@ And now to make it *pretty*
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
 				 ("WAIT" . "orange red")
 				 ("DONE" . org-done)
-				 ("PAST" . "dark red"))))
+				 ("PAST" . "dark red")))
   (setq org-modern-todo-faces
 	'(("WAIT" :background "orange red" :foreground "white")
-		("PAST" :background "dark red" :foreground "white")))
+		("PAST" :background "dark red" :foreground "white"))))
   ;;:custom-face
   ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
@@ -876,12 +875,12 @@ And now to make it *pretty*
 
 (defun +setup-org-mode-left-margin ()
   (when (and (derived-mode-p 'org-mode)
-             (eq (current-buffer) ; Check current buffer is active.
-                 (window-buffer (frame-selected-window))))
-    (setq left-margin-width (if display-line-numbers
-                                0 +org-mode-left-margin-width))
-    (set-window-buffer (get-buffer-window (current-buffer))
-                       (current-buffer))))
+			 (eq (current-buffer) ; Check current buffer is active.
+				 (window-buffer (frame-selected-window))))
+	(setq left-margin-width (if display-line-numbers
+								0 +org-mode-left-margin-width))
+	(set-window-buffer (get-buffer-window (current-buffer))
+					   (current-buffer))))
 (add-hook 'window-configuration-change-hook #'+setup-org-mode-left-margin)
 (add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
 (add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
@@ -898,29 +897,29 @@ suitable for passing to `advice-add'.  The BODY is wrapped in an
 `unwind-protect' form, so the advice will be removed even in the
 event of an error or nonlocal exit."
   (declare (debug ((&rest (&rest form)) body))
-           (indent 1))
+		   (indent 1))
   `(progn
-     ,@(mapcar (lambda (adform)
-                 (cons 'advice-add adform))
-               adlist)
-     (unwind-protect (progn ,@body)
-       ,@(mapcar (lambda (adform)
-                   `(advice-remove ,(car adform) ,(nth 2 adform)))
-                 adlist))))
+	 ,@(mapcar (lambda (adform)
+				 (cons 'advice-add adform))
+			   adlist)
+	 (unwind-protect (progn ,@body)
+	   ,@(mapcar (lambda (adform)
+				   `(advice-remove ,(car adform) ,(nth 2 adform)))
+				 adlist))))
 
 ;;Function which replaces org-switch-to-buffer-other-window with emacs' original switch-to-buffer-other-window
 (defun hd/org-todo-same-window (orig-fn)
   "Advice to fix window placement in `org-fast-todo-selection'."
-  (let  ((override
-      '("\\*Org todo\\*|\\*Org Note\\*"
-        (display-buffer-use-some-window)
-        (inhibit-same-window . nil)))) ;locally sets variable "override" as key-value pair for display-buffer-alist entry
-    (add-to-list 'display-buffer-alist override) ;adds the contents of the above defined variable to display-buffer-alist
-    (my/with-advice
-        ((#'org-switch-to-buffer-other-window :override #'switch-to-buffer-other-window))
-      (unwind-protect (funcall orig-fn)
-        (setq display-buffer-alist
-              (delete override display-buffer-alist))))))
+  (let	((override
+	  '("\\*Org todo\\*|\\*Org Note\\*"
+		(display-buffer-use-some-window)
+		(inhibit-same-window . nil)))) ;locally sets variable "override" as key-value pair for display-buffer-alist entry
+	(add-to-list 'display-buffer-alist override) ;adds the contents of the above defined variable to display-buffer-alist
+	(my/with-advice
+		((#'org-switch-to-buffer-other-window :override #'switch-to-buffer-other-window))
+	  (unwind-protect (funcall orig-fn)
+		(setq display-buffer-alist
+			  (delete override display-buffer-alist))))))
 
 ; Injecting the relevant advice into the org-fast-todo-selection function
 (advice-add #'org-fast-todo-selection :around #'hd/org-todo-same-window)
@@ -948,8 +947,8 @@ And inline images:
 *** Python
 #+begin_src elisp
 (use-package lsp-pyright
-    :ensure t
-    :hook (python-mode . (lambda ()
+	:ensure t
+	:hook (python-mode . (lambda ()
 			   (require 'lsp-pyright)
 			   (lsp-deferred))))
 #+end_src
@@ -965,7 +964,7 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
 Add DAP stuff + make sure rustic works
 #+begin_src elisp
 (use-package rustic
-    :custom
+	:custom
   (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
 #+end_src
 
@@ -1006,7 +1005,7 @@ Add label indentation + DAP stuff
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
-    :config
+	:config
   (setq vterm-shell "fish")
   (setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
   )
@@ -1017,11 +1016,11 @@ Switched to Dirvish, +haven't looked back+ haven't seen much lol. Ty to Sun I fo
 Need to make an evil mode map for dirvish (add to evil-collection)
 #+begin_src elisp :tangle no
 (use-package dirvish
-    :custom
+	:custom
   (dirvish-quick-access-entries
    '(("h" "~/" "Home")
-     ("d" "~/Downloads/" "Downloads")
-     ("t" "~/.Trash" "TrashCan")))
+	 ("d" "~/Downloads/" "Downloads")
+	 ("t" "~/.Trash" "TrashCan")))
   :init
   (dirvish-override-dired-mode)
   :config
@@ -1078,11 +1077,11 @@ Even better: custom function to open a directory and populate a perspective with
   (setq persp-initial-frame-name "emacs")
   (setq persp-purge-initial-persp-on-save t)
   :config
-  (persp-setup-for "mail" (mu4e) () (persp-set-buffer 'mu4e-main-buffer-name))
+  ;;(persp-setup-for "mail" (mu4e) (persp-set-buffer 'mu4e-main-buffer-name))
   ;;(persp-setup-for "irc" (erc-join-server "Libera.Chat"))
-(defun open-directory-in-perspective (dir)
-(interactive "DOpen directory: ")
-)
+;;(defun open-directory-in-perspective (dir)
+;;(interactive "DOpen directory: ")
+;;)
   ;;(define-advice consult--buffer-preview (:around (fn &rest args) fysh/persp-tamer)
   ;;  ;;(ad-disable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
   ;;(ad-deactivate-regexp "^persp-.*")
@@ -1110,16 +1109,17 @@ For usage with nix-direnv (and maybe lorri in the future?)
 OLD-DIRECTORY and NEW-DIRECTORY are the directories before and after
 the environment changes."
 	(let ((paths
-           (when direnv-show-paths-in-summary
+		   (when direnv-show-paths-in-summary
 			 (direnv--format-paths old-directory new-directory))))
-      (if paths
-          (message "direnv: %s" paths)
+	  (if paths
+		  (message "direnv: %s" paths)
 		(message "direnv: changed"))))
   (direnv-mode))
 #+end_src
 
 *** TODO Ledger
 So I can commit tax fraud productively.
+Pull ~monthly_expenses~ out of custom.el; make it programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode)
 #+end_src
@@ -1154,7 +1154,7 @@ Woah boy, this is gonna be a long one.
 I started off trying to build lldb-vscode from source, only to immediately realize that's a /terrible/ idea. Instead, I admitted to myself that I'm still suckling the teat of VSCode and (ashamedly) installed Lanza's lldb-vscode.
 #+begin_src elisp :tangle no
 (use-package dap-mode
-    :config
+	:config
   (setq dap-auto-configure-mode t)
   (setq dap-auto-configure-features '(sessions locals controls tooltip))
   (require 'dap-lldb)
@@ -1165,19 +1165,19 @@ I started off trying to build lldb-vscode from source, only to immediately reali
   (dap-register-debug-template
    "C++ LLDB dap"
    (list :type "lldb-vscode"
-         :cwd nil
-         :args nil
-         :request "launch"
-         :program nil))
+		 :cwd nil
+		 :args nil
+		 :request "launch"
+		 :program nil))
   
   (defun dap-debug-create-or-edit-json-template ()
-    "Edit the C++ debugging configuration or create + edit if none exists yet."
-    (interactive)
-    (let ((filename (concat (lsp-workspace-root) "/launch.json"))
+	"Edit the C++ debugging configuration or create + edit if none exists yet."
+	(interactive)
+	(let ((filename (concat (lsp-workspace-root) "/launch.json"))
 	  (default "~/.emacs.d/default-launch.json"))
-      (unless (file-exists-p filename)
+	  (unless (file-exists-p filename)
 	(copy-file default filename))
-      (find-file-existing filename)))
+	  (find-file-existing filename)))
 )
 #+end_src
 
@@ -1208,21 +1208,21 @@ Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Cor
   (setq lsp-modeline-diagnostics-enable nil))
 
 ;;(use-package lsp-ui
-;;    :commands lsp-ui-mode
-;;    :config
-;;    (setq lsp-ui-doc-use-webkit t))
+;;	  :commands lsp-ui-mode
+;;	  :config
+;;	  (setq lsp-ui-doc-use-webkit t))
 ;;(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 ;;(use-package lsp-treemacs
-;;    :commands lsp-treemacs-errors-list
-;;    :config
-;;    (lsp-treemacs-sync-mode 1))
+;;	  :commands lsp-treemacs-errors-list
+;;	  :config
+;;	  (lsp-treemacs-sync-mode 1))
 #+end_src
 
 *** Treesitter
 Emacs 29 has tree sitter built in, which adds ts specific major modes. Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]].
 #+begin_src elisp :tangle no
 (use-package tree-sitter
-    :config
+	:config
   (global-tree-sitter-mode))
 (use-package tree-sitter-langs)
 #+end_src
@@ -1252,27 +1252,27 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 I make liberal use of Doom's themes but not ~evil-mode~. I still need to properly configure the modeline.
 #+begin_src elisp
 (use-package doom-themes
-    :ensure t
-    :config
-    (setq doom-themes-enable-bold t
-          doom-themes-enable-italic t)
-    (load-theme 'doom-palenight t)
-    (doom-themes-visual-bell-config)
-    (setq doom-themes-treemacs-theme "doom-atom")
-    (doom-themes-treemacs-config)
-    (doom-themes-org-config))
+	:ensure t
+	:config
+	(setq doom-themes-enable-bold t
+		  doom-themes-enable-italic t)
+	(load-theme 'doom-palenight t)
+	(doom-themes-visual-bell-config)
+	(setq doom-themes-treemacs-theme "doom-atom")
+	(doom-themes-treemacs-config)
+	(doom-themes-org-config))
 
 (use-package doom-modeline
-    :ensure t
-;:straight (doom-modeline :type git :host github :repo ""
-    :config
+	:ensure t
+	;; :straight (doom-modeline :type git :host github :repo ""
+	:config
 	(setq doom-modeline-modal-icon t)
 	(setq nerd-icons-color-icons nil)
-    :hook
-    (after-init . doom-modeline-mode))
+	:hook
+	(after-init . doom-modeline-mode))
 
 (use-package solaire-mode
-    :ensure t
+	:ensure t
 	:init
 	(setq solaire-mode-real-buffer-fn
 		  (defun shor/solaire-mode-real-buffer-p ()
@@ -1281,8 +1281,8 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
 			  (cond ((string-match-p (regexp-quote "*scratch*") bufname))
 					((string-match-p (regexp-opt '("*mu4e-article*" "*mu4e-draft*" "*mu4e-compose*")) bufname))
 					((buffer-file-name buf))))))
-    :config
-    (solaire-global-mode +1))
+	:config
+	(solaire-global-mode +1))
 #+end_src
 
 *** TODO GUI
@@ -1293,10 +1293,10 @@ Or lack thereof...
 :END:
 #+begin_src elisp
 (setq menu-bar-mode nil
-      tool-bar-mode nil)
+	  tool-bar-mode nil)
 ;; for some reason, scroll bar behaves really weirdly. Issue with PGTK branch perhaps?
 (add-to-list 'default-frame-alist
-             '(vertical-scroll-bars . nil))
+			 '(vertical-scroll-bars . nil))
 
 ;; Resizing the Emacs frame can be a terribly expensive part of changing the
 ;; font. By inhibiting this, we easily halve startup times with fonts that are
@@ -1338,25 +1338,25 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
 (defun fonts/org ()
   (if org-modern-mode
   (progn
-    (setq fonts/org-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
-    (setq fonts/org-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Sarasa Mono J" :size 15 :weight 'normal)))
-    (variable-pitch-mode +1))
+	(setq fonts/org-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+	(setq fonts/org-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Sarasa Mono J" :size 15 :weight 'normal)))
+	(variable-pitch-mode +1))
   (progn
-    (face-remap-remove-relative fonts/org-fixed-cookie)
-    (face-remap-remove-relative fonts/org-variable-cookie)
-    (variable-pitch-mode -1))))
+	(face-remap-remove-relative fonts/org-fixed-cookie)
+	(face-remap-remove-relative fonts/org-variable-cookie)
+	(variable-pitch-mode -1))))
 ;; note that I still need to set these in `custom` for org
 
 (defun fonts/literate-programming ()
   (if org-cdlatex-mode
   (progn
-    (setq fonts/literate-programming-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
-    (setq fonts/literate-programming-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 15 :weight 'normal)))
-    (variable-pitch-mode +1))
+	(setq fonts/literate-programming-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+	(setq fonts/literate-programming-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 15 :weight 'normal)))
+	(variable-pitch-mode +1))
   (progn
-    (face-remap-remove-relative fonts/literate-programming-fixed-cookie)
-    (face-remap-remove-relative fonts/literate-programming-variable-cookie)
-    (variable-pitch-mode -1))))
+	(face-remap-remove-relative fonts/literate-programming-fixed-cookie)
+	(face-remap-remove-relative fonts/literate-programming-variable-cookie)
+	(variable-pitch-mode -1))))
 
 (add-hook 'after-init-hook 'fonts/default)
 #+end_src
@@ -1364,7 +1364,7 @@ Ok, something in my Emacs config is definitely messing up native scroll.
 We add rainbow-mode to color hex codes, like #003b6f.
 #+begin_src elisp
 (use-package rainbow-mode
-    :config
+	:config
   (rainbow-mode 1))
 #+end_src
 
@@ -1378,7 +1378,7 @@ I use this because of yabai weirdness. Also, I want to add a proper splash scree
 Hmmmm... to use or not to use EAF...
 #+begin_src elisp
 (use-package pdf-tools
-    :config 
+	:config
   (pdf-loader-install)
   (setq pdf-view-use-scaling t)
   (setq-default pdf-view-display-size 'fit-page))

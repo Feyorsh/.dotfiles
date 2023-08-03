@@ -18,6 +18,8 @@ Fix browser notifications (icons, sounds, duration)
 My cursor appears larger on dunst and rofi, which are rendered as layers, not windows. Check if I can repro this on sway
 
 * hyprland
+Add Chromium windowed fullscreen
+(previous approach would probably work, but use 'unset' instead)
 ** trackpad
 change acceleration profile
 see libinput-gestures or fusuma only if hypr-native solution doesn't work

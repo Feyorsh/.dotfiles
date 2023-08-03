@@ -13,7 +13,6 @@ rev = "e964f9f56c01992263c0b8040f989996aa870741";
       systemd-boot = {
         enable = true;
         configurationLimit = 5;
-
       };
       efi = {
         canTouchEfiVariables = true;
