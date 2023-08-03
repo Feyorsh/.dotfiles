@@ -498,6 +498,10 @@ Null prefix argument turns off the mode."
 
 *** TODO Mail
 Support for thread folding coming soon!
+Fix image display size
+Change gnus smileys to emoji (not all smileys are interpreted properly)
+Fix the... shitty? Display of HTML email. Not sure this is even possible, but at the very least why is it using the fancy font?
+Change bookmarks to not use trash
 #+begin_src elisp
 (use-package mu4e
 	:straight (:type built-in)
@@ -506,19 +510,18 @@ Support for thread folding coming soon!
 						 'window-configuration-change-hook
 						 (lambda ()
 						   (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
-						 (add-to-list 'fringe-indicator-alist '(continuation . nil))))
+								  (add-to-list 'fringe-indicator-alist '(continuation . nil))))
 						 nil :local)))
 	:hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
 	:commands mu4e
-	:config
-	(pinentry-start)
+	:init
 	;; these have to be set, but there should be no defaults
 	(setq mu4e-drafts-folder "/.mu4e"
 		  mu4e-trash-folder "/.mu4e"
 		  mu4e-sent-folder "/.mu4e"
 		  mu4e-attachment-dir "~/Downloads")
-
-
+	:config
+	(pinentry-start)
 	(setq mu4e-context-policy 'pick-first
 		  mu4e-compose-context-policy 'ask-if-none
 		  mu4e-contexts
@@ -555,10 +558,29 @@ Support for thread folding coming soon!
 												 (:name "All Mail" :maildir "/work/[Gmail].All Mail" :key ?a)
 												 ))
 					  (mu4e-bookmarks . (
-										 (:name "Unread" :query "flag:unread" :key ?u)
-										 (:name "memo-list" :query "list:memo-list.redhat.com" :key ?m)
+										 (:name "Personal" :query "maildir:/work/INBOX AND flag:personal" :key ?p)
+										 (:name "Unread" :query "maildir:/work/INBOX AND flag:unread" :key ?u)
+										 (:name "memo-list" :query "maildir:/work/INBOX AND list:memo-list.redhat.com" :key ?m)
+										 (:name "kernel" :query "maildir:/work/INBOX AND (list:linux-kernel.vger.kernel.org OR list:io-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
 										 ))
 					  ))))
+
+	(setq smiley-style 'emoji
+		  smiley-emoji-regexp-alist
+		  '(("\\(;-?)\\)\\W" 1 "😉")
+			("[^;]\\(;)\\)\\W" 1 "😉")
+			("\\(:-?]\\)\\W" 1 "😬")
+			("\\(8-?)\\)\\W" 1 "🥴")
+			("\\(:-?|\\)\\W" 1 "😐")
+			("\\(:-?[/\\]\\)[^/\\]\\W" 1 "😕")
+			("\\(:-?(\\)\\W" 1 "😠")
+			("\\(X-?)\\)\\W" 1 "😵")
+			("\\(:-?{\\)\\W" 1 "😦")
+			("\\(>:-?)\\)\\W" 1 "😈")
+			("\\(;-?(\\)\\W" 1 "😢")
+			("\\(:-?D\\)\\W" 1 "😀")
+			("\\(O:-?)\\)\\W" 1 "😇")
+			("\\(\\^?:-?)\\)\\W" 1 "🙂")))
 
 	(setq mu4e-get-mail-command "mbsync -a"
 		  sendmail-program "msmtp"
@@ -574,8 +596,10 @@ Support for thread folding coming soon!
 		  message-citation-line-function 'message-insert-formatted-citation-line
 		  gnus-article-date-headers '(combined-local-lapsed)
 		  gnus-boring-article-headers '(empty followup-to reply-to to-list long-to)
-		  gnus-treat-hide-boring-headers 'head
-mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
+		  ;; this is really annoying. it just shows whitespace instead of the emails, which is even worse
+		  ;;gnus-treat-hide-boring-headers 'head
+		  ;;gnus-treat-leading-whitespace 'head
+		  mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
 
 	(setq mu4e-modeline-show-global nil)
 	(setq mu4e-confirm-quit nil)
@@ -601,22 +625,22 @@ mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
 		  mu4e-headers-thread-child-prefix '("o " . "├ ")
 		  mu4e-headers-thread-first-child-prefix '("o " . "├ "))
 
-	(setq mu4e-headers-visible-flags '(attach encrypted signed)
+	(setq mu4e-headers-visible-flags '(calendar attach encrypted signed)
 		  mu4e-split-view 'vertical
-		  mu4e-headers-visible-columns (+ 15 10 12 22)
+		  mu4e-headers-visible-columns (+ 15 60)
 		  mu4e-use-fancy-chars t
 		  mu4e-headers-precise-alignment t
 		  mu4e-headers-include-related nil)
 
 	(add-to-list 'mu4e-header-info '(:flags :name "Flags" :shortname "Flags" :help "Flags for the message" :sortable nil))
 	(setq mu4e-headers-fields '((:human-date . 15)
+								(:subject . 60)
 								(:flags . 10)
-								(:mailing-list . 12)
 								(:from . 22)
-								(:subject . nil)))
+								(:mailing-list . nil)))
 
 	(define-advice mu4e~headers-human-date (:filter-return (ret) pretty-date)
-	  (if (equal (format-time-string "%Y") (substring ret -4 nil))
+	  (if (string= (format-time-string "%Y") (substring ret -4 nil))
 		  (let*
 			  ((timestamp (if (ignore-errors (equal "en_US" (substring (getenv "LANG") nil 5)))
 							  (string-join (list (substring ret -4 nil) (substring ret nil 2) (substring ret 3 5)) "-")
@@ -628,6 +652,13 @@ mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
 								  (t "%b %-e"))
 								(date-to-time timestamp)))
 		ret))
+	(setq mu4e-headers-time-format "%T")
+
+;; come back to this once gpg method gets better
+;; even better: hook pre-update to double it, and reset it on zero exit code
+;;	(define-advice mu4e-message (:after (frm &rest args) pinentry-timeout)
+;;	  (when (ignore-errors (progn (message "%s" args) (string-match-p (regexp-quote "non-zero exit code") (car args)))) (setq mu4e-update-interval (* 2 mu4e-update-interval))))
+
 
 	:hook (evil-collection-setup . (lambda (&rest _) (general-define-key
 													  :keymaps 'mu4e-headers-mode-map
@@ -636,13 +667,25 @@ mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
 													  "k" 'evil-previous-line
 													  )))
 	)
+;; TODO: this sends a duplicate email:
+;; Re: Accepted: Test   <-- bad, this should not be sent
+;; Accepted: Test @ 11:59 PM   <-- correct
+;; (use-package mu4e-icalendar
+;; 	:straight (:type built-in)
+;; 	:after mu4e
+;; 	:demand t
+;; 	:config
+;; 	;;(setq mu4e-icalendar-trash-after-reply t)
+;;     (mu4e-icalendar-setup))
 #+end_src
 There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
+It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
 #+begin_src conf :tangle ~/.mbsyncrc
 IMAPAccount work
 Host imap.gmail.com
 User ghuebner@redhat.com
-PassCmd "PINENTRY_USER_DATA=\"emacs\" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\\s\"\\([[:alpha:]]*\\)\"/\\1/p'"
+#PassCmd "PINENTRY_USER_DATA=\"emacs\" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\\s\"\\([[:alpha:]]*\\)\"/\\1/p'"
+PassCmd "cat ~/.dotfiles/secrets/gmail"
 Port 993
 SSLType IMAPS
 AuthMechs LOGIN
@@ -676,7 +719,8 @@ auth on
 tls_starttls off
 from ghuebner@redhat.com
 user ghuebner@redhat.com
-passwordeval PINENTRY_USER_DATA="emacs" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\s"\([[:alpha:]]*\)"/\1/p'
+#passwordeval PINENTRY_USER_DATA="emacs" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\s"\([[:alpha:]]*\)"/\1/p'
+passwordeval cat ~/.dotfiles/secrets/gmail
 
 account default : work
 #+end_src
@@ -696,10 +740,9 @@ My company doesn't use TLS for... reasons. I guess they don't really use IRC tha
 					:port 6697
 					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
 
-	(defun erc-join-server ()
-	  (interactive)
-	  (let* ((server (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list)))
-			 (server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
+	(defun erc-join-server (server)
+	  (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
+	  (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
 			 (certs (plist-get server-args :client-certificate)))
 		(if-let ((erc-buffer (get-buffer server)))
 			(switch-to-buffer erc-buffer)
@@ -1176,6 +1219,14 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
 
 (use-package solaire-mode
     :ensure t
+	:init
+	(setq solaire-mode-real-buffer-fn
+		  (defun shor/solaire-mode-real-buffer-p ()
+			(let* ((buf (buffer-base-buffer))
+				   (bufname (buffer-name buf)))
+			  (cond ((string-match-p (regexp-quote "*scratch*") bufname))
+					((string-match-p (regexp-opt '("*mu4e-article*" "*mu4e-draft*" "*mu4e-compose*")) bufname))
+					((buffer-file-name buf))))))
     :config
     (solaire-global-mode +1))
 #+end_src
