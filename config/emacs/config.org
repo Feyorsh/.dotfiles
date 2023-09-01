@@ -1,0 +1,1391 @@
+#+TITLE: Lit(erate) Config
+#+AUTHOR: Shorden
+#+PROPERTY: header-args:elisp :tangle "~/.config/emacs/init.el"
+
+#+begin_quote
+These are your father's parentheses. Elegant weapons for a more... civilized age. --- xkcd
+#+end_quote
+Oh yeah baby, time to use a scuffed editor on a scuffed operating system. Nothing will go wrong. I still don't really know wtf I'm doing, but there's a few items that need to be taken care of to download Emacs on NixOS.
+#+begin_src nix
+Nothing to see here...
+#+end_src
+Running the GTK branch for that sweet Wayland experience, gccemacs is default in 29+, and librsvg is (???)
+
+* Straight
+Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el/issues/305#issuecomment-417952067][broken]] or something?
+#+begin_src elisp
+  ;;; init.el --- Personal configuration file -*- lexical-binding: t; -*-
+
+  (setq straight-recipes-gnu-elpa-use-mirror t)
+  (setq straight-check-for-modifications '(check-on-save find-when-checking))
+  (setq straight-use-package-by-default t)
+  (setq straight-vc-git-default-clone-depth '(1 single-branch))
+  (setq use-package-verbose nil)
+
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	(bootstrap-version 6))
+	(unless (file-exists-p bootstrap-file)
+	  (with-current-buffer
+	  (url-retrieve-synchronously
+  "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
+	(load bootstrap-file nil 'nomessage))
+
+  (straight-use-package 'use-package)
+
+  (setq	 x-meta-keysym 'super
+	   x-super-keysym 'meta)
+#+end_src
+*** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
+:END:
+#+begin_src elisp
+;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
+
+(setq package-enable-at-startup nil)
+(add-to-list 'native-comp-eln-load-path (expand-file-name "eln-cache/" user-emacs-directory))
+#+end_src
+
+* Emacs
+** Environment
+:PROPERTIES:
+:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
+:END:
+Recommended config from lsp-mode
+#+begin_src elisp
+(setenv "LSP_USE_PLISTS" "1")
+#+end_src
+Not sure I need this anymore on NixOS
+#+begin_src elisp
+(setq native-comp-driver-options '("-Wl,-w"))
+#+end_src
+
+** Backups
+Forgot where I sourced all this, but basically take a rather conservative approach to backups without littering current directory with lock files.
+#+begin_src elisp
+(setq backup-directory-alist `(("." . ,(expand-file-name "saves/backups" user-emacs-directory))))
+(setq auto-save-file-name-transforms `((".*" ,(expand-file-name "saves/auto-saves" user-emacs-directory) t)))
+(setq lock-file-name-transforms `((".*" ,(expand-file-name "saves/locks" user-emacs-directory) t))
+	  remote-file-name-inhibit-locks t)
+(setq backup-by-copying-when-linked t
+	  version-control t
+	  kept-new-versions 5
+	  kept-old-versions 0
+	  delete-old-versions t
+	  vc-make-backup-files t)
+#+end_src
+
+** Config
+I was previously using file local variables at the end of ~config.org~, but they look /ugly AF/.
+#+begin_src elisp
+(defun config-reload ()
+  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
+	(if (y-or-n-p "Reload?")(load-file (expand-file-name "init.el" user-emacs-directory)))))
+(defun config-tangle ()
+  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
+	(if (y-or-n-p "Tangle?")(org-babel-tangle))))
+
+(add-hook 'after-save-hook 'config-reload)
+(add-hook 'after-save-hook 'config-tangle)
+#+end_src
+I think this will work; gets rid of "File changed" dialog
+#+begin_src elisp
+(add-hook 'after-init-hook 'global-auto-revert-mode)
+(setq debug-on-error t)
+#+end_src
+dOnT uSE tHe MoUSe!
+#+begin_src elisp
+(defun stop-using-minibuffer ()
+  "kill the minibuffer"
+  (when (and (>= (recursion-depth) 1) (active-minibuffer-window))
+	(abort-recursive-edit)))
+
+(add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
+#+end_src
+This should be fine, right?
+#+begin_src elisp
+(setq vc-follow-symlinks t)
+#+end_src
+Ok, ok, I'll switch to 29 soon, I promise...
+#+begin_src elisp
+(use-package compat
+	:demand t)
+#+end_src
+Get native comp to shut up, but not so we can't debug a problem
+#+begin_src elisp
+(setq native-comp-async-report-warnings-errors 'silent)
+#+end_src
+
+** TODO Custom
+I will remove this... one day...
+#+begin_src elisp :tangle no
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ledger-reports
+   '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
+	 ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
+	 ("bal" "%(binary) -f %(ledger-file) bal")
+	 ("reg" "%(binary) -f %(ledger-file) reg")
+	 ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+	 ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+#+end_src
+
+#+begin_src elisp
+;;(setq custom-file (concat user-emacs-directory "custom.el"))
+;;(when (file-exists-p custom-file)
+;;	(load custom-file))
+#+end_src
+
+** Sane Defaults
+#+begin_src elisp
+(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
+  "Create parent directory if not exists while visiting file."
+  (unless (file-exists-p filename)
+	(let ((dir (file-name-directory filename)))
+	  (unless (file-exists-p dir)
+		(make-directory dir t)))))
+#+end_src
+
+* Packages
+** Keybinds
+I feel like this is a really cool package, I just don't have the elisp-fu to take full advantage of it.
+#+begin_src elisp
+(use-package general
+	:demand t
+	:config
+	(general-evil-setup))
+#+end_src
+After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
+#+begin_src elisp
+(use-package evil
+	:demand t
+	:after general
+	:init
+	(setq evil-want-integration t)
+	(setq evil-want-keybinding nil)
+	(setq evil-want-C-u-scroll t)
+	(setq evil-want-Y-yank-to-eol t)
+	(setq evil-move-cursor-back nil)
+	(setq evil-undo-system 'undo-redo)
+	(setq evil-want-minibuffer t)
+	(setq evil-ex-visual-char-range t)
+	(setq evil-v$-excludes-newline t)
+	;; disable state change echo
+	;; consider actually unbinding the echo
+	(setq evil-normal-state-message nil)
+	(setq evil-insert-state-message nil)
+	(setq evil-visual-state-message nil)
+	(setq evil-replace-state-message nil)
+	(setq evil-emacs-state-message nil)
+	:config
+	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
+	(evil-ex-define-cmd "bk" "bkill")
+	(evil-mode 1))
+#+end_src
+This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
+#+begin_src elisp
+(use-package evil-collection
+	:after evil
+	:demand
+	:config
+	(setq evil-collection-setup-minibuffer t)
+	(evil-collection-init))
+#+end_src
+I ran into a weird issue where the recipe on MELPA differed from the Git repo (straight doesn't use the MELPA version but instead the recipe). Running ~straight-pull-package~ fixed this issue.
+#+begin_src elisp
+(use-package evil-org
+	:after org
+	:hook (org-mode . evil-org-mode)
+	:config
+(evil-org-set-key-theme '(textobjects insert navigation additional calendar))
+	(require 'evil-org-agenda)
+	(evil-org-agenda-set-keys))
+#+end_src
+I don't really know why, but my xkb layout binds the Command key to SUPER instead of META, and the Hyprland author has a strong aversion to META.
+#+begin_src elisp
+(setq  x-meta-keysym 'super
+	 x-super-keysym 'meta)
+#+end_src
+*** TODO Evil Numbers
+https://github.com/juliapath/evil-numbers
+*** TODO Evil Snipe
+*** TODO Evil Surround
+*** TODO Evil Visualstar
+(This should be quite easy to replace myself if I don't like it)
+** Performance
+Oldest trick in the book! (Not really.)
+#+begin_src elisp
+(use-package gcmh
+  :demand
+  :config
+  (setq gcmh-high-cons-threshold (* 16 1024 1024))
+  :hook
+  (after-init . gcmh-mode))
+#+end_src
+**** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
+:END:
+This /should/ get reset by GCMH... right?
+#+begin_src elisp
+(setq gc-cons-threshold most-positive-fixnum)
+#+end_src
+
+** Completion
+**** TODO Company
+I think I need to add ~company-box~? Maybe?
+#+begin_src elisp :tangle no
+(use-package company
+	:after lsp-mode
+	:hook (prog-mode . company-mode)
+	:bind (:map company-active-map
+		("<tab>" . company-complete-selection))
+	(:map lsp-mode-map
+		  ("<tab>" . company-indent-or-complete-common))
+	:custom
+	(company-minimum-prefix-length 2)
+	(company-idle-delay 0.0))
+#+end_src
+Mwahaha, time to suck the life out of poor Minad
+#+begin_src elisp
+(use-package corfu
+	:straight (:files (:defaults "extensions/*")
+					  :includes (
+								 corfu-popupinfo
+								 corfu-history
+								 ))
+	:hook ((after-init . global-corfu-mode)
+		   (minibuffer-setup . corfu-enable-always-in-minibuffer)
+		   (corfu-history-mode . savehist-mode))
+	:config
+	(with-eval-after-load 'doom-themes
+	  (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
+	(with-eval-after-load 'savehist
+	  (add-to-list 'savehist-additional-variables 'corfu-history))
+	(general-define-key
+	 :states 'insert
+	 :keymaps 'corfu-map
+	 "C-u" #'corfu-scroll-down
+	 "C-d" #'corfu-scroll-up
+	 "M-k" #'corfu-popupinfo-scroll-down
+	 "M-j" #'corfu-popupinfo-scroll-up
+	 )
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'minibuffer-mode-map
+	 "<escape>" #'abort-recursive-edit)
+
+	(defun corfu-enable-always-in-minibuffer ()
+	  "Enable Corfu in the minibuffer if Vertico is not active."
+	  (unless (or (bound-and-true-p vertico--input)
+				  (eq (current-local-map) read-passwd-map))
+		(corfu-mode 1)))
+
+	(setq corfu-auto t)
+	(setq tab-always-indent 'complete)
+	(setq completion-cycle-threshold nil)
+	(setq corfu-min-width 20)
+	(setq corfu-max-width 40)
+
+	(corfu-history-mode)
+
+	(corfu-popupinfo-mode)
+	(setq corfu-popupinfo-delay 0.5)
+	(setq corfu-popupinfo-max-width 40)
+	(setq corfu-popupinfo-min-height 4)
+	)
+#+end_src
+
+**** Vertico
+#+begin_src elisp
+(use-package vertico
+	:straight (vertico :files (:defaults "extensions/*")
+					   :includes (
+								  vertico-directory
+								  vertico-repeat
+								  ;; vertico-indexed
+								  ;; vertico-flat
+								  ;; vertico-grid
+								  ;; vertico-mouse
+								  ;; vertico-quick
+								  ;; vertico-buffer
+								  ;; vertico-reverse
+								  ;; vertico-multiform
+								  ;; vertico-unobtrusive
+								  ))
+	:demand t
+	:hook ((minibuffer-setup . vertico-repeat-save)
+		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+	:init
+	(setq vertico-cycle nil)
+	(setq read-file-name-completion-ignore-case t
+		  read-buffer-completion-ignore-case t
+		  completion-ignore-case t)
+	(setq read-extended-command-predicate #'command-completion-default-include-p)
+	:config
+	(general-define-key
+	 :keymaps 'vertico-map
+	 :states 'insert
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "C-u" #'vertico-scroll-down
+	 "C-d" #'vertico-scroll-up
+	 "RET" #'vertico-directory-enter
+	 "DEL" #'vertico-directory-delete-char
+	 )
+	(general-define-key
+	 :keymaps 'vertico-map
+	 :states 'normal
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "C-u" #'vertico-scroll-down
+	 "C-d" #'vertico-scroll-up
+	 "<escape>" #'abort-recursive-edit
+	 )
+	(vertico-mode))
+#+end_src
+
+**** Icons
+#+begin_src elisp
+(use-package all-the-icons)
+
+(use-package all-the-icons-completion
+	:after (marginalia all-the-icons)
+	:hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+	:init
+	(all-the-icons-completion-mode))
+
+(use-package kind-icon
+	:after corfu
+	:custom
+	(kind-icon-use-icons t)
+	(kind-icon-default-face 'corfu-default)
+	(kind-icon-blend-background nil)
+	(kind-icon-blend-frac 0.08)
+	(kind-icon-mapping
+	 '((array		   "a"	 :icon "symbol-array"		:face font-lock-type-face			   :collection "vscode")
+	   (boolean		   "b"	 :icon "symbol-boolean"		:face font-lock-builtin-face		   :collection "vscode")
+	   (color		   "#"	 :icon "symbol-color"		:face success						   :collection "vscode")
+	   (command		   "cm"	 :icon "chevron-right"		:face default						   :collection "vscode")
+	   (constant	   "co"	 :icon "symbol-constant"	:face font-lock-constant-face		   :collection "vscode")
+	   (class		   "c"	 :icon "symbol-class"		:face font-lock-type-face			   :collection "vscode")
+	   (constructor	   "cn"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (enum		   "e"	 :icon "symbol-enum"		:face font-lock-builtin-face		   :collection "vscode")
+	   (enummember	   "em"	 :icon "symbol-enum-member" :face font-lock-builtin-face		   :collection "vscode")
+	   (enum-member	   "em"	 :icon "symbol-enum-member" :face font-lock-builtin-face		   :collection "vscode")
+	   (event		   "ev"	 :icon "symbol-event"		:face font-lock-warning-face		   :collection "vscode")
+	   (field		   "fd"	 :icon "symbol-field"		:face font-lock-variable-name-face	   :collection "vscode")
+	   (file		   "f"	 :icon "symbol-file"		:face font-lock-string-face			   :collection "vscode")
+	   (folder		   "d"	 :icon "folder"				:face font-lock-doc-face			   :collection "vscode")
+	   (function	   "f"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (interface	   "if"	 :icon "symbol-interface"	:face font-lock-type-face			   :collection "vscode")
+	   (keyword		   "kw"	 :icon "symbol-keyword"		:face font-lock-keyword-face		   :collection "vscode")
+	   (macro		   "mc"	 :icon "lambda"				:face font-lock-keyword-face)
+	   (magic		   "ma"	 :icon "lightbulb-autofix"	:face font-lock-builtin-face		   :collection "vscode")
+	   (method		   "m"	 :icon "symbol-method"		:face font-lock-function-name-face	   :collection "vscode")
+	   (module		   "{"	 :icon "file-code-outline"	:face font-lock-preprocessor-face)
+	   (numeric		   "nu"	 :icon "symbol-numeric"		:face font-lock-builtin-face		   :collection "vscode")
+	   (operator	   "op"	 :icon "symbol-operator"	:face font-lock-comment-delimiter-face :collection "vscode")
+	   (param		   "pa"	 :icon "gear"				:face default						   :collection "vscode")
+	   (property	   "pr"	 :icon "symbol-property"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (reference	   "rf"	 :icon "library"			:face font-lock-variable-name-face	   :collection "vscode")
+	   (snippet		   "S"	 :icon "symbol-snippet"		:face font-lock-string-face			   :collection "vscode")
+	   (string		   "s"	 :icon "symbol-string"		:face font-lock-string-face			   :collection "vscode")
+	   (struct		   "%"	 :icon "symbol-structure"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (text		   "tx"	 :icon "symbol-key"			:face font-lock-doc-face			   :collection "vscode")
+	   (typeparameter  "tp"	 :icon "symbol-parameter"	:face font-lock-type-face			   :collection "vscode")
+	   (type-parameter "tp"	 :icon "symbol-parameter"	:face font-lock-type-face			   :collection "vscode")
+	   (unit		   "u"	 :icon "symbol-ruler"		:face font-lock-constant-face		   :collection "vscode")
+	   (value		   "v"	 :icon "symbol-enum"		:face font-lock-builtin-face		   :collection "vscode")
+	   (variable	   "va"	 :icon "symbol-variable"	:face font-lock-variable-name-face	   :collection "vscode")
+	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode")))
+	:config
+	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+#+end_src
+
+**** TODO Other stuff
+At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
+#+begin_src elisp
+(use-package prescient)
+
+(use-package consult
+	:general
+  (:keymaps 'global
+			"C-x b" #'consult-buffer))
+
+(use-package marginalia
+	:init
+  (marginalia-mode))
+
+(use-package embark
+:disabled
+	:bind
+  (("C-." . embark-act)			;; pick some comfortable binding
+   ("C-;" . embark-dwim)		;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.	 You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+			   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+				 nil
+				 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+	:ensure t
+	:hook
+	(embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
+
+** Apps
+*** Sundry
+**** TODO Crypto
+EasyPG stuff:
+#+begin_src elisp
+(use-package epa-file
+	:straight (:type built-in)
+	:config
+	(setq epg-pinentry-mode 'loopback))
+(use-package pinentry :commands pinentry-start)
+#+end_src
+Authentication config
+#+begin_src elisp :tangle no
+(setq auth-sources (mapcar (lambda (x) (concat user-emacs-directory x)) '(".authinfo.gpg" ".authinfo" ".netrc")))
+#+end_src
+Sensitive minor mode to disable backups and autosave
+#+begin_src elisp
+(define-minor-mode sensitive-minor-mode
+	"For sensitive files like password lists.
+It disables backup creation and auto saving.
+
+With no argument, this command toggles the mode.
+Non-null prefix argument turns on the mode.
+Null prefix argument turns off the mode."
+  ;; The initial value.
+  :init-value nil
+  ;; The indicator for the mode line.
+  :lighter " sensitive"
+  ;; The minor mode bindings.
+  :keymap nil
+  (if (symbol-value sensitive-minor-mode)
+	  (progn
+	;; disable backups
+	(set (make-local-variable 'backup-inhibited) t)	
+	;; disable auto-save
+	(if auto-save-default
+		(auto-save-mode -1)))
+	;; resort to default value of backup-inhibited
+	(kill-local-variable 'backup-inhibited)
+	;; resort to default auto save setting
+	(if auto-save-default
+	(auto-save-mode 1))))
+
+(setq auto-mode-alist
+	  (append '(("\\.gpg$" . sensitive-minor-mode)) auto-mode-alist))
+#+end_src
+
+*** TODO Mail
+Support for thread folding coming soon!
+Fix image display size
+Change gnus smileys to emoji (not all smileys are interpreted properly)
+Fix the... shitty? Display of HTML email. Not sure this is even possible, but at the very least why is it using the fancy font?
+Change bookmarks to not use trash
+#+begin_src elisp :tangle no
+(use-package mu4e
+	:straight (:type built-in)
+	:hook ((mu4e-headers-mode mu4e-view-mode)
+		   . (lambda () (add-hook
+						 'window-configuration-change-hook
+						 (lambda ()
+						   (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
+								  (add-to-list 'fringe-indicator-alist '(continuation . nil))))
+						 nil :local)))
+	:hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
+	:commands mu4e
+	:init
+	;; these have to be set, but there should be no defaults
+	(setq mu4e-drafts-folder "/.mu4e"
+		  mu4e-trash-folder "/.mu4e"
+		  mu4e-sent-folder "/.mu4e"
+		  mu4e-attachment-dir "~/Downloads")
+	:config
+	(pinentry-start)
+	(setq mu4e-context-policy 'pick-first
+		  mu4e-compose-context-policy 'ask-if-none
+		  mu4e-contexts
+		  `(,(make-mu4e-context
+			  :name "Work"
+			  :match-func (lambda (msg)
+							(when msg
+							  (mu4e-message-contact-field-matches msg '(:to :cc :from) "ghuebner@redhat.com")))
+			  ;; don't set imap trash tag, just move to trash
+			  :enter-func (lambda ()
+							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
+								  (lambda (docid msg target)
+									(mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
+			  :leave-func (lambda ()
+							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
+								  (lambda (docid msg target)
+									(mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
+
+			  :vars '((user-full-name . "George Huebner")
+					  (user-mail-address . "ghuebner@redhat.com")
+					  (mu4e-index-cleanup nil)
+					  (mu4e-index-lazy-check t)
+					  (mu4e-sent-messages-behavior . delete)
+					  (mu4e-drafts-folder . "/work/[Gmail].Drafts")
+					  (mu4e-trash-folder . "/work/[Gmail].Trash")
+					  (mu4e-sent-folder . "/work/[Gmail].Sent Mail")
+					  (mu4e-refile-folder . "/work/[Gmail].All Mail")
+					  (message-sendmail-extra-arguments . ("-a" "work"))
+					  (mu4e-maildir-shortcuts . (
+												 (:name "Inbox" :maildir "/work/INBOX" :key ?i)
+												 (:name "Sent" :maildir "/work/[Gmail].Sent Mail" :key ?s)
+												 (:name "Drafts" :maildir "/work/[Gmail].Drafts" :key ?d)
+												 (:name "Trash" :maildir "/work/[Gmail].Trash" :key ?t)
+												 (:name "All Mail" :maildir "/work/[Gmail].All Mail" :key ?a)
+												 ))
+					  (mu4e-bookmarks . (
+										 (:name "Personal" :query "maildir:/work/INBOX AND flag:personal" :key ?p)
+										 (:name "Unread" :query "maildir:/work/INBOX AND flag:unread" :key ?u)
+										 (:name "memo-list" :query "maildir:/work/INBOX AND list:memo-list.redhat.com" :key ?m)
+										 (:name "kernel" :query "maildir:/work/INBOX AND (list:linux-kernel.vger.kernel.org OR list:io-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
+										 ))
+					  ))))
+
+	(setq smiley-style 'emoji
+		  smiley-emoji-regexp-alist
+		  '(("\\(;-?)\\)\\W" 1 "😉")
+			("[^;]\\(;)\\)\\W" 1 "😉")
+			("\\(:-?]\\)\\W" 1 "😬")
+			("\\(8-?)\\)\\W" 1 "🥴")
+			("\\(:-?|\\)\\W" 1 "😐")
+			("\\(:-?[/\\]\\)[^/\\]\\W" 1 "😕")
+			("\\(:-?(\\)\\W" 1 "😠")
+			("\\(X-?)\\)\\W" 1 "😵")
+			("\\(:-?{\\)\\W" 1 "😦")
+			("\\(>:-?)\\)\\W" 1 "😈")
+			("\\(;-?(\\)\\W" 1 "😢")
+			("\\(:-?D\\)\\W" 1 "😀")
+			("\\(O:-?)\\)\\W" 1 "😇")
+			("\\(\\^?:-?)\\)\\W" 1 "🙂")))
+
+	(setq mu4e-get-mail-command "mbsync -a"
+		  sendmail-program "msmtp"
+		  send-mail-function 'sendmail-send-it
+		  mu4e-update-interval 120
+		  mu4e-change-filenames-when-moving t)
+
+	(setq message-kill-buffer-on-exit t
+		  message-sendmail-envelope-from 'header
+		  mu4e-compose-dont-reply-to-self t
+		  mu4e-compose-format-flowed t
+		  message-citation-line-format "On %a, %b %-e, %Y at %T EST %N wrote:\n"
+		  message-citation-line-function 'message-insert-formatted-citation-line
+		  gnus-article-date-headers '(combined-local-lapsed)
+		  gnus-boring-article-headers '(empty followup-to reply-to to-list long-to)
+		  ;; this is really annoying. it just shows whitespace instead of the emails, which is even worse
+		  ;;gnus-treat-hide-boring-headers 'head
+		  ;;gnus-treat-leading-whitespace 'head
+		  mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
+
+	(setq mu4e-modeline-show-global nil)
+	(setq mu4e-confirm-quit nil)
+	(setq mu4e-hide-index-messages t)
+
+	(setq mu4e-headers-draft-mark '("D" . "📝")
+		  mu4e-headers-flagged-mark '("F" . "⭐")
+		  mu4e-headers-new-mark '("N" . "🆕")
+		  mu4e-headers-passed-mark '("P" . "↪️")
+		  mu4e-headers-replied-mark '("R" . "↩️")
+		  mu4e-headers-seen-mark '("S" . "✅")
+		  mu4e-headers-trashed-mark '("T" . "🗑️")
+		  mu4e-headers-attach-mark '("a" . "📎")
+		  mu4e-headers-encrypted-mark '("x" . "🔐")
+		  mu4e-headers-signed-mark '("s" . "🔏")
+		  mu4e-headers-unread-mark '("u" . "☑️")
+		  mu4e-headers-list-mark '("l" . "🗒️")
+		  mu4e-headers-personal-mark '("p" . "🫵")
+		  mu4e-headers-calendar-mark '("a" . "🗓️")
+
+		  mu4e-headers-thread-orphan-prefix '("<>" . nil)
+		  mu4e-headers-thread-single-orphan-prefix '("<>" . nil)
+		  mu4e-headers-thread-child-prefix '("o " . "├ ")
+		  mu4e-headers-thread-first-child-prefix '("o " . "├ "))
+
+	(setq mu4e-headers-visible-flags '(calendar attach encrypted signed)
+		  mu4e-split-view 'vertical
+		  mu4e-headers-visible-columns (+ 15 60)
+		  mu4e-use-fancy-chars t
+		  mu4e-headers-precise-alignment t
+		  mu4e-headers-include-related nil)
+
+	(add-to-list 'mu4e-header-info '(:flags :name "Flags" :shortname "Flags" :help "Flags for the message" :sortable nil))
+	(setq mu4e-headers-fields '((:human-date . 15)
+								(:subject . 60)
+								(:flags . 10)
+								(:from . 22)
+								(:mailing-list . nil)))
+
+	(define-advice mu4e~headers-human-date (:filter-return (ret) pretty-date)
+	  (if (string= (format-time-string "%Y") (substring ret -4 nil))
+		  (let*
+			  ((timestamp (if (ignore-errors (equal "en_US" (substring (getenv "LANG") nil 5)))
+							  (string-join (list (substring ret -4 nil) (substring ret nil 2) (substring ret 3 5)) "-")
+							(string-join (list (substring ret -4 nil) (substring ret 3 5) (substring ret nil 2)) "-")))
+			   (delta (time-subtract (date-to-day (format-time-string "%F")) (date-to-day timestamp))))
+			(format-time-string (cond
+								  ((= 1 delta) "Yesterday")
+								  ((> 7 delta) "%A")
+								  (t "%b %-e"))
+								(date-to-time timestamp)))
+		ret))
+	(setq mu4e-headers-time-format "%T")
+
+;; come back to this once gpg method gets better
+;; even better: hook pre-update to double it, and reset it on zero exit code
+;;	(define-advice mu4e-message (:after (frm &rest args) pinentry-timeout)
+;;	  (when (ignore-errors (progn (message "%s" args) (string-match-p (regexp-quote "non-zero exit code") (car args)))) (setq mu4e-update-interval (* 2 mu4e-update-interval))))
+
+
+	:hook (evil-collection-setup . (lambda (&rest _) (general-define-key
+													  :keymaps 'mu4e-headers-mode-map
+													  :states 'normal
+													  "j"  'evil-next-line
+													  "k" 'evil-previous-line
+													  )))
+	)
+;; TODO: this sends a duplicate email:
+;; Re: Accepted: Test	<>-- bad, this should not be sent
+;; Accepted: Test @ 11:59 PM   <>-- correct
+;; (use-package mu4e-icalendar
+;;	:straight (:type built-in)
+;;	:after mu4e
+;;	:demand t
+;;	:config
+;;	;;(setq mu4e-icalendar-trash-after-reply t)
+;;	   (mu4e-icalendar-setup))
+#+end_src
+There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
+It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
+#+begin_src conf :tangle ~/.mbsyncrc :tangle no
+IMAPAccount work
+Host imap.gmail.com
+User ghuebner@redhat.com
+#PassCmd "PINENTRY_USER_DATA=\"emacs\" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\\s\"\\([[:alpha:]]*\\)\"/\\1/p'"
+PassCmd "cat ~/.dotfiles/secrets/gmail"
+Port 993
+SSLType IMAPS
+AuthMechs LOGIN
+
+IMAPStore work-remote
+Account work
+
+MaildirStore work-local
+Path ~/Mail/work/
+Inbox ~/Mail/work/INBOX
+Flatten .
+
+Channel work
+Far :work-remote:
+Near :work-local:
+Create Both
+Expunge Both
+Patterns * !"[Gmail]/Important" !"[Gmail]/Starred"
+SyncState *
+#+end_src
+#+begin_src conf :tangle ~/.config/msmtp/config :tangle no
+defaults
+logfile ~/Mail/msmtp.log
+protocol smtp
+tls on
+
+account work
+host smtp.gmail.com
+port 465
+auth on
+tls_starttls off
+from ghuebner@redhat.com
+user ghuebner@redhat.com
+#passwordeval PINENTRY_USER_DATA="emacs" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\s"\([[:alpha:]]*\)"/\1/p'
+passwordeval cat ~/.dotfiles/secrets/gmail
+
+account default : work
+#+end_src
+*** TODO IRC
+Well, I see IRC hasn't gotten any easier to use.
+
+My company doesn't use TLS for... reasons. I guess they don't really use IRC that much either though
+#+begin_src elisp
+(use-package erc
+	:commands (erc erc-tls)
+	:config
+;; this should probably be an alist...
+	(defvar erc-server-list
+	  `(,`("Libera.Chat" :server "irc.libera.chat"
+						 :port 6697
+						 :client-certificate ,(expand-file-name "erc/libera.pem" user-emacs-directory))
+		  ,`("OFTC" :server "irc.oftc.net"
+					:port 6697
+					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
+
+	(defun erc-join-server (server)
+	  (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
+	  (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
+			 (certs (plist-get server-args :client-certificate)))
+		(if-let ((erc-buffer (get-buffer server)))
+			(switch-to-buffer erc-buffer)
+		  (progn
+			(unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
+			  (plist-put server-args :client-certificate (list certs certs)))
+			(apply 'erc-tls server-args)))))
+
+	(general-define-key
+	 :keymaps 'erc-mode-map
+	 "<up>" #'erc-previous-command
+	 "<down>" #'erc-next-command)
+	(define-advice erc-previous-command (:before-while () no-cycle)
+	  (or (not erc-input-ring-index) (not (equal (ring-length erc-input-ring) (+ 1 erc-input-ring-index)))))
+	(define-advice erc-next-command (:before-while () no-cycle)
+	  erc-input-ring-index)
+
+	(use-package erc-sasl
+		:straight (:type built-in)
+		:config
+		(setq erc-sasl-mechanism 'external))
+	(use-package erc-services
+		:straight (:type built-in)
+		:init
+		;;(setq erc-prompt-for-nickserv-password nil)
+		;;(setq erc-use-auth-source-for-nickserv-password nil)
+		(erc-services-mode 1)
+		)
+
+	(setq erc-nick "Shorden")
+	(setq erc-autojoin-timing 'ident)
+	(setq erc-kill-buffer-on-part t)
+	(setq erc-kill-queries-on-quit t)
+	(setq erc-kill-server-buffer-on-quit t)
+;;	(setq erc-auth-source-server-function nil)
+	;(setq erc-prompt-for-password nil)
+	(setq erc-autojoin-channels-alist '(("libera" "#emacs") ("oftc" "#llvm"))))
+#+end_src
+Instead of gnarsty password-based auth, we can use a certificate to authenticate. For some reason, OFTC has to use SHA-1 instead of SHA-256.
+#+begin_src zsh :dir "~/emacs/emacs_profiles/vanilla" :eval no
+mkdir -p erc
+cd erc
+openssl req -x509 -new -newkey rsa:4096 -sha256 -days 1825 -nodes -out libera.pem -keyout libera.pem
+openssl req -x509 -new -newkey rsa:2048 -sha1 -days 1825 -nodes -out oftc.pem -keyout oftc.pem
+#+end_src
+And then once connected, run
+#+begin_src erc :eval no
+/msg NickServ CERT ADD
+#+end_src
+Unrelated: figure out a better place to stick this
+#+begin_src elisp
+(defun advice-unadvice (sym)
+  "Remove all advices from symbol SYM."
+  (interactive "aFunction symbol: ")
+  (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
+#+end_src
+
+** Language
+*** TODO Org
+There's not a particular reason I don't use Emacs built-ins, but caution must be exercised to avoid clobbering the built-in and MELPA versions of Org.
+#+begin_src elisp
+(use-package org
+	:init
+  (setq org-directory "~/emacs/org")
+	:config
+	(setq org-src-preserve-indentation t
+		  org-src-fontify-natively t
+		  org-export-latex-listings t
+		  org-export-with-smart-quotes t
+		  org-latex-listings 'listings
+		  org-latex-prefer-user-labels t
+		  org-confirm-babel-evaluate nil
+		  org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
+		  org-startup-folded t
+		  org-cycle-include-plain-lists 'integrate
+		  org-agenda-skip-scheduled-if-done t
+		  org-use-sub-superscripts "{}"
+		  ;; org-modern
+		  org-auto-align-tags nil
+		  org-tags-column 0
+		  org-catch-invisible-edits 'show-and-error
+		  org-special-ctrl-a/e t
+		  org-insert-heading-respect-content t
+		  org-hide-emphasis-markers t
+		  org-pretty-entities t
+		  org-ellipsis "…"
+		  org-agenda-tags-column 0
+		  org-agenda-block-separator ?─
+		  org-agenda-time-grid
+		  '((daily today require-timed)
+		(800 1000 1200 1400 1600 1800 2000)
+		" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+		  org-agenda-current-time-string
+		  "⭠ now ─────────────────────────────────────────────────")
+	(add-to-list 'org-latex-packages-alist '("" "listings"))
+	:custom
+	(org-agenda-files '("~/Documents/agenda.org")))
+  (add-hook 'emacs-startup-hook
+		(lambda ()
+		  (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+			 (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
+#+end_src
+And now to make it *pretty*
+#+begin_src elisp
+(use-package org-modern
+	:hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
+  (org-modern-mode . fonts/org)
+  (org-cdlatex-mode . fonts/literate-programming)
+  :config
+  (setq org-todo-keyword-faces '(("TODO" . org-todo)
+				 ("WAIT" . "orange red")
+				 ("DONE" . org-done)
+				 ("PAST" . "dark red")))
+  (setq org-modern-todo-faces
+	'(("WAIT" :background "orange red" :foreground "white")
+		("PAST" :background "dark red" :foreground "white"))))
+  ;;:custom-face
+  ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
+
+;; I confirmed that I can use text properties (not expensive) to do linenums with the fancy src blocks. Might look into this in the future.
+;;(add-text-properties 1 2 '(display-line-numbers-disable t) nil)
+
+;; tecosaur the goat for this one
+(defvar +org-mode-left-margin-width 1
+  "The `left-margin-width' to be used in `org-mode' buffers.")
+
+(defun +setup-org-mode-left-margin ()
+  (when (and (derived-mode-p 'org-mode)
+			 (eq (current-buffer) ; Check current buffer is active.
+				 (window-buffer (frame-selected-window))))
+	(setq left-margin-width (if display-line-numbers
+								0 +org-mode-left-margin-width))
+	(set-window-buffer (get-buffer-window (current-buffer))
+					   (current-buffer))))
+(add-hook 'window-configuration-change-hook #'+setup-org-mode-left-margin)
+(add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
+(add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
+#+end_src
+Here's a hack for the annoying org fast todo popup:
+#+begin_src elisp :tangle no
+; Macro which creates advice 'template'
+(defmacro my/with-advice (adlist &rest body)
+  "Execute BODY with temporary advice in ADLIST.
+
+Each element of ADLIST should be a list of the form
+  (SYMBOL WHERE FUNCTION [PROPS])
+suitable for passing to `advice-add'.  The BODY is wrapped in an
+`unwind-protect' form, so the advice will be removed even in the
+event of an error or nonlocal exit."
+  (declare (debug ((&rest (&rest form)) body))
+		   (indent 1))
+  `(progn
+	 ,@(mapcar (lambda (adform)
+				 (cons 'advice-add adform))
+			   adlist)
+	 (unwind-protect (progn ,@body)
+	   ,@(mapcar (lambda (adform)
+				   `(advice-remove ,(car adform) ,(nth 2 adform)))
+				 adlist))))
+
+;;Function which replaces org-switch-to-buffer-other-window with emacs' original switch-to-buffer-other-window
+(defun hd/org-todo-same-window (orig-fn)
+  "Advice to fix window placement in `org-fast-todo-selection'."
+  (let	((override
+	  '("\\*Org todo\\*|\\*Org Note\\*"
+		(display-buffer-use-some-window)
+		(inhibit-same-window . nil)))) ;locally sets variable "override" as key-value pair for display-buffer-alist entry
+	(add-to-list 'display-buffer-alist override) ;adds the contents of the above defined variable to display-buffer-alist
+	(my/with-advice
+		((#'org-switch-to-buffer-other-window :override #'switch-to-buffer-other-window))
+	  (unwind-protect (funcall orig-fn)
+		(setq display-buffer-alist
+			  (delete override display-buffer-alist))))))
+
+; Injecting the relevant advice into the org-fast-todo-selection function
+(advice-add #'org-fast-todo-selection :around #'hd/org-todo-same-window)
+#+end_src
+Now for Babel:
+#+begin_src elisp
+(use-package org
+	:config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '(
+	 (emacs-lisp . t)
+	 (shell . t)
+	 (python . t)
+	 )))
+#+end_src
+And inline images:
+#+begin_src elisp
+(use-package org-remoteimg
+	:straight (org-remoteimg :type git :host github :repo "gaoDean/org-remoteimg")
+	:config
+	(setq url-cache-directory "~/.cache/emacs/url")
+	(setq org-display-remote-inline-images 'cache))
+#+end_src
+*** Python
+#+begin_src elisp
+(use-package lsp-pyright
+	:ensure t
+	:hook (python-mode . (lambda ()
+			   (require 'lsp-pyright)
+			   (lsp-deferred))))
+#+end_src
+
+*** TODO Zig
+Panic because chals are due soon 😰
+Add a setting such that ~zig run~ creates an exe in the expected place, not the .cache directory
+#+begin_src elisp
+(use-package zig-mode)
+#+end_src
+
+*** TODO Rust
+Add DAP stuff + make sure rustic works
+#+begin_src elisp
+(use-package rustic
+	:custom
+  (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
+#+end_src
+
+*** TODO Lisp
+Slime? Improve scratch?
+#+begin_src elisp
+(setq-default lisp-indent-function 'common-lisp-indent-function)
+#+end_src
+
+*** TODO C/C++
+I realized I don't actually use an "official" style. Everyone else is just uglier than me.
+Add label indentation + DAP stuff
+#+begin_src elisp
+(setq-default indent-tabs-mode t)
+(setq-default tab-width 4)
+(defvaralias 'c-basic-offset 'tab-width)
+(defvaralias 'cperl-indent-level 'tab-width)
+(setq-default c-default-style "k&r")
+#+end_src
+
+*** Markdown
+#+begin_src elisp
+(use-package markdown-mode
+	:config
+(with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1)))))))
+)
+#+end_src
+
+*** TODO Nix
+#+begin_src elisp
+(use-package nix-mode
+	:init
+  (add-hook 'nix-mode-hook (lambda () (indent-tabs-mode -1))))
+#+end_src
+
+** Tools
+*** Terminal
+Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
+#+begin_src elisp :tangle no
+(use-package vterm
+	:config
+  (setq vterm-shell "fish")
+  (setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
+  )
+#+end_src
+
+*** TODO Dired
+Switched to Dirvish, +haven't looked back+ haven't seen much lol. Ty to Sun I for reccing ranger
+Need to make an evil mode map for dirvish (add to evil-collection)
+#+begin_src elisp :tangle no
+(use-package dirvish
+	:custom
+  (dirvish-quick-access-entries
+   '(("h" "~/" "Home")
+	 ("d" "~/Downloads/" "Downloads")
+	 ("t" "~/.Trash" "TrashCan")))
+  :init
+  (dirvish-override-dired-mode)
+  :config
+  (setq delete-by-moving-to-trash t)
+  (setq dirvish-preview-dispatchers
+	(cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
+  (setq dirvish-attributes '(vc-state file-size git-msg subtree-state all-the-icons collapse file-time))
+  (setq dired-listing-switches
+	"-l --almost-all --human-readable --group-directories-first --no-group")
+  ;;(setq dirvish-open-with-programs '(".mp4" . ()))
+  (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
+  (setq dirvish-header-line-height '(25 . 35))
+  (setq dirvish-side-width 38)
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
+  (dirvish-peek-mode)
+  )
+#+end_src
+Got to make sure all these goodies are installed:
+#+begin_src bash
+brew install coreutils fd poppler ffmpegthumbnailer mediainfo imagemagick
+#+end_src
+And here's stuff for vanilla Dired:
+- Also I am too dumb to be trusted with enabling /all/ of the disabled commands
+#+begin_src elisp
+(put 'dired-find-alternate-file 'disabled nil)
+#+end_src
+
+*** Ibuffer
+#+begin_src elisp
+(use-package ibuffer
+	:general
+  (:keymaps 'global
+			"C-x C-b" #'ibuffer))
+#+end_src
+
+*** Perspective
+consult-perspective (uses persp-switch to preview different perspectives)
+Well, poop. `persp-save` is basically useless because it only saves file-visiting buffers. I know what I want, so instead we'll hook into `persp-mode` to create a bunch of perspectives populated with mail, irc, etc
+Even better: custom function to open a directory and populate a perspective with a vterm, magit or dired (if it's a git repo), and the README if it exists
+#+begin_src elisp
+(use-package perspective
+	:general
+  (:keymaps 'global
+			"C-x p" #'persp-switch
+			)
+  :commands (persp-new persp-switch persp-state-save)
+  :hook (ibuffer . (lambda () (persp-ibuffer-set-filter-groups)))
+  :hook (persp-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (persp-name (persp-curr))))))
+  :init
+  (setq persp-state-default-file (expand-file-name ".persp" user-emacs-directory))
+  (setq persp-suppress-no-prefix-key-warning t)
+  (setq persp-sort 'access)
+  (setq persp-modestring-short t)
+  (setq persp-initial-frame-name "emacs")
+  (setq persp-purge-initial-persp-on-save t)
+  :config
+  ;;(persp-setup-for "mail" (mu4e) (persp-set-buffer 'mu4e-main-buffer-name))
+  ;;(persp-setup-for "irc" (erc-join-server "Libera.Chat"))
+;;(defun open-directory-in-perspective (dir)
+;;(interactive "DOpen directory: ")
+;;)
+  ;;(define-advice consult--buffer-preview (:around (fn &rest args) fysh/persp-tamer)
+  ;;  ;;(ad-disable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
+  ;;(ad-deactivate-regexp "^persp-.*")
+  ;;  (apply fn args)
+  ;;(ad-activate-regexp "^persp-.*")
+  ;;  ;;(ad-enable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
+  ;;  )
+  (use-package consult :demand t)
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (add-to-list 'consult-buffer-sources persp-consult-source)
+  )
+#+end_src
+
+*** Direnv
+For usage with nix-direnv (and maybe lorri in the future?)
+#+begin_src elisp
+(use-package direnv
+	;;:hook
+	;;(prog-mode . #'direnv-update-environment)
+	:config
+;; ignore summary because it's useless on nix
+  (defun direnv--show-summary (summary old-directory new-directory)
+	"Show a SUMMARY message.
+
+OLD-DIRECTORY and NEW-DIRECTORY are the directories before and after
+the environment changes."
+	(let ((paths
+		   (when direnv-show-paths-in-summary
+			 (direnv--format-paths old-directory new-directory))))
+	  (if paths
+		  (message "direnv: %s" paths)
+		(message "direnv: changed"))))
+  (direnv-mode))
+#+end_src
+
+*** TODO Ledger
+So I can commit tax fraud productively.
+Pull ~monthly_expenses~ out of custom.el; make it programmatic to reflect the current billing cycle
+#+begin_src elisp
+(use-package ledger-mode)
+#+end_src
+
+*** TODO Magit
+#+begin_src elisp
+(use-package magit
+	:init
+  (dir-locals-set-class-variables
+   'huge-git-repository
+   '((nil
+	  . ((magit-refresh-buffers . nil)
+		 (magit-revision-insert-related-refs . nil)))
+	 (magit-status-mode
+	  . ((eval . (magit-disable-section-inserter 'magit-insert-tags-header))
+		 (eval . (magit-disable-section-inserter 'magit-insert-recent-commits))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote))
+		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream))
+		 ))
+	 ))
+  (dir-locals-set-directory-class
+   (concat (getenv "HOME") "/Personal/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class
+   (concat (getenv "HOME") "/Work/linux") 'huge-git-repository)
+  )
+#+end_src
+
+*** TODO Debugger
+Woah boy, this is gonna be a long one.
+I started off trying to build lldb-vscode from source, only to immediately realize that's a /terrible/ idea. Instead, I admitted to myself that I'm still suckling the teat of VSCode and (ashamedly) installed Lanza's lldb-vscode.
+#+begin_src elisp :tangle no
+(use-package dap-mode
+	:config
+  (setq dap-auto-configure-mode t)
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (require 'dap-lldb)
+  ;;(setq dap-lldb-debug-program '("/opt/homebrew/opt/llvm/bin/lldb-vscode"))
+  (setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+
+  ;;; default debug template for (c++)
+  (dap-register-debug-template
+   "C++ LLDB dap"
+   (list :type "lldb-vscode"
+		 :cwd nil
+		 :args nil
+		 :request "launch"
+		 :program nil))
+  
+  (defun dap-debug-create-or-edit-json-template ()
+	"Edit the C++ debugging configuration or create + edit if none exists yet."
+	(interactive)
+	(let ((filename (concat (lsp-workspace-root) "/launch.json"))
+	  (default "~/.emacs.d/default-launch.json"))
+	  (unless (file-exists-p filename)
+	(copy-file default filename))
+	  (find-file-existing filename)))
+)
+#+end_src
+
+*** TODO LSP
+Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Corfu wiki]] for setup)
+#+begin_src elisp
+(use-package lsp-mode
+	:init
+  (defun shor/lsp-mode-setup-completion ()
+	(setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+		  '(flex)))
+  :custom
+  (lsp-completion-provider :none) ;; corfu
+  :hook
+  (lsp-completion-mode . shor/lsp-mode-setup-completion)
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  ;;  (setq lsp-keymap-prefix "C-c l")
+  ;;:hook ((cc-mode . lsp-deferred)
+  ;;	   (zig-mode . lsp-deferred)
+  ;;	   (rustic-mode . lsp-deferred))
+  :commands (lsp lsp-deferred)
+  :config
+  (setq read-process-output-max (* 1024 1024)) ; 1mb
+
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-modeline-diagnostics-enable nil))
+
+;;(use-package lsp-ui
+;;	  :commands lsp-ui-mode
+;;	  :config
+;;	  (setq lsp-ui-doc-use-webkit t))
+;;(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+;;(use-package lsp-treemacs
+;;	  :commands lsp-treemacs-errors-list
+;;	  :config
+;;	  (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** Treesitter
+Emacs 29 has tree sitter built in, which adds ts specific major modes. Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]].
+#+begin_src elisp :tangle no
+(use-package tree-sitter
+	:config
+  (global-tree-sitter-mode))
+(use-package tree-sitter-langs)
+#+end_src
+
+*** Help
+TODO move elsewhere (maybe an editor group?)
+Also figure out how to reuse the help buffer, because it keeps opening in annoying places.
+#+begin_src elisp
+(use-package helpful
+	:general (:keymaps 'global
+					   "C-h f" #'helpful-callable
+					   "C-h F" #'helpful-function
+					   "C-h v" #'helpful-variable
+					   "C-h k" #'helpful-key
+					   "C-h x" #'helpful-command)
+	:config
+	(setq helpful-max-buffers 1))
+#+end_src
+
+** UI
+*** Title Bar
+#+begin_src elisp :tangle no
+(setq-default frame-title-format "Emacs")
+#+end_src
+
+*** TODO Theme
+I make liberal use of Doom's themes but not ~evil-mode~. I still need to properly configure the modeline.
+#+begin_src elisp
+(use-package doom-themes
+	:ensure t
+	:config
+	(setq doom-themes-enable-bold t
+		  doom-themes-enable-italic t)
+	(load-theme 'doom-palenight t)
+	(doom-themes-visual-bell-config)
+	(setq doom-themes-treemacs-theme "doom-atom")
+	(doom-themes-treemacs-config)
+	(doom-themes-org-config))
+
+(use-package doom-modeline
+	:ensure t
+	;; :straight (doom-modeline :type git :host github :repo ""
+	:config
+	(setq doom-modeline-modal-icon t)
+	(setq nerd-icons-color-icons nil)
+	:hook
+	(after-init . doom-modeline-mode))
+
+(use-package solaire-mode
+	:ensure t
+	:init
+	(setq solaire-mode-real-buffer-fn
+		  (defun shor/solaire-mode-real-buffer-p ()
+			(let* ((buf (buffer-base-buffer))
+				   (bufname (buffer-name buf)))
+			  (cond ((string-match-p (regexp-quote "*scratch*") bufname))
+					((string-match-p (regexp-opt '("*mu4e-article*" "*mu4e-draft*" "*mu4e-compose*")) bufname))
+					((buffer-file-name buf))))))
+	:config
+	(solaire-global-mode +1))
+#+end_src
+
+*** TODO GUI
+Or lack thereof...
+**** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
+:END:
+#+begin_src elisp
+(setq menu-bar-mode nil
+	  tool-bar-mode nil)
+;; for some reason, scroll bar behaves really weirdly. Issue with PGTK branch perhaps?
+(add-to-list 'default-frame-alist
+			 '(vertical-scroll-bars . nil))
+
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
+
+(setq use-file-dialog nil)
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+**** Treemacs
+#+begin_src elisp
+(use-package treemacs
+	:after solaire-mode
+	:config
+	(push '(treemacs-window-background-face . solaire-default-face) solaire-mode-remap-alist)
+	(push '(treemacs-hl-line-face . solaire-hl-line-face) solaire-mode-remap-alist)
+	)
+#+end_src
+
+**** TODO Fonts
+I still need to rice Org fonts, and test LaTeX fonts out. Defaults should be sane, though.
+For ligatures
+For visual-line-mode
+
+Trying to patch swathes of Unicode blocks is... a losing battle. Consider using [[https://github.com/rolandwalker/unicode-fonts][Unicode Fonts]] instead.
+#+begin_src elisp
+(add-hook 'text-mode-hook 'visual-line-mode)
+(add-hook 'prog-mode-hook 'visual-line-mode)
+
+
+(defun fonts/default ()
+  (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
+  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
+  (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
+  (set-fontset-font "fontset-default" 'symbol (font-spec :family "Sarasa UI J" :size 15))
+  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 15)))
+
+(defun fonts/org ()
+  (if org-modern-mode
+  (progn
+	(setq fonts/org-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+	(setq fonts/org-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Sarasa Mono J" :size 15 :weight 'normal)))
+	(variable-pitch-mode +1))
+  (progn
+	(face-remap-remove-relative fonts/org-fixed-cookie)
+	(face-remap-remove-relative fonts/org-variable-cookie)
+	(variable-pitch-mode -1))))
+;; note that I still need to set these in `custom` for org
+
+(defun fonts/literate-programming ()
+  (if org-cdlatex-mode
+  (progn
+	(setq fonts/literate-programming-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
+	(setq fonts/literate-programming-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 15 :weight 'normal)))
+	(variable-pitch-mode +1))
+  (progn
+	(face-remap-remove-relative fonts/literate-programming-fixed-cookie)
+	(face-remap-remove-relative fonts/literate-programming-variable-cookie)
+	(variable-pitch-mode -1))))
+
+(add-hook 'after-init-hook 'fonts/default)
+#+end_src
+Ok, something in my Emacs config is definitely messing up native scroll.
+We add rainbow-mode to color hex codes, like #003b6f.
+#+begin_src elisp
+(use-package rainbow-mode
+	:config
+  (rainbow-mode 1))
+#+end_src
+
+**** TODO Splash Screen
+I use this because of yabai weirdness. Also, I want to add a proper splash screen.
+#+begin_src elisp
+(defun use-fancy-splash-screens-p () t)
+#+end_src
+
+** TODO Deprecated
+Hmmmm... to use or not to use EAF...
+#+begin_src elisp :tangle no
+(use-package pdf-tools
+	:config
+  (pdf-loader-install)
+  (setq pdf-view-use-scaling t)
+  (setq-default pdf-view-display-size 'fit-page))
+#+end_src
