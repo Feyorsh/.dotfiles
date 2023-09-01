@@ -1,0 +1,21 @@
+#+TITLE: macOS Rice
+#+AUTHOR: Shorden
+#+begin_quote
+It's just so easy, it's so simple! I don't- I don't see why most people don't run Linux. Thank god they don't, because then they'd all be supervillains, wouldn't they?
+#+end_quote Steve the Super Villain
+
+* Tmux
+Life support while I switch to WezTerm
+* Neovim
+Try to get it to a nicer minimal config, but life support
+* TODO Yabai (+ SKHD)
+I started a script for resizing big-ass electon windows... finish that
+* TODO Git
+Import "profile" config from NixOS branch
+* TODO fish
+Finish the ~nix shell~ introspection [[./home.nix::89][function]]
+* iterm
+Still oscillating between iterm and Wezterm :/
+I should probably finish that boxdraw patch at some point...
+* TODO WezTerm
+Now with 50% more Lua©
