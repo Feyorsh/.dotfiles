@@ -1,6 +1,0 @@
-\.git.*
-vim-pathogen
-
-^/README.*
-^/LICENSE.*
-^/COPYING
