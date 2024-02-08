@@ -1,8 +1,21 @@
 #+TITLE: macOS Rice
 #+AUTHOR: Shorden
 #+begin_quote
-It's just so easy, it's so simple! I don't- I don't see why most people don't run Linux. Thank god they don't, because then they'd all be supervillains, wouldn't they?
-#+end_quote Steve the Super Villain
+It's just so easy, it's so simple! I don't- I don't see why most people don't run Linux. Thank god they don't, because then they'd all be supervillains, wouldn't they? -- Steve the Super Villain
+#+end_quote
+
+* Nix
+Make sure to run
+#+begin_src shell :noeval
+cd ~/.dotfiles/.nix-gc-roots
+nix-store --add-root <link-name> --indirect --realise /nix/store/...
+#+end_src
+Although supposedly Nix 18 has deprecated this in favor of ~nix store~...
+
+* Darwin
+Running list of defaults that aren't in nix-darwin and need to be set manually(?)
+- com.apple.driver.AppleBluetoothMultitouch.trackpad.?? ("Swipe between pages" = "Off")
+- Key repeat (see .osx dots from that guy)
 
 * Tmux
 Life support while I switch to WezTerm
@@ -11,7 +24,11 @@ Try to get it to a nicer minimal config, but life support
 * TODO Yabai (+ SKHD)
 I started a script for resizing big-ass electon windows... finish that
 * TODO Git
-Import "profile" config from NixOS branch
+Split into profiles + pull into dots
+* TODO pass
+Use pass instead of GPG to store secrets
+* TODO LaTeX
+Ugh.
 * TODO fish
 Finish the ~nix shell~ introspection [[./home.nix::89][function]]
 * iterm
