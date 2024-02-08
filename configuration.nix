@@ -2,6 +2,7 @@
   environment.systemPackages = with pkgs; [
     vim
     git
+    git-lfs
     wget
     jq
     ripgrep
