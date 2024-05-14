@@ -10,7 +10,7 @@
     silver-searcher
     fd
 
-    samba # TODO: move to the 391 flake and just do ugly impure stuff there
+    #samba # TODO: move to the 391 flake and just do ugly impure stuff there
     # https://apple.stackexchange.com/questions/445372/samba-dot-org-smbd-does-not-start-on-macos-monterey-12-5
 
     # I think this is useful if only to tell xcode cli to shut the fuck up
@@ -32,20 +32,17 @@
   services.nix-daemon.enable = true;
   nix = {
     package = pkgs.nixVersions.master;
-    # bruh what https://github.com/NixOS/nix/issues/7273
-    #settings.auto-optimise-store = true;
+    # https://github.com/NixOS/nix/issues/7273
+    # settings.auto-optimise-store = true;
     settings = {
       auto-optimise-store = false;
       keep-outputs = true;
       experimental-features = "nix-command flakes";
       # feeling a little sus after that maplectf chal...
       accept-flake-config = true;
+      trusted-users = [ "root" "@admin" ];
     };
-  #   extraOptions = ''
-  #   builders = ssh-ng://builder@linux-builder aarch64-linux /etc/builder_ed25519 4 - - - c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSUpCV2N4Yi9CbGFxdDFhdU90RStGOFFVV3JVb3RpQzVxQkorVXVFV2RWQ2Igcm9vdEBuaXhvcwo=
-  #   # Not strictly necessary, but this will reduce your disk utilization
-  #   builders-use-substitutes = true
-  # '';
+    linux-builder.enable = true;
 
     registry = {
       # nixpkgs = {
@@ -163,129 +160,86 @@
     /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
   '';
 
-  environment.etc."ssh/ssh_config.d/100-linux-builder.conf".text = ''
-    Host linux-builder
-        Hostname localhost
-        HostKeyAlias linux-builder
-        Port 31022
-  '';
-
-
 	# FUCK SAMBA FUCK THIS BULLSHIT
 
 
-  system.activationScripts.samba_lock.text = lib.stringAfter [ "var" ] ''
-    mkdir -p /var/lock/samba
-    mkdir -p /var/cache/samba
-    mkdir -p /var/cache/samba
-  '';
-
-
-  environment.etc."samba/smb.conf".text = ''
-    [global]
-        security = user
-        passdb backend = tdbsam:/etc/samba/private/passdb.tdb
-        browseable = yes
-        log file = /var/log/samba/log.%m
-        writeable = yes
-        min protocol = NT1
-        hosts allow = ;	
-        ntlm auth = yes
-        lanman auth = no
-        client lanman auth = no
-    [ece391_share]
-        comment = ECE391Shared
-        path = /Users/ghuebner/School/ECE391/share/
-        valid users = ghuebner
-        browseable = yes
-        writable = yes
-        guest ok = yes
-  '';
-
-
-  environment.launchDaemons."org.samba.nmbd.plist".text = ''
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-    <key>Label</key>
-    <string>org.samba.nmbd</string>
-    <key>OnDemand</key>
-    <false/>
-    <key>ProgramArguments</key>
-    <array>
-    <string>${pkgs.samba.outPath}/sbin/nmbd</string>
-    <string>-D</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>WorkingDirectory</key>
-    <string>/var/lock/samba</string>
-    <key>ServiceDescription</key>
-    <string>netbios</string>
-    </dict>
-    </plist>
-  '';
-
-  environment.launchDaemons."org.samba.smbd.plist".text = ''
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-    <key>Label</key>
-    <string>org.samba.smbd</string>
-    <key>OnDemand</key>
-    <false/>
-    <key>ProgramArguments</key>
-    <array>
-    <string>${pkgs.samba.outPath}/sbin/smbd</string>
-    <string>-D</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>ServiceDescription</key>
-    <string>netbios</string>
-    </dict>
-    </plist>
-'';
+  # system.activationScripts.samba_lock.text = lib.stringAfter [ "var" ] ''
+    # mkdir -p /var/lock/samba
+    # mkdir -p /var/cache/samba
+    # mkdir -p /var/cache/samba
+  # '';
+# 
+# 
+  # environment.etc."samba/smb.conf".text = ''
+    # [global]
+        # security = user
+        # passdb backend = tdbsam:/etc/samba/private/passdb.tdb
+        # browseable = yes
+        # log file = /var/log/samba/log.%m
+        # writeable = yes
+        # min protocol = NT1
+        # hosts allow = ;	
+        # ntlm auth = yes
+        # lanman auth = no
+        # client lanman auth = no
+    # [ece391_share]
+        # comment = ECE391Shared
+        # path = /Users/ghuebner/School/ECE391/share/
+        # valid users = ghuebner
+        # browseable = yes
+        # writable = yes
+        # guest ok = yes
+  # '';
+# 
+# 
+  # environment.launchDaemons."org.samba.nmbd.plist".text = ''
+    # <?xml version="1.0" encoding="UTF-8"?>
+    # <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    # <plist version="1.0">
+    # <dict>
+    # <key>Label</key>
+    # <string>org.samba.nmbd</string>
+    # <key>OnDemand</key>
+    # <false/>
+    # <key>ProgramArguments</key>
+    # <array>
+    # <string>${pkgs.samba.outPath}/sbin/nmbd</string>
+    # <string>-D</string>
+    # </array>
+    # <key>RunAtLoad</key>
+    # <true/>
+    # <key>WorkingDirectory</key>
+    # <string>/var/lock/samba</string>
+    # <key>ServiceDescription</key>
+    # <string>netbios</string>
+    # </dict>
+    # </plist>
+  # '';
+# 
+  # environment.launchDaemons."org.samba.smbd.plist".text = ''
+    # <?xml version="1.0" encoding="UTF-8"?>
+    # <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    # <plist version="1.0">
+    # <dict>
+    # <key>Label</key>
+    # <string>org.samba.smbd</string>
+    # <key>OnDemand</key>
+    # <false/>
+    # <key>ProgramArguments</key>
+    # <array>
+    # <string>${pkgs.samba.outPath}/sbin/smbd</string>
+    # <string>-D</string>
+    # </array>
+    # <key>RunAtLoad</key>
+    # <true/>
+    # <key>ServiceDescription</key>
+    # <string>netbios</string>
+    # </dict>
+    # </plist>
+# '';
 
 
   # end samba bullshit
-
-
-
-  # I actually have no idea why I added this. stuff symlinks fine with vanilla nix-darwin
-  #system.activationScripts.applications.text = lib.mkForce ''
-  #    echo "setting up /Applications..." >&2
-  #    applications="/Applications"
-  #    nix_apps="$applications/Nix Apps"
-  #
-  #    # Needs to be writable by the user so that home-manager can symlink into it
-  #    if ! test -d "$applications"; then
-  #        mkdir -p "$applications"
-  #        chown ghuebner: "$applications"
-  #        chmod u+w "$applications"
-  #    fi
-  #
-  #    # Delete the directory to remove old links
-  #    rm -rf "$nix_apps"/**
-  #    #mkdir -p "$nix_apps"
-  #    find ${config.system.build.applications}/Applications -maxdepth 1 -type l -exec readlink '{}' + |
-  #        while read src; do
-  #            # Spotlight does not recognize symlinks, it will ignore directory we link to the applications folder.
-  #            # It does understand MacOS aliases though, a unique filesystem feature. Sadly they cannot be created
-  #            # from bash (as far as I know), so we use the oh-so-great Apple Script instead.
-  #            /usr/bin/osascript -e "
-  #                set fileToAlias to POSIX file \"$src\" 
-  #                set applicationsFolder to POSIX file \"$nix_apps\"
-  #                tell application \"Finder\"
-  #                    make alias file to fileToAlias at applicationsFolder
-  #                    # This renames the alias; 'mpv.app alias' -> 'mpv.app'
-  #                    set name of result to \"$(rev <<< "$src" | cut -d'/' -f1 | rev)\"
-  #                end tell
-  #            " 1>/dev/null
-  #        done
-  #  '';
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog

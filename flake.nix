@@ -24,17 +24,6 @@
     let
       system = "aarch64-darwin";
       inherit (darwin.lib) darwinSystem;
-      #linuxSystem = builtins.replaceStrings [ "darwin" ] [ "linux" ] system;
-      darwin-builder = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        modules = [
-          "${nixpkgs}/nixos/modules/profiles/macos-builder.nix"
-          {
-            virtualisation.host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
-            system.nixos.revision = nixpkgs.lib.mkForce null;
-          }
-        ];
-      };
       pkgs = import nixpkgs {
         inherit system;
 	      config = { allowUnfree = true; };
@@ -75,15 +64,6 @@
              master = nix.packages.aarch64-darwin.nix;
            }));
 	  }) ];
-        #	  overlays = attrValues self.overlays ++ singleton (
-        #			  final: prev: (optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
-        #				  inherit (final.pkgs-x86)
-        #				  idris2
-        #				  nix-index
-        #				  niv
-        #				  purescript;
-        #				  })
-        #			  );
       };
       fpkgs = import fyshpkgs { inherit pkgs; };
     in
@@ -95,38 +75,15 @@
 	        modules = [ ./configuration.nix
 		                  home-manager.darwinModules.home-manager
 		                  {
-                        #inherit pkgs;
-			                  #nixpkgs = pkgs;
                         home-manager.extraSpecialArgs = { inherit fpkgs; };
 			                  home-manager.useGlobalPkgs = true;
 			                  home-manager.useUserPackages = true;
 			                  home-manager.users.ghuebner = import ./home.nix;
 		                  }
-                      # linux-builder
-                      # {
-                      #   nix.distributedBuilds = true;
-                      #   nix.buildMachines = [{
-                      #     hostName = "builder@localhost";
-                      #     system = "aarch64-linux";
-                      #     maxJobs = 4;
-                      #     supportedFeatures = [ "kvm" "benchmark" "big-parallel" ];
-                      #   }];
-
-                      #   launchd.daemons.darwin-builder = {
-                      #     command = "${darwin-builder.config.system.build.macos-builder-installer}/bin/create-builder";
-                      #     serviceConfig = {
-                      #       KeepAlive = true;
-                      #       RunAtLoad = true;
-                      #       StandardOutPath = "/var/log/darwin-builder.log";
-                      #       StandardErrorPath = "/var/log/darwin-builder.log";
-                      #       WorkingDirectory = "/etc/nix";
-                      #     };
-                      #   };
-                      # }
 	                  ];
         };
 
         # Expose the package set, including overlays, for convenience.
-        # darwinPackages = self.darwinConfigurations."Aqua".pkgs;
+        darwinPackages = self.darwinConfigurations."Aqua".pkgs;
       };
 }
