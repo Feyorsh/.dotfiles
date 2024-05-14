@@ -43,14 +43,16 @@
         ]
       },
       "locked": {
-        "dirtyRev": "7cf9199d7660ff51d6ec35cb989887251dda3eab-dirty",
-        "dirtyShortRev": "7cf9199-dirty",
-        "lastModified": 1707417578,
-        "narHash": "sha256-FiUdxwIjl9sm3+Fq1xnIVyizsdzqlJpNj2d6xWslz1E=",
+        "lastModified": 1708827129,
+        "narHash": "sha256-olczHgJ8bPzp/kquDYAO+Km1yk9Wtyg28Y1YsY3jDt4=",
+        "ref": "main",
+        "rev": "d64b1b33ecaa58e08e9795e737eb76f4e47a3f69",
+        "revCount": 8,
         "type": "git",
         "url": "file:///Users/ghuebner/Personal/fyshpkgs"
       },
       "original": {
+        "ref": "main",
         "type": "git",
         "url": "file:///Users/ghuebner/Personal/fyshpkgs"
       }

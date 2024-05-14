@@ -47,6 +47,12 @@ in {
   # TODO: add custom git command
   # git add --intent-to-add extra/flake.nix
   # git update-index --skip-worktree extra/flake.nix
+  programs.zsh = {
+    enable = true;
+    initExtra = let fishBin = "${config.home.profileDirectory}${config.programs.fish.package.shellPath}"; in ''
+      [ -x $fishBin ] && SHELL=$fishBin exec fish
+    '';
+  };
   programs.fish = {
     enable = true;
     shellInit = ''
@@ -139,47 +145,48 @@ in {
   # TODO: make this a git command `git leaders`
   #git log --shortstat --pretty="%cE" | sed 's/\(.*\)@.*/\1/' | grep -v "^$" | awk 'BEGIN { line=""; } !/^ / { if (line=="" || !match(line, $0)) {line = $0 "," line }} /^ / { print line " # " $0; line=""}' | sort | sed -E 's/# //;s/ files? changed,//;s/([0-9]+) ([0-9]+ deletion)/\1 0 insertions\(+\), \2/;s/\(\+\)$/\(\+\), 0 deletions\(-\)/;s/insertions?\(\+\), //;s/ deletions?\(-\)//' | awk 'BEGIN {name=""; files=0; insertions=0; deletions=0;} {if ($1 != name && name != "") { print name ": " files " files changed, " insertions " insertions(+), " deletions " deletions(-), " insertions-deletions " net"; files=0; insertions=0; deletions=0; name=$1; } name=$1; files+=$2; insertions+=$3; deletions+=$4} END {print name ": " files " files changed, " insertions " insertions(+), " deletions " deletions(-), " insertions-deletions " net";}'
 
-  # xdg.configFile."nixpkgs/config.nix".text = ''
-  #   {
-  #     allowUnfree = true;
-  #   }
-  # '';
+  # TODO git fsck magic
+  #  git fsck --no-reflog | awk '/dangling commit/ {print $3}' | while read ref; do if [ "`git show -p $ref|grep -c Upload`" -ne 0 ]; then echo $ref ; fi ; done 
+  # allows installing unfree software on cli
+  nixpkgs.config = {
+      allowUnfree = true;
+  };
 
-#  programs.gpg = {
-#    enable = true;
-#    package = pkgs.gnupg.overrideAttrs (previous: rec {
-#                pname = "gnupg";
-#                version = "2.4.0";
-#                src = pkgs.fetchurl {
-#                    url = "mirror://gnupg/gnupg/${pname}-${version}.tar.bz2";
-#                    hash = "sha256-HXkVjdAdmSQx3S4/rLif2slxJ/iXhOosthDGAPsMFIM=";
-#                };
-#              });
-#    mutableKeys = true;
-#    mutableTrust = true;
-#  };
-#  services.gpg-agent = {
-#    enable = true;
-#    defaultCacheTtl = 1200;
-#    maxCacheTtl = 86400;
-#    pinentryFlavor = null;
-#    extraConfig = ''
-#      pinentry-program '' +
-#    pkgs.writeShellScript "custom-pinentry" ''
-#      case $PINENTRY_USER_DATA in
-#      emacs)
-#          exec ${pkgs.pinentry.emacs}/bin/pinentry "$@"
-#          ;;
-#      gtk)
-#          exec ${pkgs.pinentry.gtk2}/bin/pinentry "$@"
-#          ;;
-#      *)
-#          exec ${pkgs.pinentry.tty}/bin/pinentry "$@"
-#      esac
-#    '' + ''
-#
-#      allow-emacs-pinentry
-#      allow-loopback-pinentry
-#    '';
-#  };
+ programs.gpg = {
+   enable = true;
+   # package = pkgs.gnupg.overrideAttrs (previous: rec {
+   #             pname = "gnupg";
+   #             version = "2.4.0";
+   #             src = pkgs.fetchurl {
+   #                 url = "mirror://gnupg/gnupg/${pname}-${version}.tar.bz2";
+   #                 hash = "sha256-HXkVjdAdmSQx3S4/rLif2slxJ/iXhOosthDGAPsMFIM=";
+   #             };
+   #           });
+   mutableKeys = true;
+   mutableTrust = true;
+ };
+ # services.gpg-agent = {
+ #   enable = true;
+ #   defaultCacheTtl = 1200;
+ #   maxCacheTtl = 86400;
+ #   pinentryFlavor = null;
+ #   extraConfig = ''
+ #     pinentry-program '' +
+ #   pkgs.writeShellScript "custom-pinentry" ''
+ #     case $PINENTRY_USER_DATA in
+ #     emacs)
+ #         exec ${pkgs.pinentry.emacs}/bin/pinentry "$@"
+ #         ;;
+ #     gtk)
+ #         exec ${pkgs.pinentry.gtk2}/bin/pinentry "$@"
+ #         ;;
+ #     *)
+ #         exec ${pkgs.pinentry.tty}/bin/pinentry "$@"
+ #     esac
+ #   '' + ''
+
+ #     allow-emacs-pinentry
+ #     allow-loopback-pinentry
+ #   '';
+ # };
 }

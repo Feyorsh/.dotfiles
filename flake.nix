@@ -6,13 +6,13 @@
     nix.url = "github:NixOS/nix?ref=2.19.1";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     fyshpkgs = {
-      url = "git+file:///Users/ghuebner/Personal/fyshpkgs";
-	    inputs.nixpkgs.follows = "nixpkgs";
+      url = "git+file:///Users/ghuebner/Personal/fyshpkgs?ref=main";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     darwin = {
-	    url = "github:LnL7/nix-darwin";
-	    inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -30,11 +30,6 @@
 	      overlays = [
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
-              #icon = prev.fetchurl {
-                #url = "https://raw.githubusercontent.com/Dav-ej/Custom-Big-Sur-Icons/master/Icons/Spotify_Dark_Alt.icns";
-                #name = "${prev'.pname}.icns";
-                #sha256 = "BqMxC9Mvrr9QOyCVP8RfVK/gZSkpUQjrbwJ10i/BWow=";
-              #};
               icon = ./assets/icons/spotify.icns;
 
               preInstall = ''
@@ -56,6 +51,12 @@
                sha256 = "+SGySdRPFuw+yOuTwGiH4tLYqk4bh+2BRT46jUGEfuY=";
              }) ];
 
+             configureFlags = (prev'.configureFlags or []) ++ [
+               "--with-xwidgets"
+             ];
+             buildInputs = (prev'.buildInputs or []) ++ [
+               final.darwin.apple_sdk_11_0.frameworks.WebKit
+             ];
              postInstall = prev'.postInstall + ''
                cp $icon $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
              '';

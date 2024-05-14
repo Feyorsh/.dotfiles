@@ -14,7 +14,7 @@
     # https://apple.stackexchange.com/questions/445372/samba-dot-org-smbd-does-not-start-on-macos-monterey-12-5
 
     # I think this is useful if only to tell xcode cli to shut the fuck up
-    darwin.xcode
+    darwin.xcode_15_1
   ];
 
   fonts = {
@@ -45,18 +45,15 @@
     linux-builder.enable = true;
 
     registry = {
-      # nixpkgs = {
-      #   from = { id = "nixpkgs"; type = "indirect"; };
-      #   flake = inputs.nixpkgs;
-      # };
       templates = {
         from = {
           id = "templates";
           type = "indirect";
         };
         to = {
-          path = "${config.users.users.ghuebner.home}/.dotfiles/templates";
-          type = "path";
+          type = "git";
+          ref = "main";
+          url = "file://${config.users.users.ghuebner.home}/.dotfiles/templates";
         };
       };
       fyshpkgs = {
@@ -65,8 +62,9 @@
           type = "indirect";
         };
         to = {
-          path = "${config.users.users.ghuebner.home}/fyshpkgs";
-          type = "path";
+          type = "git";
+          ref = "main";
+          url = "file://${config.users.users.ghuebner.home}/Personal/fyshpkgs";
         };
       };
     };
@@ -80,8 +78,8 @@
   networking.computerName = "Aqua";
 
 
-  # login shell
-  programs.zsh.enable = true;  # default shell on catalina
+  # login shell, fish config in ./home.nix
+  programs.zsh.enable = true;
 
   # TODO: get self (from flake) in here
   #system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -105,11 +103,6 @@
   system.defaults.dock.launchanim = false;
   system.defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
 
-  # TODO: config with yabai
-  #system.defaults.dock.autohide
-  #system.defaults.dock.autohide-delay
-  #system.defaults.dock.autohide-time-modifier
-
   system.defaults.alf.stealthenabled = 1;
   system.defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
   system.defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
@@ -123,14 +116,15 @@
   system.defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
   system.defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
 
-  # TODO i guess?
-  # activitymonitor
-
   # TODO !!
   services.yabai.enable = true;
-  #services.yabai.
   services.yabai.enableScriptingAddition = true;
   services.skhd.enable = true;
+  # TODO: config with yabai
+  #system.defaults.dock.autohide
+  #system.defaults.dock.autohide-delay
+  #system.defaults.dock.autohide-time-modifier
+
 
   # TODO spacebar status bar
   # TODO ubersicht: music
