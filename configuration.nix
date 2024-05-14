@@ -24,7 +24,7 @@
       source-sans-pro
       sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
       jetbrains-mono
-      twitter-color-emoji
+      twemoji-color-font
       emacs-all-the-icons-fonts
     ];
   };
