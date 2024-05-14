@@ -5,11 +5,13 @@
 #+begin_quote
 These are your father's parentheses. Elegant weapons for a more... civilized age. --- xkcd
 #+end_quote
-Oh yeah baby, time to use a scuffed editor on a scuffed operating system. Nothing will go wrong. I still don't really know wtf I'm doing, but there's a few items that need to be taken care of to download Emacs on NixOS.
-#+begin_src nix
-Nothing to see here...
+Oh yeah baby, time to use a scuffed editor on a scuffed operating system. Nothing will go wrong. I still don't really know wtf I'm doing, but there's a few items that need to be taken care of to download Emacs on +NixOS+.
+Emacs installation can be found in [[../../flake.nix]], but only thing of note is we're using a custom icon (squared Emacs china) and transparent title bars from railwaycat's Homebrew port.
+Run these:
+#+begin_src bash
+defaults write org.gnu.Emacs HideDocumentIcon YES
+defaults write org.gnu.Emacs TransparentTitleBar YES
 #+end_src
-Running the GTK branch for that sweet Wayland experience, gccemacs is default in 29+, and librsvg is (???)
 
 * Straight
 Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el/issues/305#issuecomment-417952067][broken]] or something?
@@ -136,6 +138,7 @@ I will remove this... one day...
 	 ("reg" "%(binary) -f %(ledger-file) reg")
 	 ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
 	 ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+(
 #+end_src
 
 #+begin_src elisp
@@ -153,6 +156,9 @@ I will remove this... one day...
 	  (unless (file-exists-p dir)
 		(make-directory dir t)))))
 #+end_src
+#+begin_src elisp
+(setq load-prefer-newer t)
+#+end_src
 
 * Packages
 ** Keybinds
@@ -161,7 +167,13 @@ I feel like this is a really cool package, I just don't have the elisp-fu to tak
 (use-package general
 	:demand t
 	:config
-	(general-evil-setup))
+	(general-evil-setup)
+	(general-create-definer leader-def
+		:prefix "SPC"
+		:keymaps 'override
+		:states '(normal visual motion emacs))
+	(leader-def "" nil)
+	)
 #+end_src
 After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 #+begin_src elisp
@@ -188,12 +200,19 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 	:config
 	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
 	(evil-ex-define-cmd "bk" "bkill")
+	(evil-define-command fysh/evil-save-modified-and-close (file &optional bang)
+	  "Save and kill the current buffer"
+	  :repeat nil
+	  (interactive "<f><!>")
+	  (when (buffer-modified-p)
+		(evil-write nil nil nil file bang))
+	  (kill-buffer (current-buffer)))
 	(evil-mode 1))
 #+end_src
 This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
 #+begin_src elisp
 (use-package evil-collection
-	:after evil
+	:after (evil magit)
 	:demand
 	:config
 	(setq evil-collection-setup-minibuffer t)
@@ -420,15 +439,21 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
 (use-package consult
 	:general
   (:keymaps 'global
-			"C-x b" #'consult-buffer))
+			"C-x b" #'consult-buffer)
+  (leader-def "." #'consult-ripgrep)
+
+  ;; (my-leader-def
+  ;; 	  :keymaps 'normal
+  ;; 	"SPC" #'consult-ripgrep)
+  )
 
 (use-package marginalia
 	:init
   (marginalia-mode))
 
 (use-package embark
-:disabled
-	:bind
+	:disabled
+  :bind
   (("C-." . embark-act)			;; pick some comfortable binding
    ("C-;" . embark-dwim)		;; good alternative: M-.
    ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
@@ -467,9 +492,14 @@ EasyPG stuff:
 	(setq epg-pinentry-mode 'loopback))
 (use-package pinentry :commands pinentry-start)
 #+end_src
-Authentication config
+Authentication config (old, using authinfo)
 #+begin_src elisp :tangle no
 (setq auth-sources (mapcar (lambda (x) (concat user-emacs-directory x)) '(".authinfo.gpg" ".authinfo" ".netrc")))
+#+end_src
+New, using ~pass~
+#+begin_src elisp
+(setq auth-sources '(password-store))
+(auth-source-pass-enable)
 #+end_src
 Sensitive minor mode to disable backups and autosave
 #+begin_src elisp
@@ -814,44 +844,47 @@ There's not a particular reason I don't use Emacs built-ins, but caution must be
 #+begin_src elisp
 (use-package org
 	:init
-  (setq org-directory "~/emacs/org")
-	:config
-	(setq org-src-preserve-indentation t
-		  org-src-fontify-natively t
-		  org-export-latex-listings t
-		  org-export-with-smart-quotes t
-		  org-latex-listings 'listings
-		  org-latex-prefer-user-labels t
-		  org-confirm-babel-evaluate nil
-		  org-latex-pdf-process '("latexmk -bibtex -f -xelatex %f")
-		  org-startup-folded t
-		  org-cycle-include-plain-lists 'integrate
-		  org-agenda-skip-scheduled-if-done t
-		  org-use-sub-superscripts "{}"
-		  ;; org-modern
-		  org-auto-align-tags nil
-		  org-tags-column 0
-		  org-catch-invisible-edits 'show-and-error
-		  org-special-ctrl-a/e t
-		  org-insert-heading-respect-content t
-		  org-hide-emphasis-markers t
-		  org-pretty-entities t
-		  org-ellipsis "…"
-		  org-agenda-tags-column 0
-		  org-agenda-block-separator ?─
-		  org-agenda-time-grid
-		  '((daily today require-timed)
-		(800 1000 1200 1400 1600 1800 2000)
-		" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-		  org-agenda-current-time-string
-		  "⭠ now ─────────────────────────────────────────────────")
-	(add-to-list 'org-latex-packages-alist '("" "listings"))
-	:custom
-	(org-agenda-files '("~/Documents/agenda.org")))
-  (add-hook 'emacs-startup-hook
-		(lambda ()
-		  (progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-			 (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
+  (setq org-directory "~/Personal/org")
+  :general
+  ("C-c l" #'org-store-link)
+  :config
+  (setq org-src-preserve-indentation t
+		org-src-fontify-natively t
+		org-export-with-smart-quotes t
+		org-latex-prefer-user-labels t
+		org-list-allow-alphabetical t
+		org-confirm-babel-evaluate nil
+		org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -xelatex %f")
+		org-startup-folded t
+		org-cycle-include-plain-lists 'integrate
+		org-agenda-skip-scheduled-if-done t
+		org-use-sub-superscripts "{}"
+		;; org-modern
+		org-auto-align-tags nil
+		org-tags-column 0
+		org-catch-invisible-edits 'show-and-error
+		org-special-ctrl-a/e t
+		org-insert-heading-respect-content t
+		org-hide-emphasis-markers t
+		org-pretty-entities t
+		org-ellipsis "…"
+		org-agenda-window-setup 'current-window
+		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
+		org-agenda-tags-column 0
+		org-agenda-block-separator ?─
+		org-agenda-time-grid
+		'((daily today require-timed)
+		  (800 1000 1200 1400 1600 1800 2000)
+		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+		org-agenda-current-time-string
+		"⭠ now ─────────────────────────────────────────────────")
+  (add-to-list 'org-latex-packages-alist '("" "listings"))
+  :custom
+  (org-agenda-files '("~/Personal/org/agenda.org")))
+(add-hook 'emacs-startup-hook
+		  (lambda ()
+			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
+				   (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -933,6 +966,7 @@ event of an error or nonlocal exit."
 Now for Babel:
 #+begin_src elisp
 (use-package org
+:after (wolfram-mode ob-sagemath)
 	:config
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -940,6 +974,8 @@ Now for Babel:
 	 (emacs-lisp . t)
 	 (shell . t)
 	 (python . t)
+	 (wolfram . t)
+	 (sagemath . t)
 	 )))
 #+end_src
 And inline images:
@@ -949,6 +985,100 @@ And inline images:
 	:config
 	(setq url-cache-directory "~/.cache/emacs/url")
 	(setq org-display-remote-inline-images 'cache))
+#+end_src
+Website stuff:
+#+begin_src elisp
+(use-package ox-hugo
+	;;:straight (ox-hugo :type git :host github :repo "kaushalmodi/ox-hugo"))
+	:config
+  ;;(setq org-hugo-section "gooba")
+  (setq org-html-with-latex 'html)
+  (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
+
+  (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
+	"Transcode a LATEX-ENVIRONMENT element from Org to HTML.
+CONTENTS is nil.  INFO is a plist holding contextual information."
+	(let ((processing-type (plist-get info :with-latex))
+		  (latex-frag (org-remove-indentation
+					   (org-element-property :value latex-environment)))
+          (attributes (org-export-read-attribute :attr_html latex-environment))
+          (label (org-html--reference latex-environment info t))
+          (caption (and (org-html--latex-environment-numbered-p latex-environment)
+						(number-to-string
+						 (org-export-get-ordinal
+						  latex-environment info nil
+						  (lambda (l _)
+							(and (org-html--math-environment-p l)
+								 (org-html--latex-environment-numbered-p l))))))))
+      (cond
+		((memq processing-type '(t mathjax))
+		 (org-html-format-latex
+		  (if (org-string-nw-p label)
+			  (replace-regexp-in-string "\\`.*"
+										(format "\\&\n\\\\label{%s}" label)
+										latex-frag)
+			latex-frag)
+		  'mathjax info))
+		((memq processing-type '(t html))
+		 (org-html-format-latex
+		  (if (org-string-nw-p label)
+			  (replace-regexp-in-string "\\`.*"
+										(format "\\&\n\\\\label{%s}" label)
+										latex-frag)
+			latex-frag)
+		  'html info))
+		((assq processing-type org-preview-latex-process-alist)
+		 (let ((formula-link
+				(org-html-format-latex
+				 (org-html--unlabel-latex-environment latex-frag)
+				 processing-type info)))
+           (when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
+			 (let ((source (org-export-file-uri (match-string 1 formula-link))))
+			   (org-html--wrap-latex-environment
+				(org-html--format-image source attributes info)
+				info caption label)))))
+		(t (org-html--wrap-latex-environment latex-frag info caption label))))))
+#+end_src
+Adding links to PDFs with Org. Need to double check linking a PDF with eww links to the remote copy properly.
+#+begin_src elisp
+(use-package org-pdftools
+	:hook (org-mode . org-pdftools-setup-link))
+#+end_src
+
+Org capture setup.
+#+begin_src elisp
+(use-package org
+	:config
+  (setq org-capture-templates
+		'(("t" "TODO" entry (file+headline "~/Personal/org/agenda.org" "Today")
+		   "* TODO %?\n  %i" :empty-lines 1)))
+  :general
+  (leader-def "c" #'org-capture)
+  )
+#+end_src
+
+#+begin_src elisp
+(use-package cdlatex
+	:hook org-cdlatex-mode
+	)
+(use-package auctex)
+#+end_src
+
+**** LaTeX
+Adding Koma Script ~article~ class to org mode:
+#+begin_src elisp :tangle no
+(setq org-latex-classes '(("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}")) ("report" "\\documentclass[11pt]{report}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}")) ("book" "\\documentclass[11pt]{book}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+#+end_src
+Add nice fontification
+#+begin_src elisp
+(use-package engrave-faces
+	:init
+  (setq org-latex-src-block-backend 'engraved))
+#+end_src
+Add colors. This requires Koma Script _and_ Xcolor
+#+begin_src elisp :tangle no
+(use-package ox-chameleon
+	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
 #+end_src
 *** Python
 #+begin_src elisp
@@ -991,6 +1121,14 @@ Add label indentation + DAP stuff
 (setq-default c-default-style "k&r")
 #+end_src
 
+*** Assembly
+I use GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at&t vs intel for gdb)
+~gas-mode~ was pretty bad last time I tried it
+#+begin_src elisp
+(setq asm-comment-char ?\#)
+(custom-set-variables
+ '(tab-stop-list (quote (8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120))))
+#+end_src
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
@@ -1006,10 +1144,40 @@ Add label indentation + DAP stuff
   (add-hook 'nix-mode-hook (lambda () (indent-tabs-mode -1))))
 #+end_src
 
+*** TODO Mathematica
+Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
+Org-babel export are wonky in latex... unsure if this is a wolfram-mode issue or not
+#+begin_src elisp
+(use-package wolfram-mode
+	:straight (wolfram-mode :type git :host github :repo "dalanicolai/wolfram-mode")
+	:config
+    ;; these are set to "default", which is a bogus value.
+    (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
+    (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face))
+	(setq org-babel-wolfram-command "mash")
+	(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
+#+end_src
+
+*** Sage
+Unsure if I need to specify the ~deferred~ dependency myself...
+#+begin_src elisp
+(use-package sage-shell-mode
+	:init
+  (sage-shell:define-alias)
+  (setq sage-shell:use-prompt-toolkit nil)
+  (setq sage-shell:use-simple-prompt t)
+  (setq sage-shell:set-ipython-version-on-startup nil)
+  (setq sage-shell:check-ipython-version-on-startup nil))
+
+(use-package ob-sagemath
+	:after sage-shell-mode
+	:init
+	(setq org-babel-default-header-args:sage '((:session . t))))
+#+end_src
 ** Tools
 *** Terminal
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package vterm
 	:config
   (setq vterm-shell "fish")
@@ -1062,7 +1230,7 @@ And here's stuff for vanilla Dired:
 			"C-x C-b" #'ibuffer))
 #+end_src
 
-*** Perspective
+*** TODO Perspective
 consult-perspective (uses persp-switch to preview different perspectives)
 Well, poop. `persp-save` is basically useless because it only saves file-visiting buffers. I know what I want, so instead we'll hook into `persp-mode` to create a bunch of perspectives populated with mail, irc, etc
 Even better: custom function to open a directory and populate a perspective with a vterm, magit or dired (if it's a git repo), and the README if it exists
@@ -1085,9 +1253,9 @@ Even better: custom function to open a directory and populate a perspective with
   :config
   ;;(persp-setup-for "mail" (mu4e) (persp-set-buffer 'mu4e-main-buffer-name))
   ;;(persp-setup-for "irc" (erc-join-server "Libera.Chat"))
-;;(defun open-directory-in-perspective (dir)
-;;(interactive "DOpen directory: ")
-;;)
+  ;;(defun open-directory-in-perspective (dir)
+  ;;(interactive "DOpen directory: ")
+  ;;)
   ;;(define-advice consult--buffer-preview (:around (fn &rest args) fysh/persp-tamer)
   ;;  ;;(ad-disable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
   ;;(ad-deactivate-regexp "^persp-.*")
@@ -1095,9 +1263,14 @@ Even better: custom function to open a directory and populate a perspective with
   ;;(ad-activate-regexp "^persp-.*")
   ;;  ;;(ad-enable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
   ;;  )
+  ;; (define-advice persp-buffers-to-savelist (:before (persp) doom/persp-remove-dead-buffers)
+  ;; 	(when (persp-p persp)
+  ;; 	  (setf (persp-buffers persp)
+  ;; 			(cl-delete-if-not #'persp-get-buffer-or-null (persp-buffers persp)))))
   (use-package consult :demand t)
   (consult-customize consult--source-buffer :hidden t :default nil)
   (add-to-list 'consult-buffer-sources persp-consult-source)
+  (persp-mode)
   )
 #+end_src
 
@@ -1107,8 +1280,10 @@ For usage with nix-direnv (and maybe lorri in the future?)
 (use-package direnv
 	;;:hook
 	;;(prog-mode . #'direnv-update-environment)
-	:config
-;; ignore summary because it's useless on nix
+	:init
+  (setq warning-minimum-level :error)
+  :config
+  ;; ignore summary because it's useless on nix
   (defun direnv--show-summary (summary old-directory new-directory)
 	"Show a SUMMARY message.
 
@@ -1128,6 +1303,8 @@ So I can commit tax fraud productively.
 Pull ~monthly_expenses~ out of custom.el; make it programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode)
+(add-hook 'emacs-startup-hook
+		  (lambda () (find-file-noselect "~/Personal/Finances/expenses.ledger")))
 #+end_src
 
 *** TODO Magit
@@ -1153,6 +1330,9 @@ Pull ~monthly_expenses~ out of custom.el; make it programmatic to reflect the cu
   (dir-locals-set-directory-class
    (concat (getenv "HOME") "/Work/linux") 'huge-git-repository)
   )
+(use-package forge
+:after magit
+)
 #+end_src
 
 *** TODO Debugger
@@ -1250,7 +1430,7 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 
 ** UI
 *** Title Bar
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (setq-default frame-title-format "Emacs")
 #+end_src
 
@@ -1267,7 +1447,8 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
 	(setq doom-themes-treemacs-theme "doom-atom")
 	(doom-themes-treemacs-config)
 	(doom-themes-org-config))
-
+#+end_src
+#+begin_src elisp
 (use-package doom-modeline
 	:ensure t
 	;; :straight (doom-modeline :type git :host github :repo ""
@@ -1276,7 +1457,18 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
 	(setq nerd-icons-color-icons nil)
 	:hook
 	(after-init . doom-modeline-mode))
-
+#+end_src
+This is required to lock the modeline to v3.4, the last version that supports all-the-icons.
+#+begin_src elisp :tangle "~/.config/emacs/straight/versions/default.el"
+(("doom-modeline" . "63eb9d3548c7d4be1774b50cdc2169262dd43100")) ;; last version that supports all-the-icons
+("org" . "19a1a5024bef3163737fa6f2b71dd9d4437dc31f")) ;; latest org breaks ox-hugo export
+:gamma
+#+end_src
+#+begin_src bash :eval no
+cd ~/.config/emacs/straight/repos/doom-modeline
+git fetch --unshallow
+#+end_src
+#+begin_src elisp
 (use-package solaire-mode
 	:ensure t
 	:init
@@ -1297,17 +1489,20 @@ Or lack thereof...
 :PROPERTIES:
 :header-args:elisp: :tangle "~/.config/emacs/early-init.el"
 :END:
+~menu-bar-mode~ must be enabled for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]]: frames without menu bars DO NOT have fullscreen enabled by default
 #+begin_src elisp
-(setq menu-bar-mode nil
-	  tool-bar-mode nil)
-;; for some reason, scroll bar behaves really weirdly. Issue with PGTK branch perhaps?
-(add-to-list 'default-frame-alist
-			 '(vertical-scroll-bars . nil))
+(define-key global-map [menu-bar] nil)
+(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
+(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
 
-;; Resizing the Emacs frame can be a terribly expensive part of changing the
-;; font. By inhibiting this, we easily halve startup times with fonts that are
-;; larger than the system default.
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+
+;; big savings, supposedly
 (setq frame-inhibit-implied-resize t)
+
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
 
 (setq use-file-dialog nil)
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -1382,10 +1577,43 @@ I use this because of yabai weirdness. Also, I want to add a proper splash scree
 
 ** TODO Deprecated
 Hmmmm... to use or not to use EAF...
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package pdf-tools
-	:config
+	:hook
+  (pdf-tools-enabled . pdf-view-midnight-minor-mode)
+  ;;(internal-show-cursor nil nil)
+  :config
   (pdf-loader-install)
   (setq pdf-view-use-scaling t)
   (setq-default pdf-view-display-size 'fit-page))
 #+end_src
+
+
+* TODO List
+** DONE Magit: Place after evil config to set help menu correctly
+** Mu4e: Get it to work with outlook (consistently)
+Also make it so I don't have to log back in every day
+** Evil: Add visual *​, evil-snipe, and maybe number incrementing
+*** Bindings: Add bindings for most common M-x commands
+- Consult ripgrep
+- Magit(?)
+  - Blame
+  - Find file
+- Comment/uncomment region
+- Run-python (just unify "run-" as one keybinding, probably C-c C-c)
+- diff buffer with file
+** Consult: Make enter fill to every candidate, not fill to the highlighted candidate
+** Pdf-tools: wrap page not found errors such that they raise the bell, but don't throw an error
++This might be fixed?+
+(advice-add pdf-tools-next-page (try ... except (ding)))
+** Figure out twitter color emoji
+** Latex org setup (very arduous)
+*** org chameleon and engrave-faces
+*** Create document class using exam
+And make a corresponding org class that automatically converts headings into questions, with tags as points
+** DONE Fix zspell/ispell
+** Dictionary mode
+** TREESITTER
+** DONE Org: Add lettered lists
+** Ediff: Breaks persp-mode
+** DONE Org babel: Don't export code results
