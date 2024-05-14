@@ -107,9 +107,8 @@
   system.defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
   system.defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
 
-  # TODO
-  #system.defaults.NSGlobalDomain.InitialKeyRepeat
-  #system.defaults.NSGlobalDomain.KeyRepeat
+  system.defaults.NSGlobalDomain.InitialKeyRepeat = 20;
+  system.defaults.NSGlobalDomain.KeyRepeat = 2;
 
   system.defaults.NSGlobalDomain.AppleShowAllFiles = true;
   system.defaults.NSGlobalDomain.AppleScrollerPagingBehavior = true;
