@@ -16,6 +16,7 @@ in {
       # this doesn't play nicely with non-lisp packages like ledger and aspell
       ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: with epkgs; [
         vterm
+        treesit-grammars.with-all-grammars
         pdf-tools
         ement
         pkgs.mu

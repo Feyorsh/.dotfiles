@@ -1419,12 +1419,34 @@ Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Cor
 #+end_src
 
 *** Treesitter
-Emacs 29 has tree sitter built in, which adds ts specific major modes. Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]].
-#+begin_src elisp :tangle no
-(use-package tree-sitter
+Emacs 29 has tree sitter built in, which adds ts specific major modes (for backward compatibility).
+Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]]; that being said, this is /really/ hacky and ugly.
+#+begin_src elisp
+(use-package treesit
+	:straight (:type built-in)
 	:config
-  (global-tree-sitter-mode))
-(use-package tree-sitter-langs)
+	(setq major-mode-remap-alist '((bash-mode . bash-ts-mode)
+								   (sh-mode . bash-ts-mode)
+								   (javascript-mode . javascript-ts-mode)
+								   (js-jsx-mode . tsx-ts-mode)
+								   (js-json-mode . json-ts-mode)
+								   (css-mode . css-ts-mode)
+								   (c-mode . c-ts-mode)
+								   (c++-mode . c++-ts-mode)
+								   (c-or-c++-mode . c-or-c++-ts-mode)
+								   (csharp-mode . csharp-ts-mode)
+								   (java-mode . java-ts-mode)
+								   (ruby-mode . ruby-ts-mode)
+								   (python-mode . python-ts-mode)))
+	(add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
+	(add-to-list 'auto-mode-alist '("go.mod\\'" . go-mod-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.yaml\\'" . yaml-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.toml\\'" . toml-ts-mode))
+	;; TODO: regex for e.g. CMakelist.txt
+	(add-to-list 'auto-mode-alist '("\\.cmake\\'" . cmake-ts-mode))
+	)
 #+end_src
 
 *** Help
