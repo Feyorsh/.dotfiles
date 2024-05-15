@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706833576,
-        "narHash": "sha256-w7BL0EWRts+nD1lbLECIuz6fRzmmV+z8oWwoY7womR0=",
+        "lastModified": 1715653378,
+        "narHash": "sha256-6kbg/PI3+SBP17f4T0js3CBsMLVtlD0JqJhDKgzk1mQ=",
         "owner": "LnL7",
         "repo": "nix-darwin",
-        "rev": "bdbae6ecff8fcc322bf6b9053c0b984912378af7",
+        "rev": "de8b0d60d6fd34f35abffc46adc94ebaa6996ce2",
         "type": "github"
       },
       "original": {
@@ -43,11 +43,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1708827129,
-        "narHash": "sha256-olczHgJ8bPzp/kquDYAO+Km1yk9Wtyg28Y1YsY3jDt4=",
+        "lastModified": 1714874953,
+        "narHash": "sha256-txb1TPwK7NidiOGltoqCLdnvUHs4x6uiaRNHCcjp6fU=",
         "ref": "main",
-        "rev": "d64b1b33ecaa58e08e9795e737eb76f4e47a3f69",
-        "revCount": 8,
+        "rev": "874fe8740e85e23c2f1c17d9776dec5a48794ea1",
+        "revCount": 12,
         "type": "git",
         "url": "file:///Users/ghuebner/Personal/fyshpkgs"
       },

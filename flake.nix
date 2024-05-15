@@ -20,7 +20,7 @@
     };
   };
 
-  outputs = inputs@{ self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
+  outputs = flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
     let
       system = "aarch64-darwin";
       inherit (darwin.lib) darwinSystem;
@@ -73,7 +73,7 @@
           system = "aarch64-darwin";
           specialArgs = { inherit fpkgs; };
           inherit pkgs;
-	        modules = [ ./configuration.nix
+	        modules = [ (import ./configuration.nix flakes)
 		                  home-manager.darwinModules.home-manager
 		                  {
                         home-manager.extraSpecialArgs = { inherit fpkgs; };

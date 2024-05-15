@@ -1,3 +1,4 @@
+flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
 { config, pkgs, lib, ... }:
 {
   environment.systemPackages = with pkgs; [
@@ -14,7 +15,7 @@
     # https://apple.stackexchange.com/questions/445372/samba-dot-org-smbd-does-not-start-on-macos-monterey-12-5
 
     # I think this is useful if only to tell xcode cli to shut the fuck up
-    darwin.xcode_15_1
+    pkgs.darwin.xcode_15_1
   ];
 
   fonts = {
@@ -45,6 +46,7 @@
     linux-builder.enable = true;
 
     registry = {
+      nixpkgs.flake = flakes.nixpkgs;
       templates = {
         from = {
           id = "templates";
@@ -82,7 +84,7 @@
   programs.zsh.enable = true;
 
   # TODO: get self (from flake) in here
-  #system.configurationRevision = self.rev or self.dirtyRev or null;
+  system.configurationRevision = self.rev or self.dirtyRev or null;
 
 
   system.keyboard.enableKeyMapping = true;
