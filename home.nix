@@ -17,6 +17,7 @@ in {
       ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: with epkgs; [
         vterm
         pdf-tools
+        ement
         pkgs.mu
       ]))
       ledger

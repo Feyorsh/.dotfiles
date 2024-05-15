@@ -761,6 +761,19 @@ passwordeval cat ~/.dotfiles/secrets/gmail
 
 account default : work
 #+end_src
+
+*** TODO RSS
+Elfeed!
+#+begin_src elisp :tangle no
+(use-package elfeed)
+#+end_src
+
+*** TODO Matrix
+#+begin_src elisp :tangle no
+(use-package ement
+	:ensure nil)
+#+end_src
+
 *** TODO IRC
 Well, I see IRC hasn't gotten any easier to use.
 
@@ -1179,10 +1192,11 @@ Unsure if I need to specify the ~deferred~ dependency myself...
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
+	:ensure nil
 	:config
-  (setq vterm-shell "fish")
-  (setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
-  )
+	(setq vterm-shell "fish")
+	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
+	)
 #+end_src
 
 *** TODO Dired
@@ -1578,13 +1592,14 @@ I use this because of yabai weirdness. Also, I want to add a proper splash scree
 Hmmmm... to use or not to use EAF...
 #+begin_src elisp
 (use-package pdf-tools
+	:ensure nil
 	:hook
-  (pdf-tools-enabled . pdf-view-midnight-minor-mode)
-  ;;(internal-show-cursor nil nil)
-  :config
-  (pdf-loader-install)
-  (setq pdf-view-use-scaling t)
-  (setq-default pdf-view-display-size 'fit-page))
+	(pdf-tools-enabled . pdf-view-midnight-minor-mode)
+	;;(internal-show-cursor nil nil)
+	:config
+	(pdf-loader-install)
+	(setq pdf-view-use-scaling t)
+	(setq-default pdf-view-display-size 'fit-page))
 #+end_src
 
 
