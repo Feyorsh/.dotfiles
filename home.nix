@@ -17,6 +17,12 @@ in {
       ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: with epkgs; [
         vterm
         treesit-grammars.with-all-grammars
+        pkgs.clang-tools
+        # pkgs.sourcekit-lsp # swift
+        # nil # nix
+        # zls # zig
+        # gopls # go
+        nodePackages_latest.pyright # python
         pdf-tools
         ement
         pkgs.mu

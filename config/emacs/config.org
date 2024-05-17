@@ -59,7 +59,7 @@ Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el
 :header-args:elisp: :tangle "~/.config/emacs/early-init.el"
 :END:
 Recommended config from lsp-mode
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (setenv "LSP_USE_PLISTS" "1")
 #+end_src
 Not sure I need this anymore on NixOS
@@ -1383,7 +1383,12 @@ I started off trying to build lldb-vscode from source, only to immediately reali
 
 *** TODO LSP
 Add Orderless here at some point (see [[https://github.com/minad/corfu/wiki][Corfu wiki]] for setup)
+Eglot!
 #+begin_src elisp
+(use-package eglot
+	:straight (:type built-in))
+#+end_src
+#+begin_src elisp :tangle no
 (use-package lsp-mode
 	:init
   (defun shor/lsp-mode-setup-completion ()
