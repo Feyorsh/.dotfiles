@@ -1,14 +1,14 @@
 flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
 { config, pkgs, lib, ... }:
 {
+  # essential packages; my perl-less swiss army chainsaw
   environment.systemPackages = with pkgs; [
+    coreutils
     vim
-    git
-    git-lfs
+    git git-lfs
     wget
-    jq
+    curl
     ripgrep
-    silver-searcher
     fd
 
     #samba # TODO: move to the 391 flake and just do ugly impure stuff there
