@@ -1480,8 +1480,8 @@ I make liberal use of Doom's themes but not ~evil-mode~. I still need to properl
 		  doom-themes-enable-italic t)
 	(load-theme 'doom-palenight t)
 	(doom-themes-visual-bell-config)
-	(setq doom-themes-treemacs-theme "doom-atom")
-	(doom-themes-treemacs-config)
+	;; (setq doom-themes-treemacs-theme "doom-atom")
+	;;(doom-themes-treemacs-config)
 	(doom-themes-org-config))
 #+end_src
 #+begin_src elisp
@@ -1545,7 +1545,7 @@ Or lack thereof...
 #+end_src
 
 **** Treemacs
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package treemacs
 	:after solaire-mode
 	:config
