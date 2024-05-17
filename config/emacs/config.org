@@ -173,6 +173,7 @@ I feel like this is a really cool package, I just don't have the elisp-fu to tak
 		:keymaps 'override
 		:states '(normal visual motion emacs))
 	(leader-def "" nil)
+	(leader-def "d" (lambda () (diff-buffer-with-file (current-buffer))))
 	)
 #+end_src
 After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
@@ -1195,6 +1196,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	:ensure nil
 	:config
 	(setq vterm-shell "fish")
+	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
 	)
 #+end_src
@@ -1469,6 +1471,15 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 	(setq helpful-max-buffers 1))
 #+end_src
 
+*** Dictionary
+#+begin_src elisp
+(use-package dictionary
+	:straight (:type built-in)
+	:general
+	(leader-def "s" #'dictionary-lookup-definition)
+	:config
+	(setq dictionary-server "dict.org"))
+#+end_src
 ** UI
 *** Title Bar
 #+begin_src elisp
