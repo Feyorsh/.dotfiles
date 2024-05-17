@@ -1065,7 +1065,7 @@ Org capture setup.
 	:config
   (setq org-capture-templates
 		'(("t" "TODO" entry (file+headline "~/Personal/org/agenda.org" "Today")
-		   "* TODO %?\n  %i" :empty-lines 1)))
+		   "* TODO %?\nDEADLINE: %t\n  %i" :empty-lines 1)))
   :general
   (leader-def "c" #'org-capture)
   )
