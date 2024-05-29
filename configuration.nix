@@ -46,16 +46,14 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
     linux-builder.enable = true;
 
     registry = {
-      nixpkgs.flake = flakes.nixpkgs;
       templates = {
         from = {
           id = "templates";
           type = "indirect";
         };
         to = {
-          type = "git";
-          ref = "main";
-          url = "file://${config.users.users.ghuebner.home}/.dotfiles/templates";
+          type = "path";
+          path = "${config.users.users.ghuebner.home}/.dotfiles/templates";
         };
       };
       fyshpkgs = {
