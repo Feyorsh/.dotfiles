@@ -4,6 +4,17 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
   # essential packages; my perl-less swiss army chainsaw
   environment.systemPackages = with pkgs; [
     coreutils
+    findutils
+    diffutils
+    inetutils
+    gawk
+    gnused
+    gnugrep
+    gnutar
+    gzip
+    unixtools.wall
+    unixtools.watch
+
     vim
     git git-lfs
     wget
