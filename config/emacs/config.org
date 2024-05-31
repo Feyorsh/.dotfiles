@@ -171,9 +171,8 @@ I feel like this is a really cool package, I just don't have the elisp-fu to tak
 	(general-create-definer leader-def
 		:prefix "SPC"
 		:keymaps 'override
-		:states '(normal visual motion emacs))
+		:states '(normal visual motion))
 	(leader-def "" nil)
-	(leader-def "d" (lambda () (diff-buffer-with-file (current-buffer))))
 	)
 #+end_src
 After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
@@ -184,7 +183,7 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 	:init
 	(setq evil-want-integration t)
 	(setq evil-want-keybinding nil)
-	(setq evil-want-C-u-scroll t)
+	;; (setq evil-want-C-u-scroll t)
 	(setq evil-want-Y-yank-to-eol t)
 	(setq evil-move-cursor-back nil)
 	(setq evil-undo-system 'undo-redo)
@@ -198,6 +197,13 @@ After using vanilla Emacs for half a year, I finally switched to Evil. Sue me.
 	(setq evil-visual-state-message nil)
 	(setq evil-replace-state-message nil)
 	(setq evil-emacs-state-message nil)
+	:general-config
+	('motion 'override "J" #'evil-scroll-down)
+	('motion 'override "K" #'evil-scroll-up)
+	('motion 'override "H" #'evil-first-non-blank)
+	('motion 'override "L" #'evil-last-non-blank)
+	;; I actually use join...
+	('normal "DEL" #'evil-join)
 	:config
 	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
 	(evil-ex-define-cmd "bk" "bkill")
@@ -219,6 +225,10 @@ This has caused a huge pain in my backside because of how damn hard it is to ove
 	(setq evil-collection-setup-minibuffer t)
 	(evil-collection-init))
 #+end_src
+#+begin_src elisp
+(use-package evil-snipe
+	:after evil)
+#+end_src
 I ran into a weird issue where the recipe on MELPA differed from the Git repo (straight doesn't use the MELPA version but instead the recipe). Running ~straight-pull-package~ fixed this issue.
 #+begin_src elisp
 (use-package evil-org
@@ -233,6 +243,13 @@ I don't really know why, but my xkb layout binds the Command key to SUPER instea
 #+begin_src elisp
 (setq  x-meta-keysym 'super
 	 x-super-keysym 'meta)
+#+end_src
+Rebind builtin bindings
+#+begin_src elisp
+(use-package emacs
+	:general
+  (leader-def "#" #'comment-dwim)
+  )
 #+end_src
 *** TODO Evil Numbers
 https://github.com/juliapath/evil-numbers
@@ -1326,7 +1343,9 @@ Pull ~monthly_expenses~ out of custom.el; make it programmatic to reflect the cu
 *** TODO Magit
 #+begin_src elisp
 (use-package magit
-	:init
+	:general-config
+  (leader-def "b" #'magit-blame)
+  :init
   (dir-locals-set-class-variables
    'huge-git-repository
    '((nil
@@ -1471,6 +1490,16 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 	(setq helpful-max-buffers 1))
 #+end_src
 
+*** Diff
+#+begin_src elisp
+(use-package emacs
+	:general-config
+  (leader-def "d" (lambda () (interactive) (diff-buffer-with-file (current-buffer))))
+  :config
+  (add-to-list 'display-buffer-alist '("\\*Diff\\*" (lambda (buffer alist) (select-window  (display-buffer-use-some-window buffer alist)))))
+  )
+#+end_src
+
 *** Dictionary
 #+begin_src elisp
 (use-package dictionary
@@ -1478,12 +1507,24 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 	:general
 	(leader-def "s" #'dictionary-lookup-definition)
 	:config
+	(setq dictionary-use-single-buffer t)
 	(setq dictionary-server "dict.org"))
 #+end_src
+
 ** UI
 *** Title Bar
 #+begin_src elisp
 (setq-default frame-title-format "Emacs")
+#+end_src
+
+*** Line numbers
+#+begin_src elisp
+(use-package emacs
+	:init
+  (setq display-line-numbers-type 'relative)
+  :hook
+  (prog-mode . display-line-numbers-mode)
+  )
 #+end_src
 
 *** TODO Theme
