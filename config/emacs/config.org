@@ -1141,6 +1141,11 @@ Slime? Improve scratch?
 (setq-default lisp-indent-function 'common-lisp-indent-function)
 #+end_src
 
+*** Haskell
+#+begin_src elisp
+(use-package haskell-mode)
+#+end_src
+
 *** TODO C/C++
 I realized I don't actually use an "official" style. Everyone else is just uglier than me.
 Add label indentation + DAP stuff
