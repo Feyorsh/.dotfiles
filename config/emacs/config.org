@@ -1494,7 +1494,19 @@ Also figure out how to reuse the help buffer, because it keeps opening in annoyi
 					   "C-h k" #'helpful-key
 					   "C-h x" #'helpful-command)
 	:config
-	(setq helpful-max-buffers 1))
+	(setq helpful-max-buffers 2)
+	(setq helpful-switch-buffer-function
+		  (lambda (buffer &optional action norecord)
+			(let ((window (get-window-with-predicate
+						   (lambda (window)
+							 (eq (buffer-local-value 'major-mode (window-buffer window)) 'helpful-mode))
+						   nil nil nil)))
+			  (if window
+				  (progn
+					(select-window window norecord)
+					(switch-to-buffer buffer nil))
+				(pop-to-buffer buffer action norecord)))))
+	)
 #+end_src
 
 *** Diff
