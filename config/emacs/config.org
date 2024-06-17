@@ -1101,11 +1101,15 @@ Org capture setup.
 #+begin_src elisp
 (use-package org
 	:config
+  (setq org-capture-bookmark nil)
   (setq org-capture-templates
-		`(,`("t" "TODO" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
-		   "* TODO %?\nDEADLINE: %t\n  %i" :empty-lines 1)
-		,`("f" "TODO in file" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
-		   "* TODO %A\nDEADLINE: %t\n  %i" :empty-lines 1)))
+        `(,`("t" "TODO" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
+                 "* TODO %?\nDEADLINE: %t\n  %i" :empty-lines 1)
+			,`("f" "TODO in file" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
+				   "* TODO %A\nDEADLINE: %t\n  %i" :empty-lines 1)
+			,`("v" "Vocab" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Vocab List")
+				   "- %?")
+			))
   :general
   (leader-def "c" #'org-capture)
   )
