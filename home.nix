@@ -17,16 +17,17 @@ in {
       ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: with epkgs; [
         vterm
         treesit-grammars.with-all-grammars
-        pkgs.clang-tools
-        # pkgs.sourcekit-lsp # swift
-        # nil # nix
-        # zls # zig
-        # gopls # go
-        nodePackages_latest.pyright # python
         pdf-tools
         ement
         pkgs.mu
       ]))
+      # for some reason, LSP servers don't play nice with `emacsWithPackages`.
+      clang-tools
+      pyright
+      # pkgs.sourcekit-lsp # swift
+      # nil # nix
+      # zls # zig
+      # gopls # go
       ledger
 
       pass

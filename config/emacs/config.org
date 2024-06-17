@@ -1138,7 +1138,15 @@ Add colors. This requires Koma Script _and_ Xcolor
 (use-package ox-chameleon
 	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
 #+end_src
+
 *** TODO Python
+#+begin_src elisp
+(use-package python
+	:straight (:type built-in)
+	:hook
+	((python-mode python-ts-mode) . eglot-ensure)
+	)
+#+end_src
 
 *** TODO Zig
 Panic because chals are due soon 😰
@@ -1166,14 +1174,21 @@ Slime? Improve scratch?
 #+end_src
 
 *** TODO C/C++
-I realized I don't actually use an "official" style. Everyone else is just uglier than me.
-Add label indentation (this bothered me in 391)
+I realized I don't actually use an "official" style; I think functions should be formatted like statements.
 #+begin_src elisp
-(setq-default indent-tabs-mode t)
-(setq-default tab-width 4)
-(defvaralias 'c-basic-offset 'tab-width)
-(defvaralias 'cperl-indent-level 'tab-width)
-(setq-default c-default-style "k&r")
+(use-package cc-mode
+	:straight (:type built-in)
+	:init
+	(setq-default indent-tabs-mode nil)
+	(setq-default tab-width 4)
+	(defvaralias 'c-basic-offset 'tab-width)
+	(defvaralias 'cperl-indent-level 'tab-width)
+	(setq-default c-default-style "k&r")
+    (setq-default c-ts-mode-indent-style (intern c-default-style))
+    (defvaralias 'c-ts-mode-indent-width 'c-basic-offset)
+    (defvaralias 'c-ts-mode-indent-offset 'c-basic-offset)
+	:hook ((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
+	)
 #+end_src
 
 *** Assembly
@@ -1181,15 +1196,20 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 ~gas-mode~ was pretty bad last time I tried it
 #+begin_src elisp
 (setq asm-comment-char ?\#)
-(custom-set-variables
- '(tab-stop-list (quote (8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120))))
 #+end_src
+
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
 	:config
 (with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1)))))))
 )
+#+end_src
+
+*** YAML
+TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party ~yaml-mode~ should be used instead.
+#+begin_src elisp
+(use-package yaml-mode)
 #+end_src
 
 *** TODO Nix
@@ -1393,7 +1413,20 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 Eglot!
 #+begin_src elisp
 (use-package eglot
-	:straight (:type built-in))
+	:straight (:type built-in)
+    :general-config
+    ('normal 'eglot-mode-map "K" nil)
+    :hook (eglot-managed-mode . (lambda ()
+                                  ;; Show flymake diagnostics first.
+                                  (setq eldoc-documentation-functions
+                                        (cons #'flymake-eldoc-function
+                                              (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+                                  ;; Show all eldoc feedback.
+                                  (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
+	:config
+	(setq eldoc-echo-area-prefer-doc-buffer t
+		  eldoc-echo-area-use-multiline-p nil)
+	)
 #+end_src
 
 *** Treesitter
