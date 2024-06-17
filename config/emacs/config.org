@@ -110,6 +110,10 @@ Get native comp to shut up, but not so we can't debug a problem
 #+begin_src elisp
 (setq load-prefer-newer t)
 #+end_src
+Couldn't figure out how to disable this in PDF Tools, might as well try things out with no blink at all.
+#+begin_src elisp
+(blink-cursor-mode -1)
+#+end_src
 
 * Packages
 ** Keybinds
@@ -133,6 +137,9 @@ Rebind builtin bindings
   (leader-def "#" #'comment-dwim)
   ("M-=" #'text-scale-increase)
   ("M--" #'text-scale-decrease)
+  ("C-x C-c" (lambda () (interactive) (message "Ah ah ah, you didn't say the magic word!")))
+  ("C-h C-c" nil)
+  ("C-h C-w" nil)
   )
 #+end_src
 
@@ -828,7 +835,8 @@ Unrelated: figure out a better place to stick this
 		org-insert-heading-respect-content t
 		org-hide-emphasis-markers t
 		org-pretty-entities t
-		org-ellipsis "…"
+        org-ellipsis "…"
+        org-use-fast-todo-selection 'expert
 		org-agenda-window-setup 'current-window
 		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
 		org-agenda-tags-column 0
@@ -1105,6 +1113,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	:general-config
 	('vterm-mode-map "M-=" #'text-scale-increase)
 	('vterm-mode-map "M--" #'text-scale-decrease)
+	('vterm-mode-map "M-:" #'eval-expression)
 	)
 #+end_src
 *** TODO PDF Viewer
@@ -1323,6 +1332,24 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
   )
 #+end_src
 
+*** Line endings
+It would be nice if ~save-excursion~ worked, but it's probably fine either way.
+#+begin_src elisp
+(use-package emacs
+    :config
+  (defun unix2dos (beginning end &optional arg)
+    (interactive "*r\nP")
+    (cond (arg (call-interactively #'encode-coding-region))
+          ((memq (detect-coding-region beginning end t) '(unix undecided-unix)) (encode-coding-region beginning end 'dos))
+          (t nil)))
+  (defun dos2unix (beginning end &optional arg)
+    (interactive "*r\nP")
+    (cond (arg (call-interactively #'decode-coding-region))
+          ((memq (detect-coding-region beginning end t) '(dos undecided-dos)) (decode-coding-region beginning end 'dos))
+          (t nil)))
+  )
+#+end_src
+
 *** Dictionary
 #+begin_src elisp
 (use-package dictionary
@@ -1451,6 +1478,7 @@ Or lack thereof...
 (scroll-bar-mode -1)
 
 (setq use-file-dialog nil)
+(setq use-dialog-box nil)
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
