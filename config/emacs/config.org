@@ -1380,6 +1380,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 (use-package magit
 	:general-config
   (leader-def "b" #'magit-blame)
+  ('magit-mode-map "K" nil)
   :init
   (setq vc-follow-symlinks t)
   (dir-locals-set-class-variables
@@ -1400,6 +1401,9 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
    (concat (getenv "HOME") "/Personal/nixpkgs") 'huge-git-repository)
   (dir-locals-set-directory-class
    (concat (getenv "HOME") "/Work/linux") 'huge-git-repository)
+  :custom-face
+  (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
+  (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight))))
   )
 (use-package forge
 	:after magit

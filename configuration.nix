@@ -16,7 +16,7 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
     unixtools.watch
 
     vim
-    git git-lfs
+    git git-lfs git-crypt
     wget
     curl
     ripgrep
