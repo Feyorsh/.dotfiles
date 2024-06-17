@@ -181,7 +181,8 @@ This has caused a huge pain in my backside because of how damn hard it is to ove
 	:after (evil magit)
 	:demand
 	:config
-	(setq evil-collection-setup-minibuffer t)
+    (setq evil-collection-key-blacklist '("s" "S"))
+    (setq evil-collection-setup-minibuffer t)
 	(evil-collection-init))
 #+end_src
 
@@ -715,15 +716,140 @@ account default : work
 Hmmm, I'd like to get scoring integrated into feeds.org, but for now ~-aggregator~ seems to get the job done.
 #+begin_src elisp
 (use-package elfeed
-	:commands (elfeed)
-	;; TODO binds
-	)
+    :commands (elfeed)
+    :config
+    (eval-when-compile (require 'elfeed))
+    (defun elfeed-clean-trash (&optional now)
+      (interactive "P")
+      (with-elfeed-db-visit (entry _)
+          (when (elfeed-tagged-p 'trash entry)
+            (setf (elfeed-entry-content entry) nil)))
+      (if now
+          (elfeed-db-gc)
+        (run-with-idle-timer 15 nil #'elfeed-db-gc)))
+
+    (defface elfeed-search-trashed-title-face
+        '((((class color)) (:foreground "red" :weight extra-bold)))
+      "Face used in search mode for trashed entries.")
+    (push '(trash elfeed-search-trashed-title-face) elfeed-search-face-alist)
+
+    (setq-default elfeed-search-filter "-trash @6-months-ago +unread")
+    (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("News" . "-trash @1-week-ago +aggregator +unread")))
+    (defun fysh/elfeed-pick-filter (filter)
+      (interactive (list (alist-get (completing-read "Filter: " (mapcar (lambda (s) (car s)) fysh/elfeed-filters)) fysh/elfeed-filters nil nil 'equal)))
+      (setq elfeed-search-filter filter)
+      (elfeed-search-update--force)
+      (goto-char (point-min)))
+
+    (define-advice elfeed-search-show-entry (:override (entry &optional arg) quick-browse)
+      (interactive (list (elfeed-search-selected :ignore-region) current-prefix-arg))
+      (require 'elfeed-show)
+      (when (elfeed-entry-p entry)
+        (elfeed-untag entry 'unread)
+        (elfeed-search-update-entry entry)
+        (unless elfeed-search-remain-on-entry (forward-line))
+        (pcase arg
+          ('(4) (funcall browse-url-browser-function (elfeed-entry-link entry)))
+          ('(16) (funcall browse-url-secondary-browser-function (elfeed-entry-link entry)))
+          (_ (elfeed-show-entry entry)))))
+    :general-config
+    ('normal 'elfeed-search-mode-map "S" #'elfeed-search-live-filter)
+    ('normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)
+    )
+
 (use-package elfeed-org
 	:after (elfeed org)
 	:config
 	(elfeed-org)
-	(setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory)))
-	)
+	(setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory))))
+#+end_src
+I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
+#+begin_src diff
+From 9a380cd80340c97f9312e3537ee58d8506e091f7 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Sun, 9 Jun 2024 19:41:56 -0500
+Subject: [PATCH] generate id from the link attribute
+
+This is to cause collisions between duplicate entries across feeds.
+---
+ elfeed.el | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/elfeed.el b/elfeed.el
+index 733f953..572fc09 100644
+--- a/elfeed.el
++++ b/elfeed.el
+@@ -292,8 +292,8 @@ If PROTOCOL is nil, returns URL."
+                                      (xml-query-all* (creator *) entry))))
+                     (categories (xml-query-all* (category :term) entry))
+                     (content (elfeed--atom-content entry))
+-                    (id (or (xml-query* (id *) entry) link
+-                            (elfeed-generate-id content)))
++					(clean-link (elfeed-cleanup link))
++                    (id (elfeed-generate-id clean-link))
+                     (type (or (xml-query* (content :type) entry)
+                               (xml-query* (summary :type) entry)
+                               ""))
+@@ -310,8 +310,8 @@ If PROTOCOL is nil, returns URL."
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+                                :feed-id feed-id
+-                               :id (cons namespace (elfeed-cleanup id))
+-                               :link (elfeed-cleanup link)
++                               :id id
++                               :link 
+                                :tags tags
+                                :date (or (elfeed-float-time date) (float-time))
+                                :content content
+@@ -361,9 +361,9 @@ If PROTOCOL is nil, returns URL."
+                     (content (or (xml-query-all* (encoded *) item)
+                                  (xml-query-all* (description *) item)))
+                     (description (apply #'concat content))
+-                    (id (or guid link (elfeed-generate-id description)))
+-                    (full-id (cons namespace (elfeed-cleanup id)))
+-                    (original (elfeed-db-get-entry full-id))
++					(clean-link (elfeed-cleanup link))
++                    (id (elfeed-generate-id clean-link)) ;; sacrifice usage of GUID. Who uses that, anyway?
++                    (original (elfeed-db-get-entry id))
+                     (original-date (and original (elfeed-entry-date original)))
+                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
+                     (etags (xml-query-all* (enclosure) item))
+@@ -376,9 +376,9 @@ If PROTOCOL is nil, returns URL."
+                               collect (list url type length)))
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+-                               :id full-id
++                               :id id
+                                :feed-id feed-id
+-                               :link (elfeed-cleanup link)
++                               :link clean-link
+                                :tags tags
+                                :date (elfeed-new-date-for-entry
+                                       original-date date)
+@@ -409,16 +409,16 @@ If PROTOCOL is nil, returns URL."
+                               (xml-query* (date *) item)))
+                     (description
+                      (apply #'concat (xml-query-all* (description *) item)))
+-                    (id (or link (elfeed-generate-id description)))
+-                    (full-id (cons namespace (elfeed-cleanup id)))
+-                    (original (elfeed-db-get-entry full-id))
++					(clean-link (elfeed-cleanup link))
++                    (id (elfeed-generate-id clean-link))
++                    (original (elfeed-db-get-entry id))
+                     (original-date (and original (elfeed-entry-date original)))
+                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+-                               :id full-id
++                               :id id
+                                :feed-id feed-id
+-                               :link (elfeed-cleanup link)
++                               :link clean-link
+                                :tags tags
+                                :date (elfeed-new-date-for-entry
+                                       original-date date)
+-- 
+2.44.1
 #+end_src
 
 *** TODO Matrix
