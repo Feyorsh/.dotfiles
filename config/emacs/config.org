@@ -8,38 +8,13 @@ These are your father's parentheses. Elegant weapons for a more... civilized age
 Oh yeah baby, time to use a scuffed editor on a scuffed operating system. Nothing will go wrong. I still don't really know wtf I'm doing, but there's a few items that need to be taken care of to download Emacs on +NixOS+.
 Emacs installation can be found in [[../../flake.nix]], but only thing of note is we're using a custom icon (squared Emacs china) and transparent title bars from railwaycat's Homebrew port.
 Run these:
-#+begin_src bash
+#+begin_src shell :eval no
 defaults write org.gnu.Emacs HideDocumentIcon YES
 defaults write org.gnu.Emacs TransparentTitleBar YES
 #+end_src
 
-* Straight
-Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el/issues/305#issuecomment-417952067][broken]] or something?
-#+begin_src elisp
-  ;;; init.el --- Personal configuration file -*- lexical-binding: t; -*-
-
-  (setq straight-recipes-gnu-elpa-use-mirror t)
-  (setq straight-check-for-modifications '(check-on-save find-when-checking))
-  (setq straight-use-package-by-default t)
-  (setq straight-vc-git-default-clone-depth '(1 single-branch))
-  (setq use-package-verbose nil)
-
-  (defvar bootstrap-version)
-  (let ((bootstrap-file
-	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-	(bootstrap-version 6))
-	(unless (file-exists-p bootstrap-file)
-	  (with-current-buffer
-	  (url-retrieve-synchronously
-  "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-	   'silent 'inhibit-cookies)
-	(goto-char (point-max))
-	(eval-print-last-sexp)))
-	(load bootstrap-file nil 'nomessage))
-
-  (straight-use-package 'use-package)
-#+end_src
-*** Early Init
+* Emacs
+** Early Init
 :PROPERTIES:
 :header-args:elisp: :tangle "~/.config/emacs/early-init.el"
 :END:
@@ -47,10 +22,19 @@ Bootstrapping code. GNU Elpa is [[https://github.com/radian-software/straight.el
 ;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
 
 (setq package-enable-at-startup nil)
-(add-to-list 'native-comp-eln-load-path (expand-file-name "eln-cache/" user-emacs-directory))
+(setq use-package-always-defer t)
+
+;; sigh. https://github.com/nix-community/emacs-overlay/issues/212#issuecomment-1073284967
+(dolist (path load-path)
+  (when (string-match-p "/nix/store/[a-z0-9]\\{32\\}-emacs-packages-deps.*" path)
+    (dolist (autoload-file (directory-files path t "-autoloads.el"))
+      (with-demoted-errors "init.el error: %s"
+        (load autoload-file nil t)))))
+
+(setq debug-on-error t)
+(setq gc-cons-threshold most-positive-fixnum)
 #+end_src
 
-* Emacs
 ** Backups
 Forgot where I sourced all this, but basically take a rather conservative approach to backups without littering current directory with lock files.
 #+begin_src elisp
@@ -67,69 +51,69 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 #+end_src
 
 ** Config
-I was previously using file local variables at the end of ~config.org~, but they look /ugly AF/.
 #+begin_src elisp
-(defun config-reload ()
-  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
-	(if (y-or-n-p "Reload?")(load-file (expand-file-name "init.el" user-emacs-directory)))))
-(defun config-tangle ()
-  (when (string= (file-name-nondirectory (buffer-file-name)) "config.org")
-	(if (y-or-n-p "Tangle?")(org-babel-tangle))))
+(use-package emacs
+    :demand t
+    :init
+    (setq load-prefer-newer t)
+    (blink-cursor-mode -1)
 
-(add-hook 'after-save-hook 'config-reload)
-(add-hook 'after-save-hook 'config-tangle)
-#+end_src
-I think this will work; gets rid of "File changed" dialog
-#+begin_src elisp
-(add-hook 'after-init-hook 'global-auto-revert-mode)
-(setq debug-on-error t)
-#+end_src
-dOnT uSE tHe MoUSe!
-#+begin_src elisp
-(defun stop-using-minibuffer ()
-  "kill the minibuffer"
-  (when (and (>= (recursion-depth) 1) (active-minibuffer-window))
-	(abort-recursive-edit)))
+    (setq use-file-dialog nil)
+    (setq use-dialog-box nil)
+    (defalias 'yes-or-no-p 'y-or-n-p)
 
-(add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
-#+end_src
-Get native comp to shut up, but not so we can't debug a problem
-#+begin_src elisp :tangle no
-(setq native-comp-async-report-warnings-errors 'silent)
-#+end_src
+    (setq warning-minimum-level :error)
 
-** Sane Defaults
-#+begin_src elisp
-(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
-  "Create parent directory if not exists while visiting file."
-  (unless (file-exists-p filename)
-	(let ((dir (file-name-directory filename)))
-	  (unless (file-exists-p dir)
-		(make-directory dir t)))))
-#+end_src
-#+begin_src elisp
-(setq load-prefer-newer t)
-#+end_src
-Couldn't figure out how to disable this in PDF Tools, might as well try things out with no blink at all.
-#+begin_src elisp
-(blink-cursor-mode -1)
+    ;;(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate))
+    (define-advice find-file (:before (filename &optional wildcards) make-directory-maybe)
+      "Create parent directory if not exists while visiting file."
+      (unless (file-exists-p filename)
+        (let ((dir (file-name-directory filename)))
+          (unless (file-exists-p dir)
+            (make-directory dir t)))))
+    :hook ((after-init . global-auto-revert-mode)
+           (mouse-leave-buffer .
+                               (lambda ()
+                                 "Kill the minibuffer."
+                                 (when (and (>= (recursion-depth) 1)
+                                            (active-minibuffer-window))
+                                   (abort-recursive-edit)))))
+    :custom (safe-local-variable-values
+             '((vc-default-patch-addressee . "bug-gnu-emacs@gnu.org")
+               (magit-revision-insert-related-refs)
+               (magit-refresh-buffers)
+               (eval add-hook 'after-save-hook
+                (lambda nil
+                  (if
+                      (y-or-n-p "Tangle?")
+                      (org-babel-tangle)))
+                nil t)
+               (eval add-hook 'after-save-hook
+                (lambda nil
+                  (if
+                      (y-or-n-p "Reload?")
+                      (load-file user-init-file)))
+                nil t)))
+    (ignored-local-variables
+     '((etags-regen-ignores "test/manual/etags/")
+       (etags-regen-regexp-alist
+        (("c" "objc")
+         "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/" "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/")))))
 #+end_src
 
 * Packages
 ** Keybinds
 #+begin_src elisp
 (use-package general
-	:demand t
-	:config
-	(general-evil-setup)
-	(general-create-definer leader-def
-		:prefix "SPC"
-		:keymaps 'override
-		:states '(normal visual motion))
-	(leader-def "" nil)
-	)
+    :demand t
+    :config
+    (general-evil-setup)
+    (general-create-definer leader-def
+        :prefix "SPC"
+        :keymaps 'override
+        :states '(normal visual motion))
+    (leader-def "" nil))
 #+end_src
-
 Rebind builtin bindings
 #+begin_src elisp
 (use-package emacs
@@ -144,7 +128,6 @@ Rebind builtin bindings
 #+end_src
 
 **** Evil
-Mwahaha...
 #+begin_src elisp
 (use-package evil
 	:demand t
@@ -165,7 +148,8 @@ Mwahaha...
 	(setq evil-replace-state-message nil)
 	(setq evil-emacs-state-message nil)
 	:general-config
-	('(normal motion) 'override "J" #'evil-scroll-down)
+	('motion 'override "J" #'evil-scroll-down)
+	('normal "J" nil)
 	('motion 'override "K" #'evil-scroll-up)
 	('motion 'override "H" #'evil-first-non-blank)
 	('motion 'override "L" #'evil-last-non-blank)
@@ -176,10 +160,12 @@ Mwahaha...
 	(evil-mode 1))
 #+end_src
 This has caused a huge pain in my backside because of how damn hard it is to override these keybindings, but this still provides more utility than not, so...
-#+begin_src elisp
+See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issues with Magit; supposedly this is fixed in a newer release.
+ #+begin_src elisp
 (use-package evil-collection
-	:after (evil magit)
-	:demand
+	;; :after (evil magit)
+	:after evil
+	:demand t
 	:config
     (setq evil-collection-key-blacklist '("s" "S"))
     (setq evil-collection-setup-minibuffer t)
@@ -201,7 +187,7 @@ This has caused a huge pain in my backside because of how damn hard it is to ove
 https://github.com/juliapath/evil-numbers
 
 ***** TODO Evil Snipe
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package evil-snipe
 	:after evil)
 #+end_src
@@ -214,37 +200,25 @@ https://github.com/juliapath/evil-numbers
 Oldest trick in the book! (Not really.)
 #+begin_src elisp
 (use-package gcmh
-  :demand
   :config
   (setq gcmh-high-cons-threshold (* 16 1024 1024))
   :hook
   (after-init . gcmh-mode))
 #+end_src
 
-**** Early Init
-:PROPERTIES:
-:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
-:END:
-This /should/ get reset by GCMH... right?
-#+begin_src elisp
-(setq gc-cons-threshold most-positive-fixnum)
-#+end_src
-
 ** Completion
 **** Corfu
 #+begin_src elisp
 (use-package corfu
-	:straight (:files (:defaults "extensions/*")
-					  :includes (
-								 corfu-popupinfo
-								 corfu-history
-								 ))
-	:hook ((after-init . global-corfu-mode)
+    ;; :demand t
+    :hook ((after-init . global-corfu-mode)
 		   (minibuffer-setup . corfu-enable-always-in-minibuffer)
 		   (corfu-history-mode . savehist-mode))
 	:config
-	(with-eval-after-load 'doom-themes
-	  (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
+    (use-package corfu-popupinfo :demand t)
+    (use-package corfu-history :demand t)
+	;; (with-eval-after-load 'doom-themes
+	;;   (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
 	(with-eval-after-load 'savehist
 	  (add-to-list 'savehist-additional-variables 'corfu-history))
 	(general-define-key
@@ -284,25 +258,13 @@ This /should/ get reset by GCMH... right?
 **** Vertico
 #+begin_src elisp
 (use-package vertico
-	:straight (vertico :files (:defaults "extensions/*")
-					   :includes (
-								  vertico-directory
-								  vertico-repeat
-								  ;; vertico-indexed
-								  ;; vertico-flat
-								  ;; vertico-grid
-								  ;; vertico-mouse
-								  ;; vertico-quick
-								  ;; vertico-buffer
-								  ;; vertico-reverse
-								  ;; vertico-multiform
-								  ;; vertico-unobtrusive
-								  ))
 	:demand t
 	:hook ((minibuffer-setup . vertico-repeat-save)
 		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
 	:init
+    (use-package vertico-directory :demand t)
+    (use-package vertico-repeat :demand t)
 	(setq vertico-cycle nil)
 	(setq read-file-name-completion-ignore-case t
 		  read-buffer-completion-ignore-case t
@@ -332,21 +294,31 @@ This /should/ get reset by GCMH... right?
 #+end_src
 
 **** TODO Orderless
-#+begin_src elisp :tangle no
-(use-package orderless)
+#+begin_src elisp
+(use-package orderless
+    :init
+  (setq orderless-matching-styles '(orderless-initialism
+                                    orderless-literal
+                                    orderless-regexp))
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
 #+end_src
 **** Icons
 #+begin_src elisp
 (use-package all-the-icons)
 
 (use-package all-the-icons-completion
-	:after (marginalia all-the-icons)
-	:hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-	:init
-	(all-the-icons-completion-mode))
+    :commands all-the-icons-completion-mode
+    :after (marginalia all-the-icons)
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+    :init
+    (all-the-icons-completion-mode))
 
 (use-package kind-icon
 	:after corfu
+    :init
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
 	:custom
 	(kind-icon-use-icons t)
 	(kind-icon-default-face 'corfu-default)
@@ -388,9 +360,7 @@ This /should/ get reset by GCMH... right?
 	   (unit		   "u"	 :icon "symbol-ruler"		:face font-lock-constant-face		   :collection "vscode")
 	   (value		   "v"	 :icon "symbol-enum"		:face font-lock-builtin-face		   :collection "vscode")
 	   (variable	   "va"	 :icon "symbol-variable"	:face font-lock-variable-name-face	   :collection "vscode")
-	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode")))
-	:config
-	(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode"))))
 #+end_src
 
 **** TODO Other stuff
@@ -401,16 +371,12 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
 (use-package consult
 	:general
   (:keymaps 'global
-			"C-x b" #'consult-buffer)
+            "C-x b" #'consult-buffer)
   (leader-def "." #'consult-ripgrep)
-
-  ;; (my-leader-def
-  ;; 	  :keymaps 'normal
-  ;; 	"SPC" #'consult-ripgrep)
   )
 
 (use-package marginalia
-	:init
+    :init
   (marginalia-mode))
 
 (use-package embark
@@ -438,9 +404,10 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
 				 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
-	:ensure t
-	:hook
-	(embark-collect-mode . consult-preview-at-point-mode))
+    :disabled
+  :ensure t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 ** Apps
@@ -489,85 +456,118 @@ Fix image display size
 Change gnus smileys to emoji (not all smileys are interpreted properly)
 Fix the... shitty? Display of HTML email. Not sure this is even possible, but at the very least why is it using the fancy font?
 Change bookmarks to not use trash
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package mu4e
-	:straight (:type built-in)
-	:hook ((mu4e-headers-mode mu4e-view-mode)
-		   . (lambda () (add-hook
-						 'window-configuration-change-hook
-						 (lambda ()
-						   (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
-								  (add-to-list 'fringe-indicator-alist '(continuation . nil))))
-						 nil :local)))
-	:hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
-	:commands mu4e
-	:init
-	;; these have to be set, but there should be no defaults
-	(setq mu4e-drafts-folder "/.mu4e"
-		  mu4e-trash-folder "/.mu4e"
-		  mu4e-sent-folder "/.mu4e"
-		  mu4e-attachment-dir "~/Downloads")
-	:config
-	(pinentry-start)
-	(setq mu4e-context-policy 'pick-first
-		  mu4e-compose-context-policy 'ask-if-none
-		  mu4e-contexts
-		  `(,(make-mu4e-context
-			  :name "Work"
-			  :match-func (lambda (msg)
-							(when msg
-							  (mu4e-message-contact-field-matches msg '(:to :cc :from) "ghuebner@redhat.com")))
-			  ;; don't set imap trash tag, just move to trash
-			  :enter-func (lambda ()
-							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
-								  (lambda (docid msg target)
-									(mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
-			  :leave-func (lambda ()
-							(setf (plist-get (alist-get 'trash mu4e-marks) :action)
-								  (lambda (docid msg target)
-									(mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
+    :hook ((mu4e-headers-mode mu4e-view-mode)
+           . (lambda () (add-hook
+                         'window-configuration-change-hook
+                         (lambda ()
+                           (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
+                                  (add-to-list 'fringe-indicator-alist '(continuation . nil))))
+                         nil :local)))
+    :hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
+    :general-config
+    ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
+    ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "J" nil)
+    ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "," #'mu4e-search-maildir)
+    :commands mu4e
+    :init
+    ;; these have to be set, but there should be no defaults. defvar prevents overriding current context value
+    (defvar mu4e-drafts-folder "~/.mu4e")
+    (defvar mu4e-trash-folder "~/.mu4e")
+    (defvar mu4e-sent-folder "~/.mu4e")
+    (defvar mu4e-attachment-dir "~/Downloads")
+    :config
+    ;; (pinentry-start)
+    (setq mu4e-context-policy 'pick-first
+          mu4e-compose-context-policy 'ask-if-none
+          mu4e-contexts
+          `(,(make-mu4e-context
+              :name "Personal"
+              :match-func (lambda (msg)
+                            (when msg
+                              (mu4e-message-contact-field-matches msg '(:to :cc :from) "george@feyor.sh")))
+              ;; don't set imap trash tag, just move to trash
+              :enter-func (lambda ()
+                            (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+                                  (lambda (docid msg target)
+                                    (mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
+              :leave-func (lambda ()
+                            (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+                                  (lambda (docid msg target)
+                                    (mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
 
 			  :vars '((user-full-name . "George Huebner")
-					  (user-mail-address . "ghuebner@redhat.com")
+					  (user-mail-address . "george@feyor.sh")
 					  (mu4e-index-cleanup nil)
 					  (mu4e-index-lazy-check t)
 					  (mu4e-sent-messages-behavior . delete)
-					  (mu4e-drafts-folder . "/work/[Gmail].Drafts")
-					  (mu4e-trash-folder . "/work/[Gmail].Trash")
-					  (mu4e-sent-folder . "/work/[Gmail].Sent Mail")
-					  (mu4e-refile-folder . "/work/[Gmail].All Mail")
-					  (message-sendmail-extra-arguments . ("-a" "work"))
+					  (mu4e-drafts-folder . "/personal/[Gmail].Drafts")
+					  (mu4e-trash-folder . "/personal/[Gmail].Trash")
+					  (mu4e-sent-folder . "/personal/[Gmail].Sent Mail")
+					  (mu4e-refile-folder . "/personal/[Gmail].All Mail")
+					  (message-sendmail-extra-arguments . ("-a" "personal"))
 					  (mu4e-maildir-shortcuts . (
-												 (:name "Inbox" :maildir "/work/INBOX" :key ?i)
-												 (:name "Sent" :maildir "/work/[Gmail].Sent Mail" :key ?s)
-												 (:name "Drafts" :maildir "/work/[Gmail].Drafts" :key ?d)
-												 (:name "Trash" :maildir "/work/[Gmail].Trash" :key ?t)
-												 (:name "All Mail" :maildir "/work/[Gmail].All Mail" :key ?a)
+												 (:name "Inbox" :maildir "/personal/INBOX" :key ?i)
+												 (:name "Sent" :maildir "/personal/[Gmail].Sent Mail" :key ?s)
+												 (:name "Drafts" :maildir "/personal/[Gmail].Drafts" :key ?d)
+												 (:name "Trash" :maildir "/personal/[Gmail].Trash" :key ?t)
+												 (:name "All Mail" :maildir "/personal/[Gmail].All Mail" :key ?a)
 												 ))
 					  (mu4e-bookmarks . (
-										 (:name "Personal" :query "maildir:/work/INBOX AND flag:personal" :key ?p)
-										 (:name "Unread" :query "maildir:/work/INBOX AND flag:unread" :key ?u)
-										 (:name "memo-list" :query "maildir:/work/INBOX AND list:memo-list.redhat.com" :key ?m)
-										 (:name "kernel" :query "maildir:/work/INBOX AND (list:linux-kernel.vger.kernel.org OR list:io-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
+										 (:name "Personal" :query "maildir:/personal/INBOX AND flag:personal" :key ?p)
+										 (:name "Unread" :query "maildir:/personal/INBOX AND flag:unread" :key ?u)
+										 (:name "kernel" :query "maildir:/personal/INBOX AND (list:linux-kernel.vger.kernel.org OR list:io-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
 										 ))
-					  ))))
+					  ))
+             ,(make-mu4e-context
+			   :name "School"
+			   :match-func (lambda (msg)
+							 (when msg
+							   (mu4e-message-contact-field-matches msg '(:to :cc :from) "georgeh3@illinois.edu")))
+			   :enter-func (lambda ()
+							 (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+								   (lambda (docid msg target)
+                                     (mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
+               :leave-func (lambda ()
+                             (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+                                   (lambda (docid msg target)
+                                     (mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
+               :vars '((user-full-name . "George Huebner")
+                       (user-mail-address . "georgeh3@illinois.edu")
+                       (mu4e-index-cleanup nil)
+                       (mu4e-index-lazy-check t)
+                       (mu4e-sent-messages-behavior . delete)
+                       (mu4e-drafts-folder . "/school/Drafts")
+                       (mu4e-trash-folder . "/school/Deleted Items")
+                       (mu4e-sent-folder . "/school/Sent Items")
+                       (mu4e-refile-folder . "/school/Archive")
+                       (message-sendmail-extra-arguments . ("-a" "school"))
+                       (mu4e-maildir-shortcuts . ((:name "Inbox" :maildir "/school/INBOX" :key ?i)
+                                                  (:name "Sent" :maildir "/school/Sent Items" :key ?s)
+                                                  (:name "Drafts" :maildir "/school/Drafts" :key ?d)
+                                                  (:name "Trash" :maildir "/school/Deleted Items" :key ?t)
+                                                  (:name "All Mail" :maildir "/school/Archive" :key ?a)))
+                       (mu4e-bookmarks . ((:name "Unread" :query "maildir:/school/INBOX AND flag:unread" :key ?u)
+                                          (:name "Lab" :query "maildir:/school/INBOX AND (from:kwiat@illinois.edu OR subject:Kwiat OR to:phys-kwiat-mailers@mx.uillinois.edu)" :key ?l)))))
+             ))
 
 	(setq smiley-style 'emoji
 		  smiley-emoji-regexp-alist
-		  '(("\\(;-?)\\)\\W" 1 "😉")
-			("[^;]\\(;)\\)\\W" 1 "😉")
-			("\\(:-?]\\)\\W" 1 "😬")
-			("\\(8-?)\\)\\W" 1 "🥴")
-			("\\(:-?|\\)\\W" 1 "😐")
-			("\\(:-?[/\\]\\)[^/\\]\\W" 1 "😕")
-			("\\(:-?(\\)\\W" 1 "😠")
-			("\\(X-?)\\)\\W" 1 "😵")
-			("\\(:-?{\\)\\W" 1 "😦")
-			("\\(>:-?)\\)\\W" 1 "😈")
-			("\\(;-?(\\)\\W" 1 "😢")
-			("\\(:-?D\\)\\W" 1 "😀")
-			("\\(O:-?)\\)\\W" 1 "😇")
-			("\\(\\^?:-?)\\)\\W" 1 "🙂")))
+		  '(("\\s-\\(;-?)\\)\\W" 1 "😉")
+			("\\s-[^;]\\(;)\\)\\W" 1 "😉")
+			("\\s-\\(:-?]\\)\\W" 1 "😬")
+			("\\s-\\(8-?)\\)\\W" 1 "🥴")
+			("\\s-\\(:-?|\\)\\W" 1 "😐")
+			("\\s-\\(:-?[/\\]\\)[^/\\]\\W" 1 "😕")
+			("\\s-\\(:-?(\\)\\W" 1 "😠")
+			("\\s-\\(X-?)\\)\\W" 1 "😵")
+			("\\s-\\(:-?{\\)\\W" 1 "😦")
+			("\\s-\\(>:-?)\\)\\W" 1 "😈")
+			("\\s-\\(;-?(\\)\\W" 1 "😢")
+			("\\s-\\(:-?D\\)\\W" 1 "😀")
+			("\\s-\\(O:-?)\\)\\W" 1 "😇")
+			("\\s-\\(\\^?:-?)\\)\\W" 1 "🙂")))
 
 	(setq mu4e-get-mail-command "mbsync -a"
 		  sendmail-program "msmtp"
@@ -588,6 +588,8 @@ Change bookmarks to not use trash
 		  ;;gnus-treat-leading-whitespace 'head
 		  mu4e-view-fields '(:from :to :cc :subject :flags :date :tags))
 
+    (add-to-list 'mm-discouraged-alternatives "text/html")
+
 	(setq mu4e-modeline-show-global nil)
 	(setq mu4e-confirm-quit nil)
 	(setq mu4e-hide-index-messages t)
@@ -607,8 +609,8 @@ Change bookmarks to not use trash
 		  mu4e-headers-personal-mark '("p" . "🫵")
 		  mu4e-headers-calendar-mark '("a" . "🗓️")
 
-		  mu4e-headers-thread-orphan-prefix '("<>" . nil)
-		  mu4e-headers-thread-single-orphan-prefix '("<>" . nil)
+		  mu4e-headers-thread-orphan-prefix '("<>" . "")
+		  mu4e-headers-thread-single-orphan-prefix '("<>" . "")
 		  mu4e-headers-thread-child-prefix '("o " . "├ ")
 		  mu4e-headers-thread-first-child-prefix '("o " . "├ "))
 
@@ -626,25 +628,25 @@ Change bookmarks to not use trash
 								(:from . 22)
 								(:mailing-list . nil)))
 
-	(define-advice mu4e~headers-human-date (:filter-return (ret) pretty-date)
-	  (if (string= (format-time-string "%Y") (substring ret -4 nil))
-		  (let*
-			  ((timestamp (if (ignore-errors (equal "en_US" (substring (getenv "LANG") nil 5)))
-							  (string-join (list (substring ret -4 nil) (substring ret nil 2) (substring ret 3 5)) "-")
-							(string-join (list (substring ret -4 nil) (substring ret 3 5) (substring ret nil 2)) "-")))
-			   (delta (time-subtract (date-to-day (format-time-string "%F")) (date-to-day timestamp))))
-			(format-time-string (cond
-								  ((= 1 delta) "Yesterday")
-								  ((> 7 delta) "%A")
-								  (t "%b %-e"))
-								(date-to-time timestamp)))
-		ret))
+	;; (define-advice mu4e~headers-human-date (:filter-return (ret) pretty-date)
+	;;   (if (string= (format-time-string "%Y") (substring ret -4 nil))
+	;; 	  (let*
+	;; 		  ((timestamp (if (ignore-errors (equal "en_US" (substring (getenv "LANG") nil 5)))
+	;; 						  (string-join (list (substring ret -4 nil) (substring ret nil 2) (substring ret 3 5)) "-")
+	;; 						(string-join (list (substring ret -4 nil) (substring ret 3 5) (substring ret nil 2)) "-")))
+	;; 		   (delta (time-subtract (date-to-day (format-time-string "%F")) (date-to-day timestamp))))
+	;; 		(format-time-string (cond
+	;; 							  ((= 1 delta) "Yesterday")
+	;; 							  ((> 7 delta) "%A")
+	;; 							  (t "%b %-e"))
+	;; 							(date-to-time timestamp)))
+	;; 	ret))
 	(setq mu4e-headers-time-format "%T")
 
-;; come back to this once gpg method gets better
-;; even better: hook pre-update to double it, and reset it on zero exit code
-;;	(define-advice mu4e-message (:after (frm &rest args) pinentry-timeout)
-;;	  (when (ignore-errors (progn (message "%s" args) (string-match-p (regexp-quote "non-zero exit code") (car args)))) (setq mu4e-update-interval (* 2 mu4e-update-interval))))
+    ;; come back to this once gpg method gets better
+    ;; even better: hook pre-update to double it, and reset it on zero exit code
+    ;;	(define-advice mu4e-message (:after (frm &rest args) pinentry-timeout)
+    ;;	  (when (ignore-errors (progn (message "%s" args) (string-match-p (regexp-quote "non-zero exit code") (car args)))) (setq mu4e-update-interval (* 2 mu4e-update-interval))))
 
 
 	:hook (evil-collection-setup . (lambda (&rest _) (general-define-key
@@ -653,12 +655,13 @@ Change bookmarks to not use trash
 													  "j"  'evil-next-line
 													  "k" 'evil-previous-line
 													  )))
+    :custom-face
+    (mu4e-thread-fold-face ((t (:inherit mu4e-header-face))))
 	)
 ;; TODO: this sends a duplicate email:
 ;; Re: Accepted: Test	<>-- bad, this should not be sent
 ;; Accepted: Test @ 11:59 PM   <>-- correct
 ;; (use-package mu4e-icalendar
-;;	:straight (:type built-in)
 ;;	:after mu4e
 ;;	:demand t
 ;;	:config
@@ -667,49 +670,96 @@ Change bookmarks to not use trash
 #+end_src
 There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
 It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
-#+begin_src conf :tangle ~/.mbsyncrc :tangle no
-IMAPAccount work
+
+**** Setting up email locally
+Brian Flaherty' [[https://sites.uw.edu/bxf4/2022/09/01/getting-uw-outlook-365-oauth2-to-work-with-emacs-mu4e-mbsync-and-msmtp/][guide]] on getting Outlook setup with mu4e is excellent.
+isync (mbsync) synchonizes mailboxes.
+#+begin_src conf :tangle ~/.mbsyncrc
+IMAPAccount personal
 Host imap.gmail.com
-User ghuebner@redhat.com
-#PassCmd "PINENTRY_USER_DATA=\"emacs\" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\\s\"\\([[:alpha:]]*\\)\"/\\1/p'"
-PassCmd "cat ~/.dotfiles/secrets/gmail"
+User ghubs25@gmail.com
+PassCmd "pass show msmtp:gmail"
 Port 993
 SSLType IMAPS
 AuthMechs LOGIN
 
-IMAPStore work-remote
-Account work
+IMAPStore personal-remote
+Account personal
 
-MaildirStore work-local
-Path ~/Mail/work/
-Inbox ~/Mail/work/INBOX
+MaildirStore personal-local
+Path ~/Mail/personal/
+Inbox ~/Mail/personal/INBOX
 Flatten .
 
-Channel work
-Far :work-remote:
-Near :work-local:
+Channel personal
+Far :personal-remote:
+Near :personal-local:
 Create Both
 Expunge Both
 Patterns * !"[Gmail]/Important" !"[Gmail]/Starred"
 SyncState *
+
+IMAPAccount school
+Host outlook.office365.com
+User georgeh3@illinois.edu
+PassCmd "mutt_oauth2.py ~/.password-store/msmtp:outlook.gpg"
+Port 993
+SSLType IMAPS
+AuthMechs XOAUTH2
+
+IMAPStore school-remote
+Account school
+
+MaildirStore school-local
+Path ~/Mail/school/
+Inbox ~/Mail/school/INBOX
+Flatten .
+
+Channel school
+Far :school-remote:
+Near :school-local:
+Create Both
+Expunge Both
+Patterns *
+Patterns * !Calendar* !"Conversation History" !"Contacts" !"Tasks" !"Journal" !"Outbox" !"Notes"
+SyncState *
 #+end_src
-#+begin_src conf :tangle ~/.config/msmtp/config :tangle no
+msmtp is a sendmail-like utility for, you guessed it, /sending/ mail.
+#+begin_src conf :tangle ~/.config/msmtp/config :mkdirp yes
 defaults
 logfile ~/Mail/msmtp.log
 protocol smtp
 tls on
 
-account work
+account personal
 host smtp.gmail.com
 port 465
 auth on
 tls_starttls off
-from ghuebner@redhat.com
-user ghuebner@redhat.com
-#passwordeval PINENTRY_USER_DATA="emacs" gpg --no-tty -qd ~/.authinfo.gpg | sed -n 's/machine imap.gmail.com.*password\s"\([[:alpha:]]*\)"/\1/p'
-passwordeval cat ~/.dotfiles/secrets/gmail
+from george@feyor.sh
+user ghubs25@gmail.com
+passwordeval pass show msmtp:gmail
 
-account default : work
+account school
+host smtp.office365.com
+port 587
+auth xoauth2
+tls_starttls on
+from georgeh3@illinois.edu
+user georgeh3@illinois.edu
+passwordeval mutt_oauth2.py ~/.password-store/msmtp:outlook.gpg
+
+account default : personal
+#+end_src
+
+#+begin_src shell :results none :eval no
+mkdir -p ~/Mail/personal
+mkdir ~/Mail/school
+mbsync -a
+#+end_src
+If you can't use an app password, use OAuth with something like [[https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py?inline=false][mutt_oauth2.py]]. I had difficulty getting the API scopes right for an AD app registration (I could request tokens but they didn't work for IMAP/SMTP), so I used Thunderbird's =client_id= instead with the device code auth mechanism (=localhostauthflow= did not work with requesting scopes for some reason).
+#+begin_src shell :results none :eval no
+mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
 
 *** TODO RSS
@@ -718,7 +768,12 @@ Hmmm, I'd like to get scoring integrated into feeds.org, but for now ~-aggregato
 (use-package elfeed
     :commands (elfeed)
     :config
-    (eval-when-compile (require 'elfeed))
+    (use-package elfeed-org
+        :demand t
+        :config
+        (elfeed-org)
+        (setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory))))
+    ;; (eval-when-compile (require 'elfeed))
     (defun elfeed-clean-trash (&optional now)
       (interactive "P")
       (with-elfeed-db-visit (entry _)
@@ -757,114 +812,19 @@ Hmmm, I'd like to get scoring integrated into feeds.org, but for now ~-aggregato
     ('normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)
     )
 
-(use-package elfeed-org
-	:after (elfeed org)
-	:config
-	(elfeed-org)
-	(setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory))))
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
-#+begin_src diff
-From 9a380cd80340c97f9312e3537ee58d8506e091f7 Mon Sep 17 00:00:00 2001
-From: George Huebner <george@feyor.sh>
-Date: Sun, 9 Jun 2024 19:41:56 -0500
-Subject: [PATCH] generate id from the link attribute
-
-This is to cause collisions between duplicate entries across feeds.
----
- elfeed.el | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/elfeed.el b/elfeed.el
-index 733f953..572fc09 100644
---- a/elfeed.el
-+++ b/elfeed.el
-@@ -292,8 +292,8 @@ If PROTOCOL is nil, returns URL."
-                                      (xml-query-all* (creator *) entry))))
-                     (categories (xml-query-all* (category :term) entry))
-                     (content (elfeed--atom-content entry))
--                    (id (or (xml-query* (id *) entry) link
--                            (elfeed-generate-id content)))
-+					(clean-link (elfeed-cleanup link))
-+                    (id (elfeed-generate-id clean-link))
-                     (type (or (xml-query* (content :type) entry)
-                               (xml-query* (summary :type) entry)
-                               ""))
-@@ -310,8 +310,8 @@ If PROTOCOL is nil, returns URL."
-                     (db-entry (elfeed-entry--create
-                                :title (elfeed-cleanup title)
-                                :feed-id feed-id
--                               :id (cons namespace (elfeed-cleanup id))
--                               :link (elfeed-cleanup link)
-+                               :id id
-+                               :link 
-                                :tags tags
-                                :date (or (elfeed-float-time date) (float-time))
-                                :content content
-@@ -361,9 +361,9 @@ If PROTOCOL is nil, returns URL."
-                     (content (or (xml-query-all* (encoded *) item)
-                                  (xml-query-all* (description *) item)))
-                     (description (apply #'concat content))
--                    (id (or guid link (elfeed-generate-id description)))
--                    (full-id (cons namespace (elfeed-cleanup id)))
--                    (original (elfeed-db-get-entry full-id))
-+					(clean-link (elfeed-cleanup link))
-+                    (id (elfeed-generate-id clean-link)) ;; sacrifice usage of GUID. Who uses that, anyway?
-+                    (original (elfeed-db-get-entry id))
-                     (original-date (and original (elfeed-entry-date original)))
-                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
-                     (etags (xml-query-all* (enclosure) item))
-@@ -376,9 +376,9 @@ If PROTOCOL is nil, returns URL."
-                               collect (list url type length)))
-                     (db-entry (elfeed-entry--create
-                                :title (elfeed-cleanup title)
--                               :id full-id
-+                               :id id
-                                :feed-id feed-id
--                               :link (elfeed-cleanup link)
-+                               :link clean-link
-                                :tags tags
-                                :date (elfeed-new-date-for-entry
-                                       original-date date)
-@@ -409,16 +409,16 @@ If PROTOCOL is nil, returns URL."
-                               (xml-query* (date *) item)))
-                     (description
-                      (apply #'concat (xml-query-all* (description *) item)))
--                    (id (or link (elfeed-generate-id description)))
--                    (full-id (cons namespace (elfeed-cleanup id)))
--                    (original (elfeed-db-get-entry full-id))
-+					(clean-link (elfeed-cleanup link))
-+                    (id (elfeed-generate-id clean-link))
-+                    (original (elfeed-db-get-entry id))
-                     (original-date (and original (elfeed-entry-date original)))
-                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
-                     (db-entry (elfeed-entry--create
-                                :title (elfeed-cleanup title)
--                               :id full-id
-+                               :id id
-                                :feed-id feed-id
--                               :link (elfeed-cleanup link)
-+                               :link clean-link
-                                :tags tags
-                                :date (elfeed-new-date-for-entry
-                                       original-date date)
--- 
-2.44.1
-#+end_src
 
 *** TODO Matrix
-#+begin_src elisp :tangle no
-(use-package ement
-	:ensure nil)
+#+begin_src elisp
+(use-package ement)
 #+end_src
 
 *** TODO IRC
-Gotta hop on Asahi chat at some point... (do I even still have my old GPG key? lol)
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package erc
-	:commands (erc erc-tls)
-	:config
-;; this should probably be an alist...
+	:commands (erc erc-tls erc-join-server)
+    :init
 	(defvar erc-server-list
 	  `(,`("Libera.Chat" :server "irc.libera.chat"
 						 :port 6697
@@ -872,54 +832,56 @@ Gotta hop on Asahi chat at some point... (do I even still have my old GPG key? l
 		  ,`("OFTC" :server "irc.oftc.net"
 					:port 6697
 					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
-
-	(defun erc-join-server (server)
-	  (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
-	  (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
-			 (certs (plist-get server-args :client-certificate)))
-		(if-let ((erc-buffer (get-buffer server)))
-			(switch-to-buffer erc-buffer)
-		  (progn
-			(unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
-			  (plist-put server-args :client-certificate (list certs certs)))
-			(apply 'erc-tls server-args)))))
-
-	(general-define-key
-	 :keymaps 'erc-mode-map
-	 "<up>" #'erc-previous-command
-	 "<down>" #'erc-next-command)
+    (defun erc-join-server (server)
+      "Join a server from 'erc-server-list'."
+      (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
+      (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
+             (certs (plist-get server-args :client-certificate)))
+        (if-let ((erc-buffer (get-buffer server)))
+            (switch-to-buffer erc-buffer)
+          (progn
+            (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
+              (plist-put server-args :client-certificate (list certs certs)))
+            ;;(apply #'erc-tls (append server-args '(&interactive-env ((erc--display-context (erc-interactive-display . erc)) (erc-join-buffer . buffer)))))))))
+            (apply #'erc-tls server-args)))))
+    :general-config
+    ('erc-mode-map "<up>" #'erc-previous-command)
+    ('erc-mode-map "<down>" #'erc-next-command)
+	:config
 	(define-advice erc-previous-command (:before-while () no-cycle)
 	  (or (not erc-input-ring-index) (not (equal (ring-length erc-input-ring) (+ 1 erc-input-ring-index)))))
 	(define-advice erc-next-command (:before-while () no-cycle)
 	  erc-input-ring-index)
 
-	(use-package erc-sasl
-		:straight (:type built-in)
-		:config
-		(setq erc-sasl-mechanism 'external))
-	(use-package erc-services
-		:straight (:type built-in)
-		:init
-		;;(setq erc-prompt-for-nickserv-password nil)
-		;;(setq erc-use-auth-source-for-nickserv-password nil)
-		(erc-services-mode 1)
-		)
-
 	(setq erc-nick "Shorden")
-	(setq erc-autojoin-timing 'ident)
+    ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
+    (setq erc-autojoin-timing 'ident)
+    (setq erc-autojoin-delay 15)
+	(setq erc-join-buffer 'window)
 	(setq erc-kill-buffer-on-part t)
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
-;;	(setq erc-auth-source-server-function nil)
-	;(setq erc-prompt-for-password nil)
-	(setq erc-autojoin-channels-alist '(("libera" "#emacs") ("oftc" "#llvm"))))
+    ;; regex isn't case sensitive
+    (setq erc-autojoin-channels-alist '(("libera" "#emacs") ("oftc" "#llvm" "#asahi")))
+
+    (setq erc-nickserv-identify-mode nil)
+    (setq erc-prompt-for-nickserv-password nil)
+    (setq erc-use-auth-source-for-nickserv-password nil)
+    (setq erc-auth-source-server-function nil)
+    (setq erc-prompt-for-password nil)
+
+    (use-package erc-sasl
+        :demand t
+        :config
+        (setq erc-sasl-mechanism 'external)))
 #+end_src
 Instead of gnarsty password-based auth, we can use a certificate to authenticate. For some reason, OFTC has to use SHA-1 instead of SHA-256.
-#+begin_src zsh :dir "~/emacs/emacs_profiles/vanilla" :eval no
-mkdir -p erc
-cd erc
-openssl req -x509 -new -newkey rsa:4096 -sha256 -days 1825 -nodes -out libera.pem -keyout libera.pem
-openssl req -x509 -new -newkey rsa:2048 -sha1 -days 1825 -nodes -out oftc.pem -keyout oftc.pem
+#+begin_src shell :dir (expand-file-name "erc" user-emacs-directory) :mkdirp yes :results none :eval no
+nix shell nixpkgs#openssl
+openssl req -x509 -new -newkey ed25519 -sha256 -subj "/" -days 365 -nodes -out libera.pem -keyout libera.pem
+openssl req -x509 -new -newkey ed25519 -sha1 -subj "/" -days 365 -nodes -out oftc.pem -keyout oftc.pem
+chmod 400 *.pem
+# openssl req -nodes -newkey rsa:2048 -keyout nick.key -x509 -days 3650 -out nick.cer
 #+end_src
 And then once connected, run
 #+begin_src erc :eval no
@@ -990,15 +952,16 @@ And now to make it *pretty*
   (org-modern-mode . fonts/org)
   (org-cdlatex-mode . fonts/literate-programming)
   :config
+  (setq org-modern-star 'replace)
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
-				 ("WAIT" . "orange red")
-				 ("DONE" . org-done)
-				 ("PAST" . "dark red")))
+                                 ("WAIT" . "orange red")
+                                 ("DONE" . org-done)
+                                 ("PAST" . "dark red")))
   (setq org-modern-todo-faces
-	'(("WAIT" :background "orange red" :foreground "white")
-		("PAST" :background "dark red" :foreground "white"))))
-  ;;:custom-face
-  ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
+        '(("WAIT" :background "orange red" :foreground "white")
+          ("PAST" :background "dark red" :foreground "white"))))
+;;:custom-face
+;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
 ;; tecosaur the goat for this one
 (defvar +org-mode-left-margin-width 1
@@ -1015,82 +978,75 @@ And now to make it *pretty*
 (add-hook 'window-configuration-change-hook #'+setup-org-mode-left-margin)
 (add-hook 'display-line-numbers-mode-hook #'+setup-org-mode-left-margin)
 (add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
-#+end_src
+  #+end_src
 Now for Babel:
 #+begin_src elisp
 (use-package org
-	:after (wolfram-mode ob-sagemath)
-	:config
-	(org-babel-do-load-languages
-	 'org-babel-load-languages
-	 '(
-	   (emacs-lisp . t)
-	   (shell . t)
-	   (python . t)
-	   (wolfram . t)
-	   (sagemath . t)
-	   )))
-#+end_src
-And inline images:
-#+begin_src elisp :tangle no
-(use-package org-remoteimg
-	:straight (org-remoteimg :type git :host github :repo "gaoDean/org-remoteimg")
-	:config
-	(setq url-cache-directory "~/.cache/emacs/url")
-	(setq org-display-remote-inline-images 'cache))
+    :commands (org-babel-eval org-babel-tangle org-babel)
+    ;; :after (wolfram-mode ob-sagemath)
+    :config
+    ;; (use-package wolfram-mode :demand t)
+    (use-package ob-sagemath :demand t)
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (shell . t)
+       (python . t)
+       ;; (mathematica . t)
+	   (sagemath . t))))
 #+end_src
 Website stuff:
 #+begin_src elisp
 (use-package ox-hugo
-	;;:straight (ox-hugo :type git :host github :repo "kaushalmodi/ox-hugo"))
-	:config
-  ;;(setq org-hugo-section "gooba")
-  (setq org-html-with-latex 'html)
-  (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
-
-  (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
-	"Transcode a LATEX-ENVIRONMENT element from Org to HTML.
+    :mode ("content\\.org\\'" . org-mode)
+    :init
+    (setq org-hugo-external-file-extensions-allowed-for-copying '("txt" "jpg" "jpeg" "tiff" "png" "svg" "gif" "bmp" "mp4" "pdf" "odt" "doc" "ppt" "xls" "docx" "pptx" "xlsx"))
+    :config
+    (setq org-html-with-latex 'html)
+    (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
+    (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
+	  "Transcode a LATEX-ENVIRONMENT element from Org to HTML.
 CONTENTS is nil.  INFO is a plist holding contextual information."
-	(let ((processing-type (plist-get info :with-latex))
-		  (latex-frag (org-remove-indentation
-					   (org-element-property :value latex-environment)))
-          (attributes (org-export-read-attribute :attr_html latex-environment))
-          (label (org-html--reference latex-environment info t))
-          (caption (and (org-html--latex-environment-numbered-p latex-environment)
-						(number-to-string
-						 (org-export-get-ordinal
-						  latex-environment info nil
-						  (lambda (l _)
-							(and (org-html--math-environment-p l)
-								 (org-html--latex-environment-numbered-p l))))))))
-      (cond
-		((memq processing-type '(t mathjax))
-		 (org-html-format-latex
-		  (if (org-string-nw-p label)
-			  (replace-regexp-in-string "\\`.*"
-										(format "\\&\n\\\\label{%s}" label)
-										latex-frag)
-			latex-frag)
-		  'mathjax info))
-		((memq processing-type '(t html))
-		 (org-html-format-latex
-		  (if (org-string-nw-p label)
-			  (replace-regexp-in-string "\\`.*"
-										(format "\\&\n\\\\label{%s}" label)
-										latex-frag)
-			latex-frag)
-		  'html info))
-		((assq processing-type org-preview-latex-process-alist)
-		 (let ((formula-link
-				(org-html-format-latex
-				 (org-html--unlabel-latex-environment latex-frag)
-				 processing-type info)))
-           (when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
-			 (let ((source (org-export-file-uri (match-string 1 formula-link))))
-			   (org-html--wrap-latex-environment
-				(org-html--format-image source attributes info)
-				info caption label)))))
-		(t (org-html--wrap-latex-environment latex-frag info caption label))))))
+	  (let ((processing-type (plist-get info :with-latex))
+		    (latex-frag (org-remove-indentation
+					     (org-element-property :value latex-environment)))
+            (attributes (org-export-read-attribute :attr_html latex-environment))
+            (label (org-html--reference latex-environment info t))
+            (caption (and (org-html--latex-environment-numbered-p latex-environment)
+						  (number-to-string
+						   (org-export-get-ordinal
+						    latex-environment info nil
+						    (lambda (l _)
+							  (and (org-html--math-environment-p l)
+								   (org-html--latex-environment-numbered-p l))))))))
+        (cond
+		  ((memq processing-type '(t mathjax))
+		   (org-html-format-latex
+		    (if (org-string-nw-p label)
+			    (replace-regexp-in-string "\\`.*"
+										  (format "\\&\n\\\\label{%s}" label)
+										  latex-frag)
+			  latex-frag)
+		    'mathjax info))
+		  ((memq processing-type '(t html))
+		   (org-html-format-latex
+		    (if (org-string-nw-p label)
+			    (replace-regexp-in-string "\\`.*"
+										  (format "\\&\n\\\\label{%s}" label)
+										  latex-frag)
+			  latex-frag)
+		    'html info))
+		  ((assq processing-type org-preview-latex-process-alist)
+		   (let ((formula-link
+				  (org-html-format-latex
+				   (org-html--unlabel-latex-environment latex-frag)
+				   processing-type info)))
+             (when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
+			   (let ((source (org-export-file-uri (match-string 1 formula-link))))
+			     (org-html--wrap-latex-environment
+				  (org-html--format-image source attributes info)
+				  info caption label)))))
+		  (t (org-html--wrap-latex-environment latex-frag info caption label))))))
 #+end_src
 Adding links to PDFs with Org.
 #+begin_src elisp
@@ -1100,7 +1056,9 @@ Adding links to PDFs with Org.
 Org capture setup.
 #+begin_src elisp
 (use-package org
-	:config
+    :general
+  (leader-def "c" #'org-capture)
+  :config
   (setq org-capture-bookmark nil)
   (setq org-capture-templates
         `(,`("t" "TODO" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
@@ -1110,8 +1068,6 @@ Org capture setup.
 			,`("v" "Vocab" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Vocab List")
 				   "- %?")
 			))
-  :general
-  (leader-def "c" #'org-capture)
   )
 #+end_src
 LaTeX stuff
@@ -1135,24 +1091,23 @@ Add nice fontification
 #+end_src
 Add colors. This requires Koma Script _and_ Xcolor
 #+begin_src elisp :tangle no
-(use-package ox-chameleon
-	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
+;; (use-package ox-chameleon
+;; 	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
 #+end_src
 
 *** TODO Python
 #+begin_src elisp
 (use-package python
-	:straight (:type built-in)
-	:hook
-	((python-mode python-ts-mode) . eglot-ensure)
-	)
+    :mode ("\\.py\\'" . python-ts-mode)
+    :interpreter ("python" . python-ts-mode))
 #+end_src
 
 *** TODO Zig
 Panic because chals are due soon 😰
 Add a setting such that ~zig run~ creates an exe in the expected place, not the .cache directory
 #+begin_src elisp
-(use-package zig-mode)
+(use-package zig-mode
+    :mode "\\.zig\\'")
 #+end_src
 
 *** TODO Rust
@@ -1170,15 +1125,16 @@ Slime? Improve scratch?
 
 *** Haskell
 #+begin_src elisp
-(use-package haskell-mode)
+(use-package haskell-mode
+    :mode "\\.hs\\'")
 #+end_src
 
 *** TODO C/C++
 I realized I don't actually use an "official" style; I think functions should be formatted like statements.
 #+begin_src elisp
 (use-package cc-mode
-	:straight (:type built-in)
-	:init
+    :mode ("\\.[ch]\\(pp\\)?\\'" . c-or-c++-ts-mode)
+    :init
 	(setq-default indent-tabs-mode nil)
 	(setq-default tab-width 4)
 	(defvaralias 'c-basic-offset 'tab-width)
@@ -1186,9 +1142,7 @@ I realized I don't actually use an "official" style; I think functions should be
 	(setq-default c-default-style "k&r")
     (setq-default c-ts-mode-indent-style (intern c-default-style))
     (defvaralias 'c-ts-mode-indent-width 'c-basic-offset)
-    (defvaralias 'c-ts-mode-indent-offset 'c-basic-offset)
-	:hook ((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
-	)
+    (defvaralias 'c-ts-mode-indent-offset 'c-basic-offset))
 #+end_src
 
 *** Assembly
@@ -1201,46 +1155,49 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
-	:config
-(with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1)))))))
-)
+    :mode "\\.md\\'"
+    :config
+    (with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1))))))))
 #+end_src
 
 *** YAML
 TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party ~yaml-mode~ should be used instead.
 #+begin_src elisp
-(use-package yaml-mode)
+(use-package yaml-mode
+    :mode "\\.ya?ml\\'")
 #+end_src
 
-*** TODO Nix
+*** Nix
 #+begin_src elisp
 (use-package nix-mode
-	:init
-  (add-hook 'nix-mode-hook (lambda () (indent-tabs-mode -1))))
+    :mode "\\.nix\\'"
+    :hook (nix-mode . (lambda () (indent-tabs-mode -1))))
 #+end_src
 
-*** TODO Mathematica
+*** Mathematica
 Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 #+begin_src elisp
-(use-package wolfram-mode
-	:straight (wolfram-mode :type git :host github :repo "dalanicolai/wolfram-mode")
-	:config
-    ;; these are set to "default", which is a bogus value.
-    (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
-    (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face))
-	(setq org-babel-wolfram-command "mash")
-	(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
+;; (use-package wolfram-mode
+;;     :mode "\\.m\\|\\(wl\\)\\'"
+;;     :config
+;;     ;; these are set to "default", which is a bogus value.
+;;     (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
+;;     (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face)))
+;; 	;;(setq org-babel-wolfram-command "mash")
+;; 	;;(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
 #+end_src
 
 *** Sage
 #+begin_src elisp
 (use-package sage-shell-mode
+    :mode ("\\.sage\\'" . sage-shell:sage-mode)
+    :interpreter "sage"
 	:init
-  (sage-shell:define-alias)
-  (setq sage-shell:use-prompt-toolkit nil)
-  (setq sage-shell:use-simple-prompt t)
-  (setq sage-shell:set-ipython-version-on-startup nil)
-  (setq sage-shell:check-ipython-version-on-startup nil))
+    (sage-shell:define-alias)
+    (setq sage-shell:use-prompt-toolkit nil)
+    (setq sage-shell:use-simple-prompt t)
+    (setq sage-shell:set-ipython-version-on-startup nil)
+    (setq sage-shell:check-ipython-version-on-startup nil))
 
 (use-package ob-sagemath
 	:after sage-shell-mode
@@ -1253,29 +1210,30 @@ Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
-	:ensure nil
-	:config
-	(setq vterm-shell "fish")
-	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
-	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state))))
 	:general
 	(leader-def "t" #'vterm)
 	:general-config
 	('vterm-mode-map "M-=" #'text-scale-increase)
 	('vterm-mode-map "M--" #'text-scale-decrease)
 	('vterm-mode-map "M-:" #'eval-expression)
-	)
+	:config
+	(setq vterm-shell "fish")
+	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
+	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
-*** TODO PDF Viewer
+
+*** PDF Viewer
 I'd like to change the cursor blink behaviour.
 #+begin_src elisp
 (use-package pdf-tools
-	:ensure nil
-	:hook
-	(pdf-tools-enabled . pdf-view-midnight-minor-mode)
+    :magic ("%PDF" . pdf-view-mode)
+    :hook
+	(pdf-view-mode . pdf-view-midnight-minor-mode)
+	:general-config
+	('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-down-or-next-page)
+	('normal 'pdf-view-mode-map "K" #'pdf-view-scroll-up-or-next-page)
 	:config
-	(pdf-loader-install)
-	(setq pdf-view-use-scaling t)
+    (setq pdf-view-use-scaling t)
 	(setq-default pdf-view-display-size 'fit-page))
 #+end_src
 
@@ -1288,7 +1246,7 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
 *** Ibuffer
 #+begin_src elisp
 (use-package ibuffer
-	:general
+    :general
   ('global "C-x C-b" #'ibuffer))
 #+end_src
 
@@ -1298,13 +1256,11 @@ See [[https://github.com/doomemacs/doomemacs/blob/9620bb45ac4cd7b0274c497b2d9d93
 consult-perspective (uses persp-switch to preview different perspectives)
 #+begin_src elisp
 (use-package perspective
-	:general
-  (:keymaps 'global
-			"C-x p" #'persp-switch
-			)
+    :general
+  ('global "C-x p" #'persp-switch)
   :commands (persp-new persp-switch persp-state-save)
-  :hook (ibuffer . (lambda () (persp-ibuffer-set-filter-groups)))
-  :hook (persp-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (persp-name (persp-curr))))))
+  :hook ((ibuffer . (lambda () (persp-ibuffer-set-filter-groups)))
+         (persp-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (persp-name (persp-curr)))))))
   :init
   (setq persp-state-default-file (expand-file-name ".persp" user-emacs-directory))
   (setq persp-suppress-no-prefix-key-warning t)
@@ -1332,28 +1288,22 @@ consult-perspective (uses persp-switch to preview different perspectives)
   (use-package consult :demand t)
   (consult-customize consult--source-buffer :hidden t :default nil)
   (add-to-list 'consult-buffer-sources persp-consult-source)
-  (persp-mode)
-  )
+  (persp-mode))
 #+end_src
 
 *** Direnv
 For usage with nix-direnv (and maybe lorri in the future?)
 #+begin_src elisp
 (use-package direnv
-	:init
-  (setq warning-minimum-level :error)
-  :config
+    :config
   ;; ignore summary because it's useless on nix
-  (defun direnv--show-summary (summary old-directory new-directory)
-	"Show a SUMMARY message.
-
-     OLD-DIRECTORY and NEW-DIRECTORY are the directories before and after the environment changes."
-	(let ((paths
-		   (when direnv-show-paths-in-summary
-			 (direnv--format-paths old-directory new-directory))))
-	  (if paths
-		  (message "direnv: %s" paths)
-		(message "direnv: changed"))))
+  (define-advice direnv--show-summary (:override (summary old-directory new-directory) short-summary)
+    (let ((paths
+           (when direnv-show-paths-in-summary
+             (direnv--format-paths old-directory new-directory))))
+      (if paths
+          (message "direnv: %s" paths)
+        (message "direnv: changed"))))
   (direnv-mode))
 #+end_src
 
@@ -1362,25 +1312,25 @@ So I can commit tax fraud productively.
 Make ~ledger-reports~ programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode
-	:init
-  (add-hook 'emacs-startup-hook
-			(lambda () (find-file-noselect "~/Personal/Finances/expenses.ledger")))
-  :custom
-  (ledger-reports
-   '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
-	 ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
-	 ("bal" "%(binary) -f %(ledger-file) bal")
-	 ("reg" "%(binary) -f %(ledger-file) reg")
-	 ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
-	 ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
+    :mode "\\.ledger\\'"
+    :hook (emacs-startup . (lambda () (find-file-noselect "~/Personal/Finances/expenses.ledger")))
+    :custom
+    (ledger-reports
+     '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
+	   ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
+	   ("bal" "%(binary) -f %(ledger-file) bal")
+	   ("reg" "%(binary) -f %(ledger-file) reg")
+	   ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+	   ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
 #+end_src
 
 *** TODO Magit
 #+begin_src elisp
 (use-package magit
-	:general-config
+    :general-config
   (leader-def "b" #'magit-blame)
   ('magit-mode-map "K" nil)
+  ('magit-mode-map "J" nil)
   :init
   (setq vc-follow-symlinks t)
   (dir-locals-set-class-variables
@@ -1399,38 +1349,39 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 	 ))
   (dir-locals-set-directory-class
    (concat (getenv "HOME") "/Personal/nixpkgs") 'huge-git-repository)
-  (dir-locals-set-directory-class
-   (concat (getenv "HOME") "/Work/linux") 'huge-git-repository)
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
-  (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight))))
-  )
+  (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))
+
 (use-package forge
-	:after magit
-	)
+    :after magit
+    :general
+    ('magit-status-mode-map "@" #'forge-dispatch))
 #+end_src
 
 *** TODO Debugger
 ~gud-mode~
 
-*** TODO LSP
+*** LSP
 Eglot!
 #+begin_src elisp
 (use-package eglot
-	:straight (:type built-in)
     :general-config
-    ('normal 'eglot-mode-map "K" nil)
-    :hook (eglot-managed-mode . (lambda ()
-                                  ;; Show flymake diagnostics first.
-                                  (setq eldoc-documentation-functions
-                                        (cons #'flymake-eldoc-function
-                                              (remove #'flymake-eldoc-function eldoc-documentation-functions)))
-                                  ;; Show all eldoc feedback.
-                                  (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
-	:config
-	(setq eldoc-echo-area-prefer-doc-buffer t
-		  eldoc-echo-area-use-multiline-p nil)
-	)
+  ('normal 'eglot-mode-map "K" nil)
+  :hook ((eglot-managed-mode . (lambda ()
+                                 ;; Show flymake diagnostics first.
+                                 (setq eldoc-documentation-functions
+                                       (cons #'flymake-eldoc-function
+                                             (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+                                 ;; Show all eldoc feedback.
+                                 (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
+         ((sage-shell-mode
+           python-mode python-ts-mode
+           c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
+          . eglot-ensure))
+  :config
+  (setq eldoc-echo-area-prefer-doc-buffer t
+		eldoc-echo-area-use-multiline-p nil))
 #+end_src
 
 *** Treesitter
@@ -1438,8 +1389,7 @@ Emacs 29 has tree sitter built in, which adds ts specific major modes (for backw
 Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]]; that being said, this is /really/ hacky and ugly.
 #+begin_src elisp
 (use-package treesit
-	:straight (:type built-in)
-	:config
+	:init
 	(setq major-mode-remap-alist '((bash-mode . bash-ts-mode)
 								   (sh-mode . bash-ts-mode)
 								   (javascript-mode . js-ts-mode)
@@ -1459,9 +1409,8 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 	(add-to-list 'auto-mode-alist '("go.mod\\'" . go-mod-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.toml\\'" . toml-ts-mode))
-	;; TODO: regex for e.g. CMakelist.txt
-	(add-to-list 'auto-mode-alist '("\\.cmake\\'" . cmake-ts-mode))
-	)
+	(add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
+	(add-to-list 'auto-mode-alist '("cmake" . cmake-ts-mode)))
 #+end_src
 
 *** Help
@@ -1485,42 +1434,39 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 				  (progn
 					(select-window window norecord)
 					(switch-to-buffer buffer nil))
-				(pop-to-buffer buffer action norecord)))))
-	)
+				(pop-to-buffer buffer action norecord))))))
 #+end_src
 
 *** Diff
 #+begin_src elisp
 (use-package emacs
-	:general-config
+    :general
   (leader-def "d" (lambda () (interactive) (diff-buffer-with-file (current-buffer))))
   :config
-  (add-to-list 'display-buffer-alist '("\\*Diff\\*" (lambda (buffer alist) (select-window  (display-buffer-use-some-window buffer alist)))))
-  )
+  (add-to-list 'display-buffer-alist '("\\*Diff\\*" (lambda (buffer alist) (select-window  (display-buffer-use-some-window buffer alist))))))
 #+end_src
 
 *** Line endings
 It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 #+begin_src elisp
 (use-package emacs
+    :autoload (unix2dos dos2unix)
     :config
-  (defun unix2dos (beginning end &optional arg)
-    (interactive "*r\nP")
-    (cond (arg (call-interactively #'encode-coding-region))
-          ((memq (detect-coding-region beginning end t) '(unix undecided-unix)) (encode-coding-region beginning end 'dos))
-          (t nil)))
-  (defun dos2unix (beginning end &optional arg)
-    (interactive "*r\nP")
-    (cond (arg (call-interactively #'decode-coding-region))
-          ((memq (detect-coding-region beginning end t) '(dos undecided-dos)) (decode-coding-region beginning end 'dos))
-          (t nil)))
-  )
+    (defun unix2dos (beginning end &optional arg)
+      (interactive "*r\nP")
+      (cond (arg (call-interactively #'encode-coding-region))
+            ((memq (detect-coding-region beginning end t) '(unix undecided-unix)) (encode-coding-region beginning end 'dos))
+            (t nil)))
+    (defun dos2unix (beginning end &optional arg)
+      (interactive "*r\nP")
+      (cond (arg (call-interactively #'decode-coding-region))
+            ((memq (detect-coding-region beginning end t) '(dos undecided-dos)) (decode-coding-region beginning end 'dos))
+            (t nil))))
 #+end_src
 
 *** Dictionary
 #+begin_src elisp
 (use-package dictionary
-	:straight (:type built-in)
 	:general
 	(leader-def "s" #'dictionary-lookup-definition)
 	:config
@@ -1533,36 +1479,79 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 #+begin_src elisp
 (use-package emacs
 	:requires xwidget-internal
-	:commands (browse-url)
-	:config
-	(setq browse-url-browser-function 'xwidget-webkit-browse-url)
-	(setq browse-url-secondary-browser-function 'browse-url-default-browser)
-	(setq shr-bullet "• ")
-	(setq shr-folding-mode t)
-	(setq url-privacy-level 'high)
-	(url-setup-privacy-info)
-	(setq fysh/browse-url-proxy-prefix "https://proxy2.library.illinois.edu/login?url=")
-	(setq browse-url-handlers '(
-								("journals\\.aps\\.org" . (lambda (url &rest args)
-															(let* ((pdf (string-replace "/abstract/" "/pdf/" url))) 
-															  (if (string-equal url pdf) (browse-url-default-browser url) (eww-browse-url (concat fysh/browse-url-proxy-prefix pdf))))))
+    :init
+    ;; (defvaralias 'fysh/search-prefix 'eww-search-prefix)
+    (setq fysh/search-prefix "https://duckduckgo.com/?q=")
+    (defun fysh/search (start end)
+      "Search selected string using a search engine."
+      (interactive "r")
+      (let* ((q (buffer-substring-no-properties start end))
+             (query (if (use-region-p) q
+                      (read-string (format-prompt "Search" (current-word)) nil nil (current-word)))))
+        (browse-url (concat fysh/search-prefix (url-hexify-string query)))))
+    :commands (browse-url)
+    :general
+    (leader-def "S" #'fysh/search)
+    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)))
+    :general-config
+    ;; ('normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)
+    ('normal 'xwidget-webkit-mode-map "K" #'xwidget-webkit-scroll-down)
+    ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
+    ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
+    ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
+    :config
+    (setq browse-url-browser-function 'xwidget-webkit-browse-url)
+    (setq browse-url-secondary-browser-function 'browse-url-default-browser)
+    (setq shr-bullet "• ")
+    (setq shr-folding-mode t)
+    (setq shr-max-image-proportion 0.5)
+    (setq url-privacy-level 'high)
+    (url-setup-privacy-info)
+
+    (setq fysh/browse-url-proxy-prefix "https://proxy2.library.illinois.edu/login?url=")
+    (defun fysh/eww-browse-url-ephemeral (url &rest args)
+      (eww-browse-url url args)
+      (run-with-timer 5 nil (lambda () (kill-matching-buffers "eww-" nil t))))
+    (setq browse-url-handlers '(
+							    ("journals\\.aps\\.org" . (lambda (url &rest args)
+														    (let* ((pdf (string-replace "/abstract/" "/pdf/" url))) 
+														      (if (string-equal url pdf) (browse-url-default-browser url) (eww-browse-url (concat fysh/browse-url-proxy-prefix pdf))))))
 
                                 ("arxiv\\.org" . (lambda (url &rest args)
-                                                   (cond ((string-match-p "/pdf/" url) (eww-browse-url url args))
-                                                         ((string-match-p "/abs/" url) (eww-browse-url (string-replace "/abs/" "/pdf/" url) args))
+                                                   (cond ((string-match-p "/pdf/" url) (fysh/eww-browse-url-ephemeral url args))
+                                                         ((string-match-p "/abs/" url) (fysh/eww-browse-url-ephemeral (string-replace "/abs/" "/pdf/" url) args))
                                                          (t (browse-url-default-browser url args)))))
-								("." . xwidget-webkit-browse-url)))
-	(define-advice xwidget-kill-buffer-query-function (:override () always-kill) t)
-	:general-config
-	('normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)
-	('normal 'xwidget-webkit-mode-map "K" #'xwidget-webkit-scroll-down)
-	('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
-	('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
-	('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
-	)
+							    ("\\.pdf" . fysh/eww-browse-url-ephemeral)
+							    ("." . xwidget-webkit-browse-url)))
+    (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
 #+end_src
 
 ** UI
+*** Early Init
+:PROPERTIES:
+:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
+:END:
+~menu-bar-mode~ must be enabled for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]]: frames without menu bars DO NOT have fullscreen enabled by default
+#+begin_src elisp
+(define-key global-map [menu-bar] nil)
+(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
+(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
+
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+
+;; big savings, supposedly
+(setq frame-inhibit-implied-resize t)
+
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+#+end_src
+
+*** Splash screen
+#+begin_src elisp
+(define-advice use-fancy-splash-screens-p (:override () always-show) t)
+#+end_src
+
 *** Title Bar
 #+begin_src elisp
 (setq-default frame-title-format "Emacs")
@@ -1581,75 +1570,35 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 *** Theme
 #+begin_src elisp
 (use-package doom-themes
-	:ensure t
-	:config
-	(setq doom-themes-enable-bold t
-		  doom-themes-enable-italic t)
-	(load-theme 'doom-palenight t)
-	(doom-themes-visual-bell-config)
-	(doom-themes-org-config))
+    :demand t
+    :config
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    (load-theme 'doom-palenight t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-org-config))
 #+end_src
+~doom-modeline~ is pinned to 3.4.0, the last version that supports all-the-icons, in [[file:~/.dotfiles/home.nix][home.nix]].
 #+begin_src elisp
 (use-package doom-modeline
-	:ensure t
-	:config
-	(setq doom-modeline-modal-icon t)
-	(setq nerd-icons-color-icons nil)
-	:hook
-	(after-init . doom-modeline-mode))
-#+end_src
-This is required to lock the modeline to v3.4, the last version that supports all-the-icons.
-#+begin_src elisp :tangle "~/.config/emacs/straight/versions/default.el"
-(("doom-modeline" . "63eb9d3548c7d4be1774b50cdc2169262dd43100")) ;; last version that supports all-the-icons
-("org" . "19a1a5024bef3163737fa6f2b71dd9d4437dc31f")) ;; latest org breaks ox-hugo export
-:gamma
-#+end_src
-#+begin_src bash :eval no
-cd ~/.config/emacs/straight/repos/doom-modeline
-git fetch --unshallow
+    :hook (after-init . doom-modeline-mode)
+    :config
+    (setq doom-modeline-modal-icon t))
 #+end_src
 #+begin_src elisp
 (use-package solaire-mode
-	:ensure t
-	:init
+    :hook (after-init . solaire-global-mode)
+	:config
 	(setq solaire-mode-real-buffer-fn
 		  (defun shor/solaire-mode-real-buffer-p ()
 			(let* ((buf (buffer-base-buffer))
 				   (bufname (buffer-name buf)))
 			  (cond ((string-match-p (regexp-quote "*scratch*") bufname))
 					((string-match-p (regexp-opt '("*mu4e-article*" "*mu4e-draft*" "*mu4e-compose*")) bufname))
-					((buffer-file-name buf))))))
-	:config
-	(solaire-global-mode +1))
+					((buffer-file-name buf)))))))
 #+end_src
 
-*** TODO GUI
-Or lack thereof...
-**** Early Init
-:PROPERTIES:
-:header-args:elisp: :tangle "~/.config/emacs/early-init.el"
-:END:
-~menu-bar-mode~ must be enabled for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]]: frames without menu bars DO NOT have fullscreen enabled by default
-#+begin_src elisp
-(define-key global-map [menu-bar] nil)
-(add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
-(add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
-
-(push '(tool-bar-lines . 0) default-frame-alist)
-(push '(vertical-scroll-bars) default-frame-alist)
-
-;; big savings, supposedly
-(setq frame-inhibit-implied-resize t)
-
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-
-(setq use-file-dialog nil)
-(setq use-dialog-box nil)
-(defalias 'yes-or-no-p 'y-or-n-p)
-#+end_src
-
-**** TODO Fonts
+*** TODO Fonts
 I still need to rice Org fonts, and test LaTeX fonts out. Defaults should be sane, though.
 
 Trying to patch swathes of Unicode blocks is... a losing battle. Consider using [[https://github.com/rolandwalker/unicode-fonts][Unicode Fonts]] instead.
@@ -1692,15 +1641,7 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
 Ok, something in my Emacs config is definitely messing up native scroll.
 We add rainbow-mode to color hex codes, like #003b6f.
 #+begin_src elisp
-(use-package rainbow-mode
-	:config
-  (rainbow-mode 1))
-#+end_src
-
-**** TODO Splash Screen
-I use this because of yabai weirdness. Also, I want to add a proper splash screen.
-#+begin_src elisp
-(defun use-fancy-splash-screens-p () t)
+(use-package rainbow-mode)
 #+end_src
 
 * TODO List
@@ -1720,3 +1661,8 @@ Also make it so I don't have to log back in every day
 And make a corresponding org class that automatically converts headings into questions, with tags as points
 ** Ediff: Breaks persp-mode
 ** Magit: Ignore stderr
+* Local variables
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t) 
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
+;; End:

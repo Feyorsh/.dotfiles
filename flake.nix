@@ -20,14 +20,14 @@
     };
   };
 
-  outputs = flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
+  outputs = flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
     let
       system = "aarch64-darwin";
       inherit (darwin.lib) darwinSystem;
       pkgs = import nixpkgs {
         inherit system;
-	      config = { allowUnfree = true; };
-	      overlays = [
+        config = { allowUnfree = true; };
+        overlays = [
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
               icon = ./assets/icons/spotify.icns;

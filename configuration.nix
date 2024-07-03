@@ -1,4 +1,4 @@
-flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager }:
+flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
 { config, pkgs, lib, ... }:
 {
   # essential packages; my perl-less swiss army chainsaw

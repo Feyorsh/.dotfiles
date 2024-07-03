@@ -1,0 +1,84 @@
+From 2f2ff29fccdd987efc79bc986976dc5cb11e5129 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Fri, 21 Jun 2024 13:38:07 -0500
+Subject: [PATCH] generate id from the link attribute
+
+This is to cause collisions between duplicate entries across feeds.
+---
+ elfeed.el | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/elfeed.el b/elfeed.el
+index 733f953..5027b0d 100644
+--- a/elfeed.el
++++ b/elfeed.el
+@@ -294,6 +294,8 @@ If PROTOCOL is nil, returns URL."
+                     (content (elfeed--atom-content entry))
+                     (id (or (xml-query* (id *) entry) link
+                             (elfeed-generate-id content)))
++					(clean-link (elfeed-cleanup link))
++                    ;; (id (or (elfeed-generate-id clean-link) guid (elfeed-generate-id content)))
+                     (type (or (xml-query* (content :type) entry)
+                               (xml-query* (summary :type) entry)
+                               ""))
+@@ -310,8 +312,8 @@ If PROTOCOL is nil, returns URL."
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+                                :feed-id feed-id
+-                               :id (cons namespace (elfeed-cleanup id))
+-                               :link (elfeed-cleanup link)
++                               :id (elfeed-cleanup id)
++                               :link clean-link
+                                :tags tags
+                                :date (or (elfeed-float-time date) (float-time))
+                                :content content
+@@ -361,9 +363,9 @@ If PROTOCOL is nil, returns URL."
+                     (content (or (xml-query-all* (encoded *) item)
+                                  (xml-query-all* (description *) item)))
+                     (description (apply #'concat content))
+-                    (id (or guid link (elfeed-generate-id description)))
+-                    (full-id (cons namespace (elfeed-cleanup id)))
+-                    (original (elfeed-db-get-entry full-id))
++					(clean-link (elfeed-cleanup link))
++                    (id (or (elfeed-generate-id clean-link) guid (elfeed-generate-id content))) ;; deprioritize GUID. Who uses that, anyway?
++                    (original (elfeed-db-get-entry id))
+                     (original-date (and original (elfeed-entry-date original)))
+                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
+                     (etags (xml-query-all* (enclosure) item))
+@@ -376,9 +378,9 @@ If PROTOCOL is nil, returns URL."
+                               collect (list url type length)))
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+-                               :id full-id
++                               :id (elfeed-cleanup id)
+                                :feed-id feed-id
+-                               :link (elfeed-cleanup link)
++                               :link clean-link
+                                :tags tags
+                                :date (elfeed-new-date-for-entry
+                                       original-date date)
+@@ -409,16 +411,16 @@ If PROTOCOL is nil, returns URL."
+                               (xml-query* (date *) item)))
+                     (description
+                      (apply #'concat (xml-query-all* (description *) item)))
+-                    (id (or link (elfeed-generate-id description)))
+-                    (full-id (cons namespace (elfeed-cleanup id)))
+-                    (original (elfeed-db-get-entry full-id))
++					(clean-link (elfeed-cleanup link))
++                    (id (or (elfeed-generate-id clean-link) guid (elfeed-generate-id content)))
++                    (original (elfeed-db-get-entry id))
+                     (original-date (and original (elfeed-entry-date original)))
+                     (tags (elfeed-normalize-tags autotags elfeed-initial-tags))
+                     (db-entry (elfeed-entry--create
+                                :title (elfeed-cleanup title)
+-                               :id full-id
++                               :id (elfeed-cleanup id)
+                                :feed-id feed-id
+-                               :link (elfeed-cleanup link)
++                               :link clean-link
+                                :tags tags
+                                :date (elfeed-new-date-for-entry
+                                       original-date date)
+-- 
+2.44.1
+
