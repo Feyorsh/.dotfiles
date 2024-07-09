@@ -14,32 +14,134 @@ in {
       # wrapper is broken(?) works when you install rosetta
       # https://github.com/NixOS/nixpkgs/commits/130e80523f73b8950568246d3b4c294825923448/pkgs/build-support/emacs/wrapper.nix
       # this doesn't play nicely with non-lisp packages like ledger and aspell
-      ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: with epkgs; [
-        vterm
-        treesit-grammars.with-all-grammars
-        pdf-tools
+      ((emacsPackagesFor emacs29-macport).emacsWithPackages (epkgs: (with epkgs; [
+        # goddammt. Ok fine, we'll split between config.org and home manager (it's fucking ugly though).
+        # the idea here is to install the really important and long-lived packages through nix, which as an added bonus allows me to patch them easily.
+        # *in theory* I can still use straight-use-package on the fly
+        mu4e
+        erc
         ement
-        pkgs.mu
+        (elfeed.overrideAttrs(prev: rec {
+          patches = (prev.patches or []) ++ [ ./config/emacs/elfeed.patch ];
+        })) elfeed-org
+
+        vterm
+        pdf-tools
+        magit forge
+        direnv
+
+        evil evil-collection evil-org evil-snipe
+        general
+        corfu
+        vertico
+        orderless
+        consult
+        embark embark-consult
+        prescient
+
+        gcmh
+        helpful
+        perspective # TODO REMOVEME
+
+        org org-modern org-pdftools ox-hugo engrave-faces
+        haskell-mode
+        markdown-mode
+        nix-mode
+        terraform-mode
+        zig-mode
+        yaml-mode
+        ledger-mode
+        wolfram-mode
+        sage-shell-mode ob-sagemath
+        treesit-grammars.with-all-grammars
+        # eglot
+
+        all-the-icons all-the-icons-completion
+        kind-icon
+        marginalia
+        doom-themes solaire-mode
+        (doom-modeline.overrideAttrs(prev: rec {
+          version = "3.4.0";
+          src = fetchFromGitHub {
+            owner = "seagle0128";
+            repo = prev.pname;
+            rev = "refs/tags/v${version}";
+            sha256 = "sha256-cTaMtLzolZckTsCzYT1Ij/ESvw+f+QI0jFKfPYbFrPw=";
+          };
+
+          # patches = (prev.patches or []) ++ [ (fetchpatch {
+          #   url = "https://github.com/seagle0128/doom-modeline/commit/9773ef765b5d530e9f6657bc24efb83059a3d888.patch";
+          #   sha256 = "sha256-vNqz3bD+E4XhxIsddAlOqyUnf9RsnZWkpWhJIqzav6Q=";
+          # }) ];
+        }))
+        rainbow-mode
+      ]) ++ [
+        # for some reason, LSP servers don't play nice with `emacsWithPackages`.
+        clang-tools
+        pyright
+        # pkgs.sourcekit-lsp # swift
+        # nil # nix
+        # zls # zig
+        # gopls # go
       ]))
-      # for some reason, LSP servers don't play nice with `emacsWithPackages`.
-      clang-tools
-      pyright
-      # pkgs.sourcekit-lsp # swift
-      # nil # nix
-      # zls # zig
-      # gopls # go
       ledger
 
       pass
   
       mu
-      isync
+      (isync.override { withCyrusSaslXoauth2 = true; })
       msmtp
+      (stdenv.mkDerivation rec {
+        pname = "mutt_oauth2";
+        version = "2020-08-07";
+
+        src = fetchurl {
+          url = "https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py?inline=false";
+          sha256 = "sha256-R+sLNQ+NMZ70KQOX4RzWVMcOW/yJuUX6G9i3rG7lCe0=";
+        };
+        dontUnpack = true;
+
+        buildInputs = [ python3 gnupg pass ];
+
+        # from thunderbird, see
+        # https://blog.thunderbird.net/2023/01/important-message-for-microsoft-office-365-enterprise-users/
+        msft_client_id = "9e5f94bc-e8a4-4e73-b8be-63364c29d753"; 
+        goog_client_id = "";
+
+        subs = writeScript "mutt_sed" ''
+          #!${pkgs.python3}/bin/python3
+          import sys
+          import itertools
+          
+          client_id = {
+              "google": "${goog_client_id}",
+              "microsoft": "${msft_client_id}",
+          }
+          
+          seen = None
+          out = []
+          with open(sys.argv[1], 'r') as f:
+              lines = f.readlines().__iter__()
+              for l in lines:
+                  if "'client_id':" in l and seen:
+                      l = l.replace("'''", f"'{client_id[seen]}'")
+                      seen = None
+                  elif (g:="YOUR_GPG_IDENTITY") in l:
+                      l = l.replace(g, "george@feyor.sh")
+                  elif (t := next((k for k in client_id.keys() if k in l), None)):
+                      seen = t
+                  out.append(l)
+          with open(sys.argv[2], 'w') as f:
+            f.writelines(out)
+        '';
+        postPatch = "$subs $src ${pname}.py";
+
+        installPhase = "install -m755 -D ${pname}.py $out/bin/${pname}.py";
+      })
 
       aspell
       
       python312
-
       alt-tab-macos
       monitorcontrol
       fpkgs.time-out-macos
@@ -75,6 +177,10 @@ in {
           else
               printf "\e]%s\e\\" "$argv"
           end
+      end
+
+      function alert
+          command $argv; afplay (random choice ~/Profile/Sounds/*) &
       end
 
       set -g SHELL ${config.home.profileDirectory}${config.programs.fish.package.shellPath}
@@ -147,6 +253,12 @@ in {
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
+    # enableFishIntegration = true;
+    config = {
+      global = {
+        hide_env_diff = true;
+      };
+    };
   };
 
   programs.vim = {
