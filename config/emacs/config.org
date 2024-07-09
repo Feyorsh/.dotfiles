@@ -1505,6 +1505,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     (setq shr-bullet "• ")
     (setq shr-folding-mode t)
     (setq shr-max-image-proportion 0.5)
+    (setq shr-ignore-cache t)
     (setq url-privacy-level 'high)
     (url-setup-privacy-info)
 
@@ -1521,7 +1522,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
                                                    (cond ((string-match-p "/pdf/" url) (fysh/eww-browse-url-ephemeral url args))
                                                          ((string-match-p "/abs/" url) (fysh/eww-browse-url-ephemeral (string-replace "/abs/" "/pdf/" url) args))
                                                          (t (browse-url-default-browser url args)))))
-							    ("\\.pdf" . fysh/eww-browse-url-ephemeral)
+							    ("pdf$" . fysh/eww-browse-url-ephemeral)
 							    ("." . xwidget-webkit-browse-url)))
     (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
 #+end_src
