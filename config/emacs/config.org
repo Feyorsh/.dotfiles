@@ -1612,7 +1612,7 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
   (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
   (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
   (set-fontset-font "fontset-default" 'symbol (font-spec :family "Sarasa UI J" :size 15))
-  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji" :size 20)))
+  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji")))
 
 (defun fonts/org ()
   (if org-modern-mode
