@@ -1287,44 +1287,30 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+end_src
 
 *** TODO Perspective
-persp-mode /can/ save non file-visiting buffers by defining functions to restore them; use that instead
-See [[https://github.com/doomemacs/doomemacs/blob/9620bb45ac4cd7b0274c497b2d9d93c4ad9364ee/lisp/lib/sessions.el#L46][doom]] and [[https://gist.github.com/Bad-ptr/1aca1ec54c3bdb2ee80996eb2b68ad2d#file-persp-shell-el][random gist]]
-consult-perspective (uses persp-switch to preview different perspectives)
+Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-bar-mode, which I've warmed up to significantly.
 #+begin_src elisp
-(use-package perspective
-    :general
-  ('global "C-x p" #'persp-switch)
-  :commands (persp-new persp-switch persp-state-save)
-  :hook ((ibuffer . (lambda () (persp-ibuffer-set-filter-groups)))
-         (persp-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (persp-name (persp-curr)))))))
-  :init
-  (setq persp-state-default-file (expand-file-name ".persp" user-emacs-directory))
-  (setq persp-suppress-no-prefix-key-warning t)
-  (setq persp-sort 'access)
-  (setq persp-modestring-short t)
-  (setq persp-initial-frame-name "emacs")
-  (setq persp-purge-initial-persp-on-save t)
+(use-package emacs
+    :init
+  (defcustom tab-bar-switch-hook nil
+    "Hook run after `tab-switch` is finished."
+    ;;:group 'erc-hooks
+    :type 'hook)
+  (defun tab-name ()
+    "Get name of current tab, or index if there's no name."
+    (let* ((current-tab (tab-bar--current-tab))
+           (tab-index (tab-bar--current-tab-index))
+           (explicit-name (alist-get 'explicit-name current-tab))
+           (tab-name (alist-get 'name current-tab)))
+      (if explicit-name tab-name (+ 1 tab-index))))
+  :general
+  ;; this is a hack, but I'm content with it for the time being because emacs 30.1 adds a proper hook.
+  ('global "C-x p" (lambda () (interactive) (progn (tab-list) (run-with-timer 10 nil (lambda () (run-hooks 'tab-bar-switch-hook))))))
+  :custom
+  (tab-bar-show nil)
+  :hook
+  (tab-bar-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (tab-name)))))
   :config
-  ;;(persp-setup-for "mail" (mu4e) (persp-set-buffer 'mu4e-main-buffer-name))
-  ;;(persp-setup-for "irc" (erc-join-server "Libera.Chat"))
-  ;;(defun open-directory-in-perspective (dir)
-  ;;(interactive "DOpen directory: ")
-  ;;)
-  ;;(define-advice consult--buffer-preview (:around (fn &rest args) fysh/persp-tamer)
-  ;;  ;;(ad-disable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
-  ;;(ad-deactivate-regexp "^persp-.*")
-  ;;  (apply fn args)
-  ;;(ad-activate-regexp "^persp-.*")
-  ;;  ;;(ad-enable-advice 'switch-to-buffer 'after 'persp-add-buffer-adv)
-  ;;  )
-  ;; (define-advice persp-buffers-to-savelist (:before (persp) doom/persp-remove-dead-buffers)
-  ;; 	(when (persp-p persp)
-  ;; 	  (setf (persp-buffers persp)
-  ;; 			(cl-delete-if-not #'persp-get-buffer-or-null (persp-buffers persp)))))
-  (use-package consult :demand t)
-  (consult-customize consult--source-buffer :hidden t :default nil)
-  (add-to-list 'consult-buffer-sources persp-consult-source)
-  (persp-mode))
+  (tab-bar-mode))
 #+end_src
 
 *** Direnv
@@ -1635,6 +1621,10 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 (use-package doom-modeline
     :hook (after-init . doom-modeline-mode)
     :config
+    ;; just moved the workspace to the right
+    (doom-modeline-def-modeline 'main
+        '(bar window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+      '(compilation objed-state misc-info workspace-name persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
     (setq doom-modeline-modal-icon t))
 #+end_src
 #+begin_src elisp

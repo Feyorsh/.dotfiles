@@ -41,7 +41,6 @@ in {
 
         gcmh
         helpful
-        perspective # TODO REMOVEME
 
         org org-modern org-pdftools ox-hugo engrave-faces
         haskell-mode
