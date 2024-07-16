@@ -117,14 +117,23 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 Rebind builtin bindings
 #+begin_src elisp
 (use-package emacs
-	:general-config
+    :init
+  (defun toggle-maximize-buffer ()
+    "Maximize buffer"
+    (interactive)
+    (if (= 1 (length (window-list)))
+        (jump-to-register '_)
+      (progn
+        (window-configuration-to-register '_)
+        (delete-other-windows))))
+  :general-config
+  (leader-def "=" #'toggle-maximize-buffer)
   (leader-def "#" #'comment-dwim)
   ("M-=" #'text-scale-increase)
   ("M--" #'text-scale-decrease)
   ("C-x C-c" (lambda () (interactive) (message "Ah ah ah, you didn't say the magic word!")))
   ("C-h C-c" nil)
-  ("C-h C-w" nil)
-  )
+  ("C-h C-w" nil))
 #+end_src
 
 **** Evil
@@ -147,6 +156,10 @@ Rebind builtin bindings
 	(setq evil-visual-state-message nil)
 	(setq evil-replace-state-message nil)
 	(setq evil-emacs-state-message nil)
+
+    (defun fysh/kill-buffer-quiet ()
+      (interactive)
+      (kill-buffer (current-buffer)))
 	:general-config
 	('motion 'override "J" #'evil-scroll-down)
 	('normal "J" nil)
@@ -154,8 +167,9 @@ Rebind builtin bindings
 	('motion 'override "H" #'evil-first-non-blank)
 	('motion 'override "L" #'evil-last-non-blank)
 	('normal "DEL" #'evil-join)
+	('normal "ZK" #'fysh/kill-buffer-quiet)
 	:config
-	(evil-ex-define-cmd "bkill" (lambda () (interactive) (kill-buffer (current-buffer))))
+	(evil-ex-define-cmd "bkill" #'fysh/kill-buffer-quiet)
 	(evil-ex-define-cmd "bk" "bkill")
 	(evil-mode 1))
 #+end_src
@@ -1474,6 +1488,20 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 	(setq dictionary-server "dict.org"))
 #+end_src
 
+*** Zone
+Use Zone as a true screen saver that prevents sleep.
+#+begin_src elisp
+(use-package zone
+    :if (eq system-type 'darwin)
+    :init
+    (define-advice zone (:around (fn &rest args) fysh/covfefe)
+      (let* ((covfefe-buf (get-buffer-create " *caffeinate*"))
+             (covfefe-proc (start-process "caffeinate" covfefe-buf "caffeinate")))
+        (set-process-query-on-exit-flag covfefe-proc nil)
+        (apply fn args)
+        (when covfefe-buf (kill-buffer covfefe-buf)))))
+#+end_src
+
 *** Browser
 EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, even for sites like HN.
 #+begin_src elisp
@@ -1492,10 +1520,11 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     :commands (browse-url)
     :general
     (leader-def "S" #'fysh/search)
-    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)))
+    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (frame-pixel-height) 2))))))
     :general-config
     ;; ('normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)
-    ('normal 'xwidget-webkit-mode-map "K" #'xwidget-webkit-scroll-down)
+    ;; ('normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (frame-pixel-height) 2))))
+    ('normal 'xwidget-webkit-mode-map "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (frame-pixel-height) 2))))
     ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
