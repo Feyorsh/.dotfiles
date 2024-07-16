@@ -1,0 +1,33 @@
+From 8f911a56beaf52f0df18537d0f9abae8373d7133 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Wed, 10 Jul 2024 01:57:15 -0500
+Subject: [PATCH] elfeed-show: render after switching to entry buffer
+
+shr can't respect `shr-max-image-proportion` because it isn't rendered
+in a window; call `elfeed-search-show-entry` first to fix this.
+
+See https://debbugs.gnu.org/cgi/bugreport.cgi?bug=71913
+---
+ elfeed-show.el | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/elfeed-show.el b/elfeed-show.el
+index 4915cae..e16b4bf 100644
+--- a/elfeed-show.el
++++ b/elfeed-show.el
+@@ -214,9 +214,9 @@ The result depends on the value of `elfeed-show-unique-buffers'."
+   (let ((buff (get-buffer-create (elfeed-show--buffer-name entry))))
+     (with-current-buffer buff
+       (elfeed-show-mode)
+-      (setq elfeed-show-entry entry)
+-      (elfeed-show-refresh))
+-    (funcall elfeed-show-entry-switch buff)))
++      (setq elfeed-show-entry entry))
++    (funcall elfeed-show-entry-switch buff)
++    (elfeed-show-refresh)))
+ 
+ (defun elfeed-show-next ()
+   "Show the next item in the elfeed-search buffer."
+-- 
+2.44.1
+

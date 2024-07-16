@@ -22,7 +22,7 @@ in {
         erc
         ement
         (elfeed.overrideAttrs(prev: rec {
-          patches = (prev.patches or []) ++ [ ./config/emacs/elfeed.patch ];
+          patches = (prev.patches or []) ++ [ ./config/emacs/elfeed.patch ./config/emacs/elfeed-shr.patch ];
         })) elfeed-org
 
         vterm

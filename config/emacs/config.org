@@ -795,8 +795,7 @@ If you can't use an app password, use OAuth with something like [[https://gitlab
 mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
 
-*** TODO RSS
-Hmmm, I'd like to get scoring integrated into feeds.org, but for now ~-aggregator~ seems to get the job done.
+*** RSS
 #+begin_src elisp
 (use-package elfeed
     :commands (elfeed)
