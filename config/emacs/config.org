@@ -470,11 +470,9 @@ gpg --export <identity> | curl -T - https://keys.openpgp.org
 #+end_src
 
 *** TODO Mail
-Support for thread folding coming soon!
-Fix image display size
-Change gnus smileys to emoji (not all smileys are interpreted properly)
-Fix the... shitty? Display of HTML email. Not sure this is even possible, but at the very least why is it using the fancy font?
-Change bookmarks to not use trash
+This is surprisingly quite nice; Outlook sets an abysmally low bar, but still.
+
+I'd like to use org-msg to compose HTML email, but there are many issues with newer versions of mu; FIXME in September 2024ish.
 #+begin_src elisp
 (use-package mu4e
     :hook ((mu4e-headers-mode mu4e-view-mode)
@@ -496,6 +494,21 @@ Change bookmarks to not use trash
     (defvar mu4e-trash-folder "~/.mu4e")
     (defvar mu4e-sent-folder "~/.mu4e")
     (defvar mu4e-attachment-dir "~/Downloads")
+
+    (setq mail-user-agent 'mu4e-user-agent)
+    (setq mml-secure-smime-encrypt-to-self t)
+    (setq mml-secure-openpgp-encrypt-to-self t)
+
+    (defun message-encrypt ()
+      "Encrypt message at point."
+      (interactive)
+      (mml-secure-message-encrypt-pgpmime))
+    (defun message-sign ()
+      "Sign message at point."
+      (interactive)
+      (mml-secure-message-sign-pgpmime))
+    :custom
+    (read-mail-command 'mu4e)
     :config
     ;; (pinentry-start)
     (setq mu4e-context-policy 'pick-first
@@ -516,8 +529,9 @@ Change bookmarks to not use trash
                                   (lambda (docid msg target)
                                     (mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
 
-			  :vars '((user-full-name . "George Huebner")
+			  :vars `((user-full-name . "George Huebner")
 					  (user-mail-address . "george@feyor.sh")
+                      (message-alternative-emails . ,(regexp-opt '("ghubs25@gmail.com")))
 					  (mu4e-index-cleanup nil)
 					  (mu4e-index-lazy-check t)
 					  (mu4e-sent-messages-behavior . delete)
