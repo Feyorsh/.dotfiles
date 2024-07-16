@@ -888,20 +888,23 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
 	(setq erc-nick "Shorden")
     ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
     (setq erc-autojoin-timing 'ident)
-    (setq erc-autojoin-delay 15)
+    (setq erc-autojoin-delay 1)
 	(setq erc-join-buffer 'window)
 	(setq erc-kill-buffer-on-part t)
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
     ;; regex isn't case sensitive
-    (setq erc-autojoin-channels-alist '(("libera" "#emacs") ("oftc" "#llvm" "#asahi")))
-
+    (setq erc-autojoin-channels-alist '(("libera" "#emacs" "#nethack" "#zig" "#lobsters" "#nixos") ("oftc" "#llvm" "#asahi")))
+    (setq erc-interpret-mirc-color t)
+    (setq erc-header-line-format nil)
+    (setq erc-hide-list '("JOIN" "PART" "QUIT" "353"))
     (setq erc-nickserv-identify-mode nil)
     (setq erc-prompt-for-nickserv-password nil)
     (setq erc-use-auth-source-for-nickserv-password nil)
     (setq erc-auth-source-server-function nil)
     (setq erc-prompt-for-password nil)
 
+    (use-package erc-hl-nicks :demand t)
     (use-package erc-sasl
         :demand t
         :config
@@ -919,6 +922,10 @@ And then once connected, run
 #+begin_src erc :eval no
 /msg NickServ CERT ADD
 #+end_src
+Here's a little cheatsheet for Zoomers like me:
+- Finding channels :: ~/msg alis LIST REGEXP [options]~ (on Libera), ~/list~ lists /all/ channels (better hope you have good scrollback)! Also see [[https://netsplit.de/][netsplit.de]].
+- Channels :: ~/join #​my-channel~, ~/part~ to leave, ~/quit~ to disconnect from a server entirely
+
 Unrelated: figure out a better place to stick this
 #+begin_src elisp
 (defun advice-unadvice (sym)

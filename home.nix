@@ -19,7 +19,7 @@ in {
         # the idea here is to install the really important and long-lived packages through nix, which as an added bonus allows me to patch them easily.
         # *in theory* I can still use straight-use-package on the fly
         mu4e
-        erc
+        erc erc-hl-nicks
         ement
         (elfeed.overrideAttrs(prev: rec {
           patches = (prev.patches or []) ++ [ ./config/emacs/elfeed.patch ./config/emacs/elfeed-shr.patch ];
