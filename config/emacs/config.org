@@ -79,7 +79,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
                                             (active-minibuffer-window))
                                    (abort-recursive-edit)))))
     :custom (safe-local-variable-values
-             '((vc-default-patch-addressee . "bug-gnu-emacs@gnu.org")
+             '((eval require 'ox-hugo)
+               (vc-default-patch-addressee . "bug-gnu-emacs@gnu.org")
                (magit-revision-insert-related-refs)
                (magit-refresh-buffers)
                (eval add-hook 'after-save-hook
@@ -462,6 +463,10 @@ Null prefix argument turns off the mode."
 	  (if auto-save-default
 		  (auto-save-mode 1))))
   (add-to-list 'auto-mode-alist '("\\.gpg$" . sensitive-minor-mode)))
+#+end_src
+Make sure to make your GPG key discoverable; I also publish mine on my website.
+#+begin_src shell :eval no
+gpg --export <identity> | curl -T - https://keys.openpgp.org
 #+end_src
 
 *** TODO Mail
@@ -1012,9 +1017,6 @@ Now for Babel:
 Website stuff:
 #+begin_src elisp
 (use-package ox-hugo
-    :mode ("content\\.org\\'" . org-mode)
-    :init
-    (setq org-hugo-external-file-extensions-allowed-for-copying '("txt" "jpg" "jpeg" "tiff" "png" "svg" "gif" "bmp" "mp4" "pdf" "odt" "doc" "ppt" "xls" "docx" "pptx" "xlsx"))
     :config
     (setq org-html-with-latex 'html)
     (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
