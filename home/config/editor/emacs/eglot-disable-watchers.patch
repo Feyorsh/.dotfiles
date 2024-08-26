@@ -1,0 +1,44 @@
+From 1bfe22ee40efd9d332871dba27d6a9542dcc2d91 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Thu, 25 Jul 2024 00:06:37 -0500
+Subject: [PATCH] eglot: add option to disable file watchers
+
+---
+ lisp/progmodes/eglot.el | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/lisp/progmodes/eglot.el b/lisp/progmodes/eglot.el
+index 03da5c7..4a05310 100644
+--- a/lisp/progmodes/eglot.el
++++ b/lisp/progmodes/eglot.el
+@@ -608,6 +608,10 @@ This can be useful when using docker to run a language server.")
+     vec)
+   "Like `url-path-allowed-chars' but more restrictive.")
+ 
++(defcustom eglot-enable-file-watchers t
++  "If non-nil, enable file watchers (for workspace/didChangeWatchedFiles)."
++  :type 'boolean)
++
+ 
+ ;;; Message verification helpers
+ ;;;
+@@ -3784,6 +3788,7 @@ at point.  With prefix argument, prompt for ACTION-KIND."
+ (cl-defmethod eglot-register-capability
+   (server (method (eql workspace/didChangeWatchedFiles)) id &key watchers)
+   "Handle dynamic registration of workspace/didChangeWatchedFiles."
++  (when eglot-enable-file-watchers
+   (eglot-unregister-capability server method id)
+   (let* (success
+          (globs (mapcar
+@@ -3836,7 +3841,7 @@ at point.  With prefix argument, prompt for ACTION-KIND."
+              `(:message ,(format "OK, watching %s directories in %s watchers"
+                                  (length dirs-to-watch) (length watchers)))))
+         (unless success
+-          (eglot-unregister-capability server method id))))))
++          (eglot-unregister-capability server method id)))))))
+ 
+ (cl-defmethod eglot-unregister-capability
+   (server (_method (eql workspace/didChangeWatchedFiles)) id)
+-- 
+2.44.1
+

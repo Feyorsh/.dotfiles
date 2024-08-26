@@ -1,46 +1,33 @@
-[filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
 [user]
-	name = Feyorsh
-	email = ghubs25@gmail.com
-[core]
-	editor = nvim
-	excludesfile = /Users/george/.config/git/ignore
-[difftool]
-    prompt = true
-[diff]
-    tool = nvimdiff
-	colorMoved = zebra
-[difftool "nvimdiff"]
-    cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
-[difftool "codediff"]
-	cmd = code --wait --diff $LOCAL $REMOTE
-[merge]
-    tool = nvimdiff
-[mergetool]
-    prompt = true
-[mergetool "nvimdiff"]
-    cmd = nvim -d \"$LOCAL\" \"$REMOTE\" \"$MERGED\" -c 'wincmd w' -c 'wincmd J'
-[mergetool "vscode"]
-	cmd = code --wait --merge $REMOTE $LOCAL $BASE $MERGED
-[credential]
-	helper = osxkeychain
+	email = george@feyor.sh
+	name = George Huebner
+	signingkey = ~/.ssh/id_ed25519
+[gpg]
+	format = ssh
+#[gpg "ssh"]
+	#allowedSignersFile = ~/.ssh/allowed_signers
+[commit]
+	gpgsign = true
+[status]
+	showUntrackedFiles = all
 [init]
 	defaultBranch = main
-[fetch]
-	prune = true
 [pull]
 	rebase = true
+[rebase]
+	autoStash = true
+[core]
+	editor = vim
 [alias]
-	lg = lg2
+    lg = lg2
     lg1 = lg1-specific --all
     lg2 = lg2-specific --all
     lg3 = lg3-specific --all
     lg1-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
     lg2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
     lg3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''          %C(white)%s%C(reset)%n''          %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
-[protocol "file"]
-	allow = user
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

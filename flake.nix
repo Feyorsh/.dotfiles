@@ -9,6 +9,10 @@
       url = "git+file:///Users/ghuebner/Personal/fyshpkgs?ref=main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pwnypus = {
+      url = "git+file:///Users/ghuebner/Personal/pwnypus?ref=module-test";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     darwin = {
       url = "github:LnL7/nix-darwin";
@@ -18,9 +22,18 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    mac-app-util = {
+      url = "github:hraban/mac-app-util";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
+  outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
     let
       system = "aarch64-darwin";
       inherit (darwin.lib) darwinSystem;
@@ -28,6 +41,7 @@
         inherit system;
         config = { allowUnfree = true; };
         overlays = [
+          fyshpkgs.overlay.${system}
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
               icon = ./assets/icons/spotify.icns;
@@ -44,43 +58,38 @@
                 cp $icon extra/osx/Alacritty.app/Contents/Resources/alacritty.icns
               '';
             });
-           emacs29-macport = prev.emacs29-macport.overrideAttrs (prev': {
-             icon = ./assets/icons/emacs.icns;
-             patches = prev'.patches ++ [ (final.fetchpatch {
-               url = "https://raw.githubusercontent.com/railwaycat/homebrew-emacsmacport/911412ca8ea2671c1122bc307a1cd0740005a55d/patches/emacs-mac-title-bar-9.1.patch";
-               sha256 = "+SGySdRPFuw+yOuTwGiH4tLYqk4bh+2BRT46jUGEfuY=";
-             }) ];
+            emacs29-macport = (prev.emacs29-macport.overrideAttrs(prev': {
+              icon = ./assets/icons/emacs.icns;
 
-             configureFlags = (prev'.configureFlags or []) ++ [
-               "--with-xwidgets"
-             ];
-             buildInputs = (prev'.buildInputs or []) ++ [
-               final.darwin.apple_sdk_11_0.frameworks.WebKit
-             ];
-             postInstall = prev'.postInstall + ''
-               cp $icon $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
+              postInstall = prev'.postInstall + ''
+                cp $icon $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
              '';
-           });
+            }));
            nixVersions = (prev.nixVersions.extend(self: super: {
              master = nix.packages.aarch64-darwin.nix;
            }));
 	  }) ];
       };
-      fpkgs = import fyshpkgs { inherit pkgs; };
     in
       {
-        darwinConfigurations."Aqua" = darwinSystem {
+        darwinConfigurations."Aqua" = let
+          username = "ghuebner";
+          specialArgs = { inherit inputs username; };
+        in darwinSystem {
           system = "aarch64-darwin";
-          specialArgs = { inherit fpkgs; };
-          inherit pkgs;
-	        modules = [ (import ./configuration.nix flakes)
+          inherit specialArgs pkgs;
+	        modules = [ ./configuration
 		                  home-manager.darwinModules.home-manager
 		                  {
-                        home-manager.extraSpecialArgs = { inherit fpkgs; };
+                        home-manager.extraSpecialArgs = specialArgs;
 			                  home-manager.useGlobalPkgs = true;
 			                  home-manager.useUserPackages = true;
-			                  home-manager.users.ghuebner = import ./home.nix;
+			                  home-manager.users.${username} = import ./home;
 		                  }
+		                  home-manager.darwinModules.home-manager
+                      inputs.mac-app-util.darwinModules.default
+		                  inputs.pwnypus.darwinModules.chmodbpf
+		                  inputs.pwnypus.darwinModules.xquartz
 	                  ];
         };
 

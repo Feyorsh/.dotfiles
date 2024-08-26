@@ -1,0 +1,10 @@
+[user]
+    email = georgeh3@illinois.edu
+
+[sendemail]
+    from = George Huebner <georgeh3@illinois.edu>
+    smtpuser = georgeh3@illinois.edu
+    smtpserver = "/etc/profiles/per-user/ghuebner/bin/msmtp"
+    smtpencryption = tls
+    chainreplyto = false
+    confirm = auto

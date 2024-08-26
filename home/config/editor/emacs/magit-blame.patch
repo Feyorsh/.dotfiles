@@ -1,0 +1,27 @@
+From 369ef4647b36399145dc600e5854fbc6deb8b0a7 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Tue, 16 Jul 2024 12:23:38 -0500
+Subject: [PATCH] magit-process: redirect stderr
+
+---
+ lisp/magit-process.el | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lisp/magit-process.el b/lisp/magit-process.el
+index dad69c67..6f1cc1c2 100644
+--- a/lisp/magit-process.el
++++ b/lisp/magit-process.el
+@@ -660,8 +660,8 @@ Magit status buffer."
+                    (process-environment (magit-process-environment))
+                    (default-process-coding-system
+                     (magit--process-coding-system)))
+-               (apply #'start-file-process "git" process-buf
+-                      (magit-git-executable) args))))
++               (make-process :name "git" :buffer process-buf
++                      :command (append `(,(magit-git-executable)) args) :stderr (get-buffer-create "*magit-stderr*")))))
+         (process-put process 'command-buf command-buf)
+         (process-put process 'parsed (point))
+         (setq magit-this-process process)
+-- 
+2.44.1
+

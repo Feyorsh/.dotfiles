@@ -64,7 +64,10 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     (setq warning-minimum-level :error)
 
-    ;;(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate))
+    ;; show tooltips on point hover, not just mouse hover
+    (setq help-at-pt-display-when-idle t)
+
+    ;; TODO add find-file-hook to run recover-this-file automatically
     (define-advice find-file (:before (filename &optional wildcards) make-directory-maybe)
       "Create parent directory if not exists while visiting file."
       (unless (file-exists-p filename)
@@ -151,6 +154,8 @@ Rebind builtin bindings
 	(setq evil-want-minibuffer t)
 	(setq evil-ex-visual-char-range t)
 	(setq evil-v$-excludes-newline t)
+	(setq evil-flash-delay most-positive-fixnum)
+    (setq evil-ex-search-persistent-highlight nil)
 	;; disable state change echo
 	(setq evil-normal-state-message nil)
 	(setq evil-insert-state-message nil)
@@ -170,6 +175,8 @@ Rebind builtin bindings
 	('normal "DEL" #'evil-join)
 	('normal "ZK" #'fysh/kill-buffer-quiet)
 	:config
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (add-to-list 'debug-ignored-errors 'search-failed)
 	(evil-ex-define-cmd "bkill" #'fysh/kill-buffer-quiet)
 	(evil-ex-define-cmd "bk" "bkill")
 	(evil-mode 1))
@@ -182,7 +189,6 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
 	:after evil
 	:demand t
 	:config
-    (setq evil-collection-key-blacklist '("s" "S"))
     (setq evil-collection-setup-minibuffer t)
 	(evil-collection-init))
 #+end_src
@@ -202,9 +208,17 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
 https://github.com/juliapath/evil-numbers
 
 ***** TODO Evil Snipe
-#+begin_src elisp :tangle no
+#+begin_src elisp
 (use-package evil-snipe
-	:after evil)
+  :after evil
+  :commands evil-snipe-local-mode evil-snipe-override-local-mode
+  :hook (after-init . evil-snipe-override-mode)
+  :hook (after-init . evil-snipe-mode)
+  :init
+  (setq evil-snipe-smart-case t
+        evil-snipe-scope 'line
+        evil-snipe-repeat-scope 'visible
+        evil-snipe-char-fold t))
 #+end_src
 
 ***** TODO Evil Surround
@@ -482,7 +496,9 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                            (progn (add-to-list 'fringe-indicator-alist '(truncation . nil))
                                   (add-to-list 'fringe-indicator-alist '(continuation . nil))))
                          nil :local)))
-    :hook (mu4e-view-mode . (lambda () (visual-line-mode 1)))
+    :hook
+    (mu4e-view-mode . (lambda () (visual-line-mode 1)))
+    (mu4e-compose-mode . turn-off-auto-fill)
     :general-config
     ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "J" nil)
@@ -550,7 +566,8 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 					  (mu4e-bookmarks . (
 										 (:name "Personal" :query "maildir:/personal/INBOX AND flag:personal" :key ?p)
 										 (:name "Unread" :query "maildir:/personal/INBOX AND flag:unread" :key ?u)
-										 (:name "kernel" :query "maildir:/personal/INBOX AND (list:linux-kernel.vger.kernel.org OR list:io-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
+										 (:name "git" :query "maildir:/personal/INBOX AND (from:notifications@github.com OR subject:[PATCH]* OR contact:/.*@debbugs.gnu.org/)" :key ?g)
+										 (:name "kernel" :query "maildir:/personal/INBOX AND (list:linux-kernel.vger.kernel.org OR list:o-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
 										 ))
 					  ))
              ,(make-mu4e-context
@@ -652,7 +669,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 		  mu4e-headers-visible-columns (+ 15 60)
 		  mu4e-use-fancy-chars t
 		  mu4e-headers-precise-alignment t
-		  mu4e-headers-include-related nil)
+		  mu4e-headers-include-related t)
 
 	(add-to-list 'mu4e-header-info '(:flags :name "Flags" :shortname "Flags" :help "Flags for the message" :sortable nil))
 	(setq mu4e-headers-fields '((:human-date . 15)
@@ -700,6 +717,8 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 ;;	:config
 ;;	;;(setq mu4e-icalendar-trash-after-reply t)
 ;;	   (mu4e-icalendar-setup))
+
+;; (use-package org-msg)
 #+end_src
 There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
 It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
@@ -805,7 +824,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
         :config
         (elfeed-org)
         (setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory))))
-    ;; (eval-when-compile (require 'elfeed))
+    (eval-when-compile (require 'elfeed)) ;; needed to cleaning trash? idk man
     (defun elfeed-clean-trash (&optional now)
       (interactive "P")
       (with-elfeed-db-visit (entry _)
@@ -839,11 +858,8 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
           ('(4) (funcall browse-url-browser-function (elfeed-entry-link entry)))
           ('(16) (funcall browse-url-secondary-browser-function (elfeed-entry-link entry)))
           (_ (elfeed-show-entry entry)))))
-    :general-config
-    ('normal 'elfeed-search-mode-map "S" #'elfeed-search-live-filter)
-    ('normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)
-    )
-
+    :hook ((evil-collection-setup . (lambda (&rest _) (general-def 'normal 'elfeed-search-mode-map "S" #'elfeed-search-live-filter)))
+           (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)))))
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
@@ -876,6 +892,33 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
               (plist-put server-args :client-certificate (list certs certs)))
             ;;(apply #'erc-tls (append server-args '(&interactive-env ((erc--display-context (erc-interactive-display . erc)) (erc-join-buffer . buffer)))))))))
             (apply #'erc-tls server-args)))))
+
+    ;; bookmarks
+    (defun fysh/bookmark-autojoin (channel)
+      (erc-join-channel channel)
+      (remove-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))
+    (defun fysh/erc-bookmark-handler (bookmark)
+      (let ((alias (bookmark-prop-get bookmark 'alias))
+            (channel (bookmark-prop-get bookmark 'channel)))
+        (erc-join-server alias)
+        (if-let ((erc-buffer (get-buffer alias)))
+            (erc-join-channel channel)
+          (add-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))))
+    (defun fysh/erc-bookmark-make-record ()
+      (when (and erc-session-server (erc-server-buffer-p))
+        (let* ((buf (buffer-name))
+               (server erc-session-server)
+               (alias (car (mapcar (lambda (s) (car (member server s))) erc-server-list)))
+               (channel (if (string= buf alias) buf ""))
+               (defaults (delq nil (alias server channel)))
+               `(nil
+                 (alias . ,alias)
+                  (server . ,server)
+                  (channel . ,channel)
+                  (handler . fysh/erc-bookmark-handler)
+                  (defaults . '(nil)))))))
+    (add-hook 'erc-mode-hook (lambda () (setq-local bookmark-make-record-function #'fysh/erc-bookmark-make-record)))
+
     :general-config
     ('erc-mode-map "<up>" #'erc-previous-command)
     ('erc-mode-map "<down>" #'erc-next-command)
@@ -889,8 +932,8 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
     ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
     (setq erc-autojoin-timing 'ident)
     (setq erc-autojoin-delay 1)
-	(setq erc-join-buffer 'window)
-	(setq erc-kill-buffer-on-part t)
+    (setq erc-join-buffer 'bury)
+    (setq erc-kill-buffer-on-part t)
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
     ;; regex isn't case sensitive
@@ -898,6 +941,22 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
     (setq erc-interpret-mirc-color t)
     (setq erc-header-line-format nil)
     (setq erc-hide-list '("JOIN" "PART" "QUIT" "353"))
+    ;; I don't care who's in a channel, just how many people are there.
+    ;; hook this into modes.
+    ;; we do this because NAMES is several messages, which looks really silly.
+    ;; (defun fysh/erc-show-n-users (n-users)
+    ;;   (erc-display-message parsed 'notice 'active 's353 ?c channel ?u users))
+    ;; (timeout-debounce! fysh/erc-show-n-users 3)
+    ;; (push (lambda (proc parsed)
+    ;;         "NAMES notice."
+    ;;         (let ((channel (nth 2 (erc-response.command-args parsed)))
+    ;;               (users (erc-response.contents parsed)))
+    ;;           ;; (erc-display-message parsed 'notice (or (erc-get-buffer channel proc)
+    ;;           ;;                                         'active)
+    ;;           ;;                      's353 ?c channel ?u users)
+    ;;           (erc-with-buffer (channel proc)
+    ;;             (erc-channel-receive-names users))) t)
+    ;;       erc-server-353-functions)
     (setq erc-nickserv-identify-mode nil)
     (setq erc-prompt-for-nickserv-password nil)
     (setq erc-use-auth-source-for-nickserv-password nil)
@@ -933,6 +992,77 @@ Unrelated: figure out a better place to stick this
   (interactive "aFunction symbol: ")
   (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
 #+end_src
+More stuff, this time from a fantastic Karthinks [[https://karthinks.com/software/cool-your-heels-emacs/#throttle-and-debounce-non-destructive-finagling][article]].
+#+begin_src elisp
+(defun timeout--debounce-advice (&optional delay default)
+  "Return a function that debounces its argument function.
+
+DELAY defaults to 0.50 seconds.  DEFAULT is the immediate return
+value of the function when called.
+
+This is intended for use as function advice."
+  (let ((debounce-timer nil)
+        (delay (or delay 0.50)))
+    (lambda (orig-fn &rest args)
+      "Debounce calls to this function."
+      (if (timerp debounce-timer)
+          (timer-set-idle-time debounce-timer delay)
+        (prog1 default
+          (setq debounce-timer
+                (run-with-idle-timer
+                 delay nil
+                 (lambda (buf)
+                   (cancel-timer debounce-timer)
+                   (setq debounce-timer nil)
+                   (if (buffer-live-p buf)
+                       (with-current-buffer buf
+                         (apply orig-fn args))
+                     (apply orig-fn args)))
+                 (current-buffer))))))))
+
+(defun timeout-debounce! (func &optional delay default)
+  "Debounce FUNC by DELAY seconds.
+
+This advises FUNC, when called (interactively or from code), to
+run after DELAY seconds.   If FUNC is called again within this time,
+the timer is reset.
+
+DELAY defaults to 0.5 seconds.   Using a delay of 0 resets the
+function.
+
+DEFAULT is the immediate return value of the function when called."
+  (if (and delay (= delay 0))
+      (advice-remove func 'debounce)
+    (advice-add func :around (timeout--debounce-advice delay default)
+                '((name . debounce)
+                  (depth . -99)))))
+#+end_src
+
+**** Kaomoji
+This isn't strictly IRC related, but...
+#+begin_src elisp
+(use-package insert-kaomoji
+    :general
+  (leader-def "k" (lambda () (interactive) (insert-kaomoji 16)))
+  :config
+  (ring-insert insert-kaomoji--last-used "ヽ( ⌒ω⌒)人(=^‥^= )ﾉ")
+  (ring-insert insert-kaomoji--last-used "(ﾉ>ω<)ﾉ :｡･:*:･ﾟ’★,｡･:*:･ﾟ’☆")
+  (ring-insert insert-kaomoji--last-used "ε=ε=ε=ε=┌(;￣▽￣)┘")
+  (ring-insert insert-kaomoji--last-used "(・`ω´・)")
+  (ring-insert insert-kaomoji--last-used "(－_－) zzZ")
+  (ring-insert insert-kaomoji--last-used "(=`ω´=)")
+  (ring-insert insert-kaomoji--last-used "＼(≧▽≦)／")
+  (ring-insert insert-kaomoji--last-used "(＞﹏＜)")
+  (ring-insert insert-kaomoji--last-used "(￢_￢)")
+  (ring-insert insert-kaomoji--last-used "(ノ°益°)ノ")
+  (ring-insert insert-kaomoji--last-used "|･ω･)")
+  (ring-insert insert-kaomoji--last-used "(；一_一)")
+  (ring-insert insert-kaomoji--last-used "(￣ω￣)")
+  (ring-insert insert-kaomoji--last-used "(╯°益°)╯彡┻━┻")
+  (ring-insert insert-kaomoji--last-used "(ಠ_ಠ)")
+  (ring-insert insert-kaomoji--last-used "( ͡° ͜ʖ ͡°)")
+  (ring-insert insert-kaomoji--last-used "¯\\_(ツ)_/¯"))
+#+end_src
 
 ** Language
 *** TODO Org
@@ -940,8 +1070,10 @@ Unrelated: figure out a better place to stick this
 (use-package org
 	:init
   (setq org-directory "~/Personal/org")
+  (setq org-fold-core-style 'overlays) ;; org-cycle bug
   :general
   ("C-c l" #'org-store-link)
+  :hook (org-mode . (lambda () (corfu-mode -1)))
   :config
   (setq org-src-preserve-indentation t
 		org-src-fontify-natively t
@@ -952,6 +1084,8 @@ Unrelated: figure out a better place to stick this
 		org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -xelatex %f")
 		org-startup-folded t
 		org-cycle-include-plain-lists 'integrate
+        org-list-indent-offset 1
+        org-list-demote-modify-bullet '(("-" . "+") ("+" . "*") ("*" . "-"))
 		org-agenda-skip-scheduled-if-done t
 		org-use-sub-superscripts "{}"
 		;; org-modern
@@ -980,7 +1114,7 @@ Unrelated: figure out a better place to stick this
 (add-hook 'emacs-startup-hook
 		  (lambda ()
 			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-				   (find-file-noselect "~/.dotfiles/config/emacs/config.org"))))
+				   (find-file-noselect "~/.dotfiles/home/config/editor/emacs/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -992,13 +1126,16 @@ And now to make it *pretty*
   (org-cdlatex-mode . fonts/literate-programming)
   :config
   (setq org-modern-star 'replace)
+  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w!)" "|" "DONE(d!)" "KILL(k)")))
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
                                  ("WAIT" . "orange red")
+                                 ("PROG" . "deep pink")
                                  ("DONE" . org-done)
-                                 ("PAST" . "dark red")))
+                                 ("KILL" . "dark red")))
   (setq org-modern-todo-faces
         '(("WAIT" :background "orange red" :foreground "white")
-          ("PAST" :background "dark red" :foreground "white"))))
+          ("PROG" :background "deep pink" :foreground "white")
+          ("KILL" :background "dark red" :foreground "white"))))
 ;;:custom-face
 ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
@@ -1026,6 +1163,7 @@ Now for Babel:
     :config
     ;; (use-package wolfram-mode :demand t)
     (use-package ob-sagemath :demand t)
+    (setq org-babel-default-header-args:elisp '((:lexical . "yes")))
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
@@ -1269,6 +1407,7 @@ I'd like to change the cursor blink behaviour.
 	('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-down-or-next-page)
 	('normal 'pdf-view-mode-map "K" #'pdf-view-scroll-up-or-next-page)
 	:config
+    (add-to-list 'debug-ignored-errors "\\`No such page:")
     (setq pdf-view-use-scaling t)
 	(setq-default pdf-view-display-size 'fit-page))
 #+end_src
@@ -1283,7 +1422,7 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
 (use-package ibuffer
     :general
-  ('global "C-x C-b" #'ibuffer))
+  ('global "C-x C-i" #'ibuffer))
 #+end_src
 
 *** TODO Perspective
@@ -1308,6 +1447,7 @@ Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-ba
   :custom
   (tab-bar-show nil)
   :hook
+  ;; TODO this doesn't work when creating a new perspective
   (tab-bar-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (tab-name)))))
   :config
   (tab-bar-mode))
@@ -1400,10 +1540,16 @@ Eglot!
          ((sage-shell-mode
            python-mode python-ts-mode
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
-          . eglot-ensure))
+          . (lambda () (when eglot-enabled (eglot-ensure)))))
+  :init
+  (setq eglot-enabled t) ;; let me globally disable eglot
   :config
   (setq eldoc-echo-area-prefer-doc-buffer t
-		eldoc-echo-area-use-multiline-p nil))
+        eldoc-echo-area-use-multiline-p nil
+        eglot-events-buffer-size 0
+        eglot-autoshutdown t
+        eglot-autoreconnect nil
+        eglot-ignored-server-capabilities '(:workspace/didChangeWatchedFiles)))
 #+end_src
 
 *** Treesitter
@@ -1504,7 +1650,7 @@ Use Zone as a true screen saver that prevents sleep.
     :init
     (define-advice zone (:around (fn &rest args) fysh/covfefe)
       (let* ((covfefe-buf (get-buffer-create " *caffeinate*"))
-             (covfefe-proc (start-process "caffeinate" covfefe-buf "caffeinate")))
+             (covfefe-proc (start-process "caffeinate" covfefe-buf "caffeinate" "-d")))
         (set-process-query-on-exit-flag covfefe-proc nil)
         (apply fn args)
         (when covfefe-buf (kill-buffer covfefe-buf)))))
@@ -1528,11 +1674,11 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     :commands (browse-url)
     :general
     (leader-def "S" #'fysh/search)
-    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (frame-pixel-height) 2))))))
+    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (window-pixel-height) 2))))))
     :general-config
     ;; ('normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)
     ;; ('normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (frame-pixel-height) 2))))
-    ('normal 'xwidget-webkit-mode-map "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (frame-pixel-height) 2))))
+    ('normal 'xwidget-webkit-mode-map "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (window-pixel-height) 2))))
     ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
@@ -1577,6 +1723,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
+(push '(undecorated-round . t) default-frame-alist)
 
 ;; big savings, supposedly
 (setq frame-inhibit-implied-resize t)

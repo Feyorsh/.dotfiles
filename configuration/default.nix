@@ -1,6 +1,12 @@
-flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, username, ... }:
+let
+  home = config.users.users.${username}.home;
+in
 {
+  imports = [
+    ./yabai
+  ];
+
   # essential packages; my perl-less swiss army chainsaw
   environment.systemPackages = with pkgs; [
     coreutils
@@ -16,7 +22,6 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
     unixtools.watch
 
     vim
-    git git-lfs git-crypt
     wget
     curl
     ripgrep
@@ -30,10 +35,11 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
   ];
 
   fonts = {
-    fontDir.enable = true;
-    fonts = with pkgs; [
+    # fontDir.enable = true;
+    packages = with pkgs; [
       (nerdfonts.override { fonts = [ "CascadiaCode" ]; })
       source-sans-pro
+      source-serif-pro
       sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
       jetbrains-mono
       twemoji-color-font
@@ -64,7 +70,7 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
         };
         to = {
           type = "path";
-          path = "${config.users.users.ghuebner.home}/.dotfiles/templates";
+          path = "${home}/.dotfiles/templates";
         };
       };
       fyshpkgs = {
@@ -75,34 +81,42 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
         to = {
           type = "git";
           ref = "main";
-          url = "file://${config.users.users.ghuebner.home}/Personal/fyshpkgs";
+          url = "file://${home}/Personal/fyshpkgs";
         };
       };
     };
   };
 
-  users.users.ghuebner = {
-    name = "ghuebner";
-    home = "/Users/ghuebner";
+  users.knownUsers = [ username ];
+  users.users.${username} = {
+    name = username;
+    uid = 501;
+    home = "/Users/${username}";
+    shell = pkgs.fish;
   };
+  programs.fish.enable = true;
+  programs.zsh.enable = true;
+
   networking.localHostName = "Aqua";
   networking.computerName = "Aqua";
 
+  security.chmodbpf = {
+    enable = true;
+    members = [ username ];
+  };
 
-  # login shell, fish config in ./home.nix
-  programs.zsh.enable = true;
+  # services.xquartz.enable = true;
 
-  # TODO: get self (from flake) in here
-  system.configurationRevision = self.rev or self.dirtyRev or null;
+  system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
 
   system.keyboard.enableKeyMapping = true;
   system.keyboard.remapCapsLockToControl = true;
   time.timeZone = "America/Chicago";
-  system.defaults.screencapture.location = "${config.users.users.ghuebner.home}/Images/Screenshots";
+  system.defaults.screencapture.location = "${home}/Images/Screenshots";
   system.defaults.menuExtraClock.Show24Hour = true;
   system.defaults.loginwindow.GuestEnabled = false;
-  system.defaults.finder.CreateDesktop = false;
+  system.defaults.finder.CreateDesktop = true;
   system.defaults.finder.AppleShowAllFiles = true;
   system.defaults.finder.AppleShowAllExtensions = true;
   system.defaults.finder.FXPreferredViewStyle = "icnv";
@@ -112,6 +126,7 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
   system.defaults.dock.minimize-to-application = true;
   system.defaults.dock.mineffect = "scale";
   system.defaults.dock.launchanim = false;
+  system.defaults.WindowManager.EnableStandardClickToShowDesktop = false;
   system.defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
 
   system.defaults.alf.stealthenabled = 1;
@@ -126,15 +141,12 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
   system.defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
   system.defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
 
-  # TODO !!
-  services.yabai.enable = true;
-  services.yabai.enableScriptingAddition = true;
   services.skhd.enable = true;
   # TODO: config with yabai
-  #system.defaults.dock.autohide
-  #system.defaults.dock.autohide-delay
-  #system.defaults.dock.autohide-time-modifier
-
+  system.defaults.dock.autohide = true;
+  system.defaults.dock.autohide-delay = 0.0;
+  system.defaults.dock.autohide-time-modifier = 0.3;
+  # system.defaults.dock.mru-spaces
 
   # TODO spacebar status bar
   # TODO ubersicht: music
@@ -163,6 +175,29 @@ flakes @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
     # Following line should allow us to avoid a logout/login cycle
     /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
   '';
+
+  launchd.daemons = {
+    "fdLimitUp".serviceConfig = {
+      ProgramArguments = [
+        "/bin/launchctl"
+        "limit"
+        "maxfiles"
+        "1024"
+        "4611686018427387904" # can't set unlimited
+      ];
+      RunAtLoad = true;
+    };
+    # "enableCoredump".serviceConfig = {
+    #   ProgramArguments = [
+    #     "/bin/launchctl"
+    #     "limit"
+    #     "core"
+    #     "4611686018427387904"
+    #     "4611686018427387904"
+    #   ];
+    #   RunAtLoad = true;
+    # };
+  };
 
 	# FUCK SAMBA FUCK THIS BULLSHIT
 

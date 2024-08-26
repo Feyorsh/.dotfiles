@@ -1,0 +1,98 @@
+OPTIONS=autodig
+
+OPTIONS=fruit:slime mold,boulder:0
+
+OPTIONS=msg_window:combination
+
+OPTIONS=lit_corridor
+
+OPTIONS=number_pad:0
+
+OPTIONS=disclose:+i +a yg yc yo
+
+OPTIONS=autopickup,pickup_types:?!/$="
+## Always pick these:
+AUTOPICKUP_EXCEPTION="<.*magic lamp.*"
+AUTOPICKUP_EXCEPTION="<.*magic marker.*"
+AUTOPICKUP_EXCEPTION="<.*wand of wishing.*"
+AUTOPICKUP_EXCEPTION="<.*wand of death.*"
+AUTOPICKUP_EXCEPTION="<.*wand of polymorph.*"
+## Don't pick these:
+AUTOPICKUP_EXCEPTION=">.*worthless piece of.*"
+AUTOPICKUP_EXCEPTION=">.*loadstone.*"
+AUTOPICKUP_EXCEPTION=">.*flint stone.*"
+AUTOPICKUP_EXCEPTION=">.*flint stone.*"
+
+OPTIONS=showexp,showscore,time
+
+OPTIONS=color
+OPTIONS=statushilites:10
+OPTIONS=hilite_status:alignment/Lawful/cyan/Neutral/gray/Chaotic/magenta
+OPTIONS=hilite_status:gold/always/yellow
+OPTIONS=hilite_status:condition/major_troubles/red&bold/minor_troubles/yellow&bold/movement/green
+OPTIONS=hilite_status:carrying-capacity/burdened/yellow/stressed/orange
+OPTIONS=hilite_status:hunger/hungry/yellow/weak/orange/fainting/orange/weak/orange
+OPTIONS=hilite_status:hitpoints/100%/green/<100%/green/<60%/yellow/<40%/red
+OPTIONS=hitpointbar
+OPTIONS=hilite_pet
+
+OPTIONS=menucolors
+MENUCOLOR="blessed"=cyan
+MENUCOLOR=" holy"=cyan
+MENUCOLOR=" cursed"=red
+MENUCOLOR=" unholy"=red
+MENUCOLOR=" cursed .* (being worn)"=red&underline
+
+OPTIONS=paranoid_confirmation:quit attack pray Remove
+
+OPTIONS=sortloot:full
+
+#OPTIONS=!bones
+
+AUTOCOMPLETE=!quit
+
+MSGTYPE=hide "You swap places with .*"
+MSGTYPE=hide "Your tentacles suck the .*"
+MSGTYPE=norep "You see here a.*"
+# delayed instadeaths
+MSGTYPE=stop "The .* (grabs|swings itself around) you!"
+MSGTYPE=stop "You don't feel very well."
+MSGTYPE=stop "You are turning a little green."
+MSGTYPE=stop "Your limbs are getting oozy."
+MSGTYPE=stop "Your skin begins to peel away."
+MSGTYPE=stop "You are turning into a green slime."
+MSGTYPE=stop "You are slowing down."
+MSGTYPE=stop "Your limbs are stiffening."
+MSGTYPE=stop "It constricts your throat!"
+MSGTYPE=stop "You find it hard to breathe."
+MSGTYPE=stop "You're gasping for air."
+MSGTYPE=stop "Your blood is having trouble reaching your brain."
+MSGTYPE=stop "You can no longer breathe."
+MSGTYPE=stop "You're turning blue."
+MSGTYPE=stop "Your consciousness is fading."
+MSGTYPE=stop "You feel deathly sick."
+MSGTYPE=stop "You feel (much|even) worse."
+# Things that aren't dangerous by themselves but could kill you if you don't notice.
+MSGTYPE=stop "You fail to cast the spell correctly."
+MSGTYPE=stop "You see here a c(hi|o)ckatrice corpse." 
+MSGTYPE=stop "You are beginning to feel weak."
+MSGTYPE=stop "You wrest .*"
+# Don't miss the vibrating square
+MSGTYPE=stop "You feel a strange vibration under your *."
+MSGTYPE=stop "You feel a strange vibration beneath you."
+
+OPTIONS=suppress_alert:3.6.7
+
+# See http://nethackwiki.com/wiki/Curses_interface
+OPTIONS=windowtype:curses
+OPTIONS=perm_invent
+OPTIONS=symset:DECgraphics
+#SYMBOLS=S_litcorr:\x2592 # gotta wait for 3.7
+SYMBOLS=S_hodoor:-,S_vodoor:|
+
+# gotta wait for 3.7
+#OPTONS=utf8graphics
+#MONSTERSYMBOL="samurai":U+4f8d
+
+NAME=Shorden
+
