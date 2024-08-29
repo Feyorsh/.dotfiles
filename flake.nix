@@ -3,7 +3,6 @@
   # $ darwin-rebuild build --flake .#Aqua
 
   inputs = {
-    nix.url = "github:NixOS/nix?ref=2.19.1";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     fyshpkgs = {
       url = "git+file:///Users/ghuebner/Personal/fyshpkgs?ref=main";
@@ -33,7 +32,7 @@
     };
   };
 
-  outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, nix, home-manager, ... }:
+  outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
     let
       system = "aarch64-darwin";
       inherit (darwin.lib) darwinSystem;
@@ -58,16 +57,6 @@
                 cp $icon extra/osx/Alacritty.app/Contents/Resources/alacritty.icns
               '';
             });
-            emacs29-macport = (prev.emacs29-macport.overrideAttrs(prev': {
-              icon = ./assets/icons/emacs.icns;
-
-              postInstall = prev'.postInstall + ''
-                cp $icon $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
-             '';
-            }));
-           nixVersions = (prev.nixVersions.extend(self: super: {
-             master = nix.packages.aarch64-darwin.nix;
-           }));
 	  }) ];
       };
     in

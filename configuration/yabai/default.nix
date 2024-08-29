@@ -5,6 +5,10 @@ let
     postInstall = (prev.postInstall or "") + "wrapProgram $out/bin/skhd --set SHELL ${pkgs.bash}/bin/bash";
   });
   userShell = let t = config.users.users.${username}.shell; in "${t}${t.shellPath}";
+
+  yabaiScript = pkgs.writeShellScript "yabai-sa" ''
+    ${pkgs.yabai}/bin/yabai --load-sa
+  '';
 in
 {
   environment.systemPackages = with pkgs; [ yabai skhd' ];
@@ -84,20 +88,11 @@ in
     jq = "${pkgs.jq}/bin/jq";
     alacritty = args: "${pkgs.alacritty}/bin/alacritty msg create-window ${args} || open -a ${pkgs.alacritty}/Applications/Alacritty.app --env SHELL=${userShell} ${lib.optionalString (builtins.stringLength != 0) "--args"} ${args}";
 
-    # rshift = "0x3C";
     lab = "0x2B";
     rab = "0x2F";
     semi = "0x29";
     comm = "0x27";
     plus = "0x18";
-
-    # exit 0 if the space "$1" is on the same display as the focused space, otherwise 1
-    # same_display = pkgs.writeShellScript "same_display" ''
-    #   NEW_DISPLAY=$(${yabai} -m query --spaces --space "$1" | ${jq} -er '.display')
-    #   CUR_DISPLAY=$(${yabai} -m query --spaces --space | ${jq} -er '.display')
-
-    #   [[ "$CUR_DISPLAY" -eq "$NEW_DISPLAY" ]]
-    # '';
 
     focus_right_space = pkgs.writeShellScript "focus_right_space" ''
       if [[ $(${yabai} -m query --spaces --display | ${jq} '.[-1]."has-focus"') == "false" ]]; then ${yabai} -m space --focus next; fi
@@ -111,7 +106,12 @@ in
       if [[ $(${yabai} -m query --spaces --display | ${jq} '.[0]."has-focus"') == "false" ]]; then ${yabai} -m space --focus prev; fi
     '';
     moveto_left_space = pkgs.writeShellScript "moveto_left_space" ''
-      if [[ $(${yabai} -m query --spaces --display | ${jq} '.[0]."has-focus"') == "true" ]]; then ${yabai} -m space --create; IDX="$(${yabai} -m query --spaces --display | ${jq} 'map(select(."native-fullscreen" == 0))[-1].index')"; ${yabai} -m space $IDX --move prev; fi
+      if [[ $(${yabai} -m query --spaces --display | ${jq} '.[0]."has-focus"') == "true" ]]; then
+        # CUR_IDX="$(${yabai} -m query --spaces --space | ${jq} '.id')"
+        ${yabai} -m space --create
+        IDX="$(${yabai} -m query --spaces --display | ${jq} '[.[] | select(."is-native-fullscreen" | not)][-1].index')"
+        ${yabai} -m space $IDX --move first
+      fi
       ${yabai} -m window --space prev --focus
     '';
 
@@ -131,23 +131,6 @@ in
       fi
     '';
     
-    # move focused window to left space, creating it if it doesn't exist
-    # move_win_to_space = pkgs.writeShellScript "move_win_to_space" ''
-    #   ${yabai} -m query --spaces --space $1 || (${yabai} -m space --create; ${yabai} -m space --move 
-    #   ${same_display} $1 && ${yabai} -m window --space $1 --focus
-    # '';
-
-    # # move focused window to right space, creating it if it doesn't exist
-    # move_win_to_left_space = pkgs.writeShellScript "move_win_to_left_space" ''
-    #   ${same_display} next || ${yabai} -m space --create
-    #   ${yabai} -m window --space next --focus
-    # '';
-
-    # move_win_to_right_space = pkgs.writeShellScript "move_win_to_right_space" ''
-    #   ${same_display} prev || (${yabai} -m space --create; ${yabai} -m space last --move first)
-    #   ${yabai} -m window --space prev --focus
-    # '';
-
     # focus the `$1`th on the current display, if it exists.
     focus_nth_space = pkgs.writeShellScript "focus_nth_space" ''
       IDX=$(${yabai} -m query --spaces --display | ${jq} -er ".[$(($1-1))].index") && ${yabai} -m space --focus $IDX
@@ -274,22 +257,39 @@ in
       yabai < r : ${reset}
 
 
-      fn - z : osascript -e 'tell application "Spotify" to previous track'
-      fn - x : osascript -e 'tell application "Spotify" to playpause'
-      fn - c : osascript -e 'tell application "Spotify" to previous track'
+      # doesn't work with HHKB
+      # fn - z : osascript -e 'tell application "Spotify" to previous track'
+      # fn - x : osascript -e 'tell application "Spotify" to playpause'
+      # fn - c : osascript -e 'tell application "Spotify" to previous track'
     '';
   };
 
   # https://github.com/koekeishiya/yabai/blob/a4062be1d28c54489400d8b84175fba271423497/README.md?plain=1#L62
   system.defaults.finder.CreateDesktop = lib.mkForce true;
+  system.defaults.WindowManager.StandardHideDesktopIcons = true;
 
-  launchd.user.agents.skhd.serviceConfig.StandardOutPath = "/tmp/skhd_${username}.out.log";
-  launchd.user.agents.skhd.serviceConfig.StandardErrorPath = "/tmp/skhd_${username}.err.log";
 
-  launchd.user.agents.remapEjectToPlay.serviceConfig = {
-    Program = (pkgs.writeShellScript "remapEject" ''
-      /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0xC000000B8,"HIDKeyboardModifierMappingDst":0xC000000CD}]}'
-    '').outPath;
-    RunAtLoad = true;
-  };
+  # TODO broken
+  # needed for startup
+  # launchd.daemons.yabai-sa = {
+  #   script = lib.mkForce "";
+  #   serviceConfig.RunAtLoad = true;
+  #   serviceConfig.KeepAlive.SuccessfulExit = false;
+  #   serviceConfig.ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp; exec ${yabaiScript}" ];
+  # };
+  # launchd.user.agents.skhd.serviceConfig = {
+  #   StandardOutPath = "/tmp/skhd_${username}.out.log";
+  #   StandardErrorPath = "/tmp/skhd_${username}.err.log";
+
+  #   ProgramArguments = lib.mkForce [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp;" ] ++ [ "${config.services.skhd.package}/bin/skhd" ] ++ lib.optionals (config.services.skhd.skhdConfig != "") [ "-c" "/etc/skhdrc" ];
+  # };
+
+  # launchd.user.agents.remapEjectToPlay.serviceConfig = let
+  #   bindScript = pkgs.writeShellScript "remapEject" ''
+  #     /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0xC000000B8,"HIDKeyboardModifierMappingDst":0xC000000CD}]}'
+  #   '';
+  # in {
+  #   ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${bindScript} &amp;&amp; exec ${bindScript}" ];
+  #   RunAtLoad = true;
+  # };
 }

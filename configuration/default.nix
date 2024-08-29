@@ -49,7 +49,6 @@ in
 
   services.nix-daemon.enable = true;
   nix = {
-    package = pkgs.nixVersions.master;
     # https://github.com/NixOS/nix/issues/7273
     # settings.auto-optimise-store = true;
     settings = {

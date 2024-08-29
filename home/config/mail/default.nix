@@ -54,4 +54,9 @@ in {
     msmtp
     mutt_oauth2
   ];
+
+  programs.emacs.extraPackages = epkgs: (with epkgs; [
+    mu4e
+    org-msg
+  ]);
 }
