@@ -269,27 +269,25 @@ in
   system.defaults.WindowManager.StandardHideDesktopIcons = true;
 
 
-  # TODO broken
   # needed for startup
-  # launchd.daemons.yabai-sa = {
-  #   script = lib.mkForce "";
-  #   serviceConfig.RunAtLoad = true;
-  #   serviceConfig.KeepAlive.SuccessfulExit = false;
-  #   serviceConfig.ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp; exec ${yabaiScript}" ];
-  # };
-  # launchd.user.agents.skhd.serviceConfig = {
-  #   StandardOutPath = "/tmp/skhd_${username}.out.log";
-  #   StandardErrorPath = "/tmp/skhd_${username}.err.log";
-
+  launchd.daemons.yabai-sa = {
+    script = lib.mkForce "";
+    serviceConfig.RunAtLoad = true;
+    serviceConfig.KeepAlive.SuccessfulExit = false;
+    serviceConfig.ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp; exec ${yabaiScript}" ];
+  };
+  launchd.user.agents.skhd.serviceConfig = {
+    StandardOutPath = "/tmp/skhd_${username}.out.log";
+    StandardErrorPath = "/tmp/skhd_${username}.err.log";
   #   ProgramArguments = lib.mkForce [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp;" ] ++ [ "${config.services.skhd.package}/bin/skhd" ] ++ lib.optionals (config.services.skhd.skhdConfig != "") [ "-c" "/etc/skhdrc" ];
-  # };
+  };
 
-  # launchd.user.agents.remapEjectToPlay.serviceConfig = let
-  #   bindScript = pkgs.writeShellScript "remapEject" ''
-  #     /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0xC000000B8,"HIDKeyboardModifierMappingDst":0xC000000CD}]}'
-  #   '';
-  # in {
-  #   ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${bindScript} &amp;&amp; exec ${bindScript}" ];
-  #   RunAtLoad = true;
-  # };
+  launchd.user.agents.remapEjectToPlay.serviceConfig = let
+    bindScript = pkgs.writeShellScript "remapEject" ''
+      /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0xC000000B8,"HIDKeyboardModifierMappingDst":0xC000000CD}]}'
+    '';
+  in {
+    ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${bindScript} &amp;&amp; exec ${bindScript}" ];
+    RunAtLoad = true;
+  };
 }
