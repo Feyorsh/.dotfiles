@@ -53,6 +53,7 @@ in {
     (isync.override { withCyrusSaslXoauth2 = true; })
     msmtp
     mutt_oauth2
+    pass
   ];
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
