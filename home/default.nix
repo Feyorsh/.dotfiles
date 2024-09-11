@@ -9,6 +9,7 @@ in {
     ./config/games
     ./config/editor
     ./config/terminal
+    ./config/finance
   ];
 
   home = {
