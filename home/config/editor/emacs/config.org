@@ -14,13 +14,20 @@ defaults write org.gnu.Emacs TransparentTitleBar YES
 #+end_src
 
 * Emacs
+** Lexical binding
+#+begin_src elisp :tangle "~/.config/emacs/early-init.el"
+;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
+#+end_src
+
+#+begin_src elisp :tangle "~/.config/emacs/init.el"
+;;; init.el --- Init File -*- lexical-binding: t; -*-
+#+end_src
+
 ** Early Init
 :PROPERTIES:
 :header-args:elisp: :tangle "~/.config/emacs/early-init.el"
 :END:
 #+begin_src elisp
-;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
-
 (setq package-enable-at-startup nil)
 (setq use-package-always-defer t)
 
@@ -38,16 +45,28 @@ defaults write org.gnu.Emacs TransparentTitleBar YES
 ** Backups
 Forgot where I sourced all this, but basically take a rather conservative approach to backups without littering current directory with lock files.
 #+begin_src elisp
-(setq backup-directory-alist `(("." . ,(expand-file-name "saves/backups" user-emacs-directory))))
-(setq auto-save-file-name-transforms `((".*" ,(expand-file-name "saves/auto-saves" user-emacs-directory) t)))
-(setq lock-file-name-transforms `((".*" ,(expand-file-name "saves/locks" user-emacs-directory) t))
-	  remote-file-name-inhibit-locks t)
-(setq backup-by-copying-when-linked t
-	  version-control t
-	  kept-new-versions 5
-	  kept-old-versions 0
-	  delete-old-versions t
-	  vc-make-backup-files t)
+(use-package emacs
+    :demand t
+    :init
+    (setq backup-directory-alist `(("." . ,(expand-file-name "saves/backups" user-emacs-directory))))
+    (setq auto-save-file-name-transforms `((".*" ,(expand-file-name "saves/auto-saves" user-emacs-directory) t)))
+
+    ;; this auto-saves to the visited file instead of a special auto-save file; useful for files synced between computers. Make it buffer-local with (setq-local auto-save-visited-mode t).
+    (auto-save-visited-mode 1)
+    (setq-default auto-save-visited-mode nil)
+    (setq auto-save-visited-interval 15)
+
+    (add-to-list 'safe-local-variable-values '(eval auto-revert-mode 1))
+    (add-to-list 'safe-local-variable-values '(auto-save-visited-mode . t))
+
+    (setq lock-file-name-transforms `((".*" ,(expand-file-name "saves/locks" user-emacs-directory) t))
+	      remote-file-name-inhibit-locks t)
+    (setq backup-by-copying-when-linked t
+	      version-control t
+	      kept-new-versions 5
+	      kept-old-versions 0
+	      delete-old-versions t
+          vc-make-backup-files t))
 #+end_src
 
 ** Config
@@ -67,6 +86,36 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
 
+    (defun fysh/custom-find-file ()
+      (interactive)
+      (find-file custom-file))
+    (defun fysh/init-find-file ()
+      (interactive)
+      (find-file user-init-file))
+    (defun fysh/early-init-find-file ()
+      (interactive)
+      (find-file early-init-file))
+
+    ;; dont kill scratch
+    (defun fysh/scratch-kill-buffer-query-function ()
+      (not (string= "*scratch*" (buffer-name (current-buffer)))))
+
+    (add-hook 'kill-buffer-query-functions #'fysh/scratch-kill-buffer-query-function)
+
+    (defun fysh/delete-visited-file (buffer &optional arg)
+      "Delete the file visited by the buffer BUFFER."
+      (interactive (list (current-buffer) current-prefix-arg))
+      (let* ((buf (if arg
+                      (read-buffer "Delete file visited by buffer: " (current-buffer) t)
+                    buffer))
+             (filename (buffer-file-name buf)))
+        (cond ((buffer-local-value 'buffer-read-only buf) (signal 'buffer-read-only `(,buf)))
+              ((not filename) (user-error (format "%s is not visiting a file" buf)))
+              ((not (file-exists-p filename)) (user-error (format "The file %s does not exist" filename)))
+              ((y-or-n-p (format "Delete %s?" filename))
+               (delete-file filename)
+               (kill-buffer buf)))))
+
     ;; TODO add find-file-hook to run recover-this-file automatically
     (define-advice find-file (:before (filename &optional wildcards) make-directory-maybe)
       "Create parent directory if not exists while visiting file."
@@ -74,6 +123,12 @@ Forgot where I sourced all this, but basically take a rather conservative approa
         (let ((dir (file-name-directory filename)))
           (unless (file-exists-p dir)
             (make-directory dir t)))))
+
+
+    ;; reload config.org on save; see bottom for local variables
+    (add-to-list 'safe-local-variable-values '(eval auto-revert-mode 1))
+    (add-to-list 'safe-local-variable-values '(auto-save-visited-mode . t))
+
     :hook ((after-init . global-auto-revert-mode)
            (mouse-leave-buffer .
                                (lambda ()
@@ -81,23 +136,25 @@ Forgot where I sourced all this, but basically take a rather conservative approa
                                  (when (and (>= (recursion-depth) 1)
                                             (active-minibuffer-window))
                                    (abort-recursive-edit)))))
-    :custom (safe-local-variable-values
-             '((eval require 'ox-hugo)
-               (vc-default-patch-addressee . "bug-gnu-emacs@gnu.org")
-               (magit-revision-insert-related-refs)
-               (magit-refresh-buffers)
-               (eval add-hook 'after-save-hook
-                (lambda nil
-                  (if
-                      (y-or-n-p "Tangle?")
-                      (org-babel-tangle)))
-                nil t)
-               (eval add-hook 'after-save-hook
-                (lambda nil
-                  (if
-                      (y-or-n-p "Reload?")
-                      (load-file user-init-file)))
-                nil t)))
+
+    :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
+    (safe-local-variable-values
+   '((eval add-hook 'after-save-hook
+      (lambda nil
+        (if
+            (y-or-n-p "Tangle?")
+            (let
+                ((inhibit-redisplay t)
+                 (inhibit-message t))
+              (org-babel-tangle)
+              (byte-compile-file user-init-file))))
+      nil t)
+     (eval add-hook 'after-save-hook
+      (lambda nil
+        (if
+            (y-or-n-p "Reload?")
+            (load (concat user-init-file "c"))))
+      nil t)))
     (ignored-local-variables
      '((etags-regen-ignores "test/manual/etags/")
        (etags-regen-regexp-alist
@@ -110,13 +167,13 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 #+begin_src elisp
 (use-package general
     :demand t
-    :config
+    :init
     (general-evil-setup)
     (general-create-definer leader-def
         :prefix "SPC"
         :keymaps 'override
         :states '(normal visual motion))
-    (leader-def "" nil))
+    :config)
 #+end_src
 Rebind builtin bindings
 #+begin_src elisp
@@ -174,6 +231,7 @@ Rebind builtin bindings
 	('motion 'override "L" #'evil-last-non-blank)
 	('normal "DEL" #'evil-join)
 	('normal "ZK" #'fysh/kill-buffer-quiet)
+	('normal "ZD" #'fysh/delete-visited-file)
 	:config
     (evil-select-search-module 'evil-search-module 'evil-search)
     (add-to-list 'debug-ignored-errors 'search-failed)
@@ -196,12 +254,14 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
 ***** Evil Org
 #+begin_src elisp
 (use-package evil-org
-	:after org
-	:hook (org-mode . evil-org-mode)
-	:config
-(evil-org-set-key-theme '(textobjects insert navigation additional calendar))
-	(require 'evil-org-agenda)
-	(evil-org-agenda-set-keys))
+    :hook (org-mode . evil-org-mode)
+    :config
+    (setq evil-org-key-theme '(textobjects insert navigation additional calendar))
+    (evil-org-set-key-theme))
+(use-package evil-org-agenda
+    :hook (org-agenda-mode . evil-org-agenda-mode)
+    :config
+    (evil-org-agenda-set-keys))
 #+end_src
 
 ***** TODO Evil Numbers
@@ -342,6 +402,14 @@ Oldest trick in the book! (Not really.)
     :after (marginalia all-the-icons)
     :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
     :init
+    ;; https://github.com/minad/marginalia/issues/175
+    (define-minor-mode all-the-icons-completion-mode
+      "Add icons to completion candidates."
+      :global t
+      (require 'all-the-icons-completion)
+      (if all-the-icons-completion-mode
+  	  (advice-add (compat-function completion-metadata-get) :around #'all-the-icons-completion-completion-metadata-get)
+        (advice-remove (compat-function completion-metadata-get) #'all-the-icons-completion-completion-metadata-get)))
     (all-the-icons-completion-mode))
 
 (use-package kind-icon
@@ -402,10 +470,15 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
   (:keymaps 'global
             "C-x b" #'consult-buffer)
   (leader-def "." #'consult-ripgrep)
+  (leader-def "," #'consult-fd)
   )
 
 (use-package marginalia
-    :init
+    :general-config
+  (:keymaps 'minibuffer-local-map "M-a" #'marginalia-cycle)
+  :config
+  (setq marginalia--pangram "The quick brown fox jumps over the lazy dog")
+  :init
   (marginalia-mode))
 
 (use-package embark
@@ -499,6 +572,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     :hook
     (mu4e-view-mode . (lambda () (visual-line-mode 1)))
     (mu4e-compose-mode . turn-off-auto-fill)
+    (mu4e-compose-mode . fysh/message-sign)
     :general-config
     ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "J" nil)
@@ -515,16 +589,11 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (setq mml-secure-smime-encrypt-to-self t)
     (setq mml-secure-openpgp-encrypt-to-self t)
 
-    (defun message-encrypt ()
-      "Encrypt message at point."
-      (interactive)
-      (mml-secure-message-encrypt-pgpmime))
-    (defun message-sign ()
-      "Sign message at point."
-      (interactive)
-      (mml-secure-message-sign-pgpmime))
+    (defalias 'fysh/message-encrypt 'mml-secure-message-encrypt-pgpmime)
+    (defalias 'fysh/message-sign 'mml-secure-message-sign-pgpmime)
     :custom
     (read-mail-command 'mu4e)
+    (mml-secure-openpgp-sign-with-sender t)
     :config
     ;; (pinentry-start)
     (setq mu4e-context-policy 'pick-first
@@ -562,6 +631,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 												 (:name "Drafts" :maildir "/personal/[Gmail].Drafts" :key ?d)
 												 (:name "Trash" :maildir "/personal/[Gmail].Trash" :key ?t)
 												 (:name "All Mail" :maildir "/personal/[Gmail].All Mail" :key ?a)
+												 (:name "Spam" :maildir "/personal/[Gmail].Spam" :key ?q)
 												 ))
 					  (mu4e-bookmarks . (
 										 (:name "Personal" :query "maildir:/personal/INBOX AND flag:personal" :key ?p)
@@ -597,7 +667,9 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                                                   (:name "Sent" :maildir "/school/Sent Items" :key ?s)
                                                   (:name "Drafts" :maildir "/school/Drafts" :key ?d)
                                                   (:name "Trash" :maildir "/school/Deleted Items" :key ?t)
-                                                  (:name "All Mail" :maildir "/school/Archive" :key ?a)))
+                                                  (:name "All Mail" :maildir "/school/Archive" :key ?a)
+												  (:name "Spam" :maildir "/personal/Junk Email" :key ?q)
+                                                  ))
                        (mu4e-bookmarks . ((:name "Unread" :query "maildir:/school/INBOX AND flag:unread" :key ?u)
                                           (:name "Lab" :query "maildir:/school/INBOX AND (from:kwiat@illinois.edu OR subject:Kwiat OR to:phys-kwiat-mailers@mx.uillinois.edu)" :key ?l)))))
              ))
@@ -894,30 +966,30 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
             (apply #'erc-tls server-args)))))
 
     ;; bookmarks
-    (defun fysh/bookmark-autojoin (channel)
-      (erc-join-channel channel)
-      (remove-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))
-    (defun fysh/erc-bookmark-handler (bookmark)
-      (let ((alias (bookmark-prop-get bookmark 'alias))
-            (channel (bookmark-prop-get bookmark 'channel)))
-        (erc-join-server alias)
-        (if-let ((erc-buffer (get-buffer alias)))
-            (erc-join-channel channel)
-          (add-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))))
-    (defun fysh/erc-bookmark-make-record ()
-      (when (and erc-session-server (erc-server-buffer-p))
-        (let* ((buf (buffer-name))
-               (server erc-session-server)
-               (alias (car (mapcar (lambda (s) (car (member server s))) erc-server-list)))
-               (channel (if (string= buf alias) buf ""))
-               (defaults (delq nil (alias server channel)))
-               `(nil
-                 (alias . ,alias)
-                  (server . ,server)
-                  (channel . ,channel)
-                  (handler . fysh/erc-bookmark-handler)
-                  (defaults . '(nil)))))))
-    (add-hook 'erc-mode-hook (lambda () (setq-local bookmark-make-record-function #'fysh/erc-bookmark-make-record)))
+    ;; (defun fysh/bookmark-autojoin (channel)
+    ;;   (erc-join-channel channel)
+    ;;   (remove-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))
+    ;; (defun fysh/erc-bookmark-handler (bookmark)
+    ;;   (let ((alias (bookmark-prop-get bookmark 'alias))
+    ;;         (channel (bookmark-prop-get bookmark 'channel)))
+    ;;     (erc-join-server alias)
+    ;;     (if-let ((erc-buffer (get-buffer alias)))
+    ;;         (erc-join-channel channel)
+    ;;       (add-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))))
+    ;; (defun fysh/erc-bookmark-make-record ()
+    ;;   (when (and erc-session-server (erc-server-buffer-p))
+    ;;     (let* ((buf (buffer-name))
+    ;;            (server erc-session-server)
+    ;;            (alias (car (mapcar (lambda (s) (car (member server s))) erc-server-list)))
+    ;;            (channel (if (string= buf alias) buf ""))
+    ;;            (defaults (delq nil (alias server channel)))
+    ;;            `(nil
+    ;;              (alias . ,alias)
+    ;;               (server . ,server)
+    ;;               (channel . ,channel)
+    ;;               (handler . fysh/erc-bookmark-handler)
+    ;;               (defaults . '(nil)))))))
+    ;; (add-hook 'erc-mode-hook (lambda () (setq-local bookmark-make-record-function #'fysh/erc-bookmark-make-record)))
 
     :general-config
     ('erc-mode-map "<up>" #'erc-previous-command)
@@ -1082,6 +1154,7 @@ This isn't strictly IRC related, but...
 		org-list-allow-alphabetical t
 		org-confirm-babel-evaluate nil
 		org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -xelatex %f")
+        org-latex-image-default-width ".5\\textwidth"
 		org-startup-folded t
 		org-cycle-include-plain-lists 'integrate
         org-list-indent-offset 1
@@ -1098,6 +1171,7 @@ This isn't strictly IRC related, but...
 		org-pretty-entities t
         org-ellipsis "…"
         org-use-fast-todo-selection 'expert
+                org-agenda-inhibit-startup t
 		org-agenda-window-setup 'current-window
 		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
 		org-agenda-tags-column 0
@@ -1110,7 +1184,8 @@ This isn't strictly IRC related, but...
 		"⭠ now ─────────────────────────────────────────────────")
   (add-to-list 'org-latex-packages-alist '("" "listings"))
   :custom
-  (org-agenda-files `(,(expand-file-name "agenda.org" org-directory))))
+  (org-agenda-files `(,(expand-file-name "agenda.org" org-directory) ,(expand-file-name "~/School")))
+  (org-refile-targets `(,(expand-file-name "agenda.org" org-directory))))
 (add-hook 'emacs-startup-hook
 		  (lambda ()
 			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
@@ -1126,16 +1201,18 @@ And now to make it *pretty*
   (org-cdlatex-mode . fonts/literate-programming)
   :config
   (setq org-modern-star 'replace)
-  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w!)" "|" "DONE(d!)" "KILL(k)")))
+  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELED(c@)")))
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
                                  ("WAIT" . "orange red")
                                  ("PROG" . "deep pink")
+                                 ("LATE" . "dark red")
                                  ("DONE" . org-done)
-                                 ("KILL" . "dark red")))
+                                 ("CANCELED" . "dark red")))
   (setq org-modern-todo-faces
         '(("WAIT" :background "orange red" :foreground "white")
           ("PROG" :background "deep pink" :foreground "white")
-          ("KILL" :background "dark red" :foreground "white"))))
+          ("LATE" :background "dark red" :foreground "white")
+          ("CANCELED" :background "dark red" :foreground "white"))))
 ;;:custom-face
 ;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
@@ -1159,9 +1236,8 @@ Now for Babel:
 #+begin_src elisp
 (use-package org
     :commands (org-babel-eval org-babel-tangle org-babel)
-    ;; :after (wolfram-mode ob-sagemath)
+    :after (wolfram-mode ob-sagemath)
     :config
-    ;; (use-package wolfram-mode :demand t)
     (use-package ob-sagemath :demand t)
     (setq org-babel-default-header-args:elisp '((:lexical . "yes")))
     (org-babel-do-load-languages
@@ -1169,58 +1245,61 @@ Now for Babel:
      '((emacs-lisp . t)
        (shell . t)
        (python . t)
-       ;; (mathematica . t)
+       (mathematica . t)
 	   (sagemath . t))))
 #+end_src
+
 Website stuff:
 #+begin_src elisp
 (use-package ox-hugo
-    :config
-    (setq org-html-with-latex 'html)
-    (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
-    (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
-	  "Transcode a LATEX-ENVIRONMENT element from Org to HTML.
+    :init
+  (add-to-list 'safe-local-variable-values '(eval require 'ox-hugo))
+  :config
+  (setq org-html-with-latex 'html)
+  (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
+  (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
+	"Transcode a LATEX-ENVIRONMENT element from Org to HTML.
 CONTENTS is nil.  INFO is a plist holding contextual information."
-	  (let ((processing-type (plist-get info :with-latex))
-		    (latex-frag (org-remove-indentation
-					     (org-element-property :value latex-environment)))
-            (attributes (org-export-read-attribute :attr_html latex-environment))
-            (label (org-html--reference latex-environment info t))
-            (caption (and (org-html--latex-environment-numbered-p latex-environment)
-						  (number-to-string
-						   (org-export-get-ordinal
-						    latex-environment info nil
-						    (lambda (l _)
-							  (and (org-html--math-environment-p l)
-								   (org-html--latex-environment-numbered-p l))))))))
-        (cond
-		  ((memq processing-type '(t mathjax))
-		   (org-html-format-latex
-		    (if (org-string-nw-p label)
-			    (replace-regexp-in-string "\\`.*"
-										  (format "\\&\n\\\\label{%s}" label)
-										  latex-frag)
-			  latex-frag)
-		    'mathjax info))
-		  ((memq processing-type '(t html))
-		   (org-html-format-latex
-		    (if (org-string-nw-p label)
-			    (replace-regexp-in-string "\\`.*"
-										  (format "\\&\n\\\\label{%s}" label)
-										  latex-frag)
-			  latex-frag)
-		    'html info))
-		  ((assq processing-type org-preview-latex-process-alist)
-		   (let ((formula-link
-				  (org-html-format-latex
-				   (org-html--unlabel-latex-environment latex-frag)
-				   processing-type info)))
-             (when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
-			   (let ((source (org-export-file-uri (match-string 1 formula-link))))
-			     (org-html--wrap-latex-environment
-				  (org-html--format-image source attributes info)
-				  info caption label)))))
-		  (t (org-html--wrap-latex-environment latex-frag info caption label))))))
+	(let ((processing-type (plist-get info :with-latex))
+		  (latex-frag (org-remove-indentation
+					   (org-element-property :value latex-environment)))
+          (attributes (org-export-read-attribute :attr_html latex-environment))
+          (label (org-html--reference latex-environment info t))
+          (caption (and (org-html--latex-environment-numbered-p latex-environment)
+						(number-to-string
+						 (org-export-get-ordinal
+						  latex-environment info nil
+						  (lambda (l _)
+							(and (org-html--math-environment-p l)
+								 (org-html--latex-environment-numbered-p l))))))))
+      (cond
+		((memq processing-type '(t mathjax))
+		 (org-html-format-latex
+		  (if (org-string-nw-p label)
+			  (replace-regexp-in-string "\\`.*"
+										(format "\\&\n\\\\label{%s}" label)
+										latex-frag)
+			latex-frag)
+		  'mathjax info))
+		((memq processing-type '(t html))
+		 (org-html-format-latex
+		  (if (org-string-nw-p label)
+			  (replace-regexp-in-string "\\`.*"
+										(format "\\&\n\\\\label{%s}" label)
+										latex-frag)
+			latex-frag)
+		  'html info))
+		((assq processing-type org-preview-latex-process-alist)
+		 (let ((formula-link
+				(org-html-format-latex
+				 (org-html--unlabel-latex-environment latex-frag)
+				 processing-type info)))
+           (when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
+			 (let ((source (org-export-file-uri (match-string 1 formula-link))))
+			   (org-html--wrap-latex-environment
+				(org-html--format-image source attributes info)
+				info caption label)))))
+		(t (org-html--wrap-latex-environment latex-frag info caption label))))))
 #+end_src
 Adding links to PDFs with Org.
 #+begin_src elisp
@@ -1244,15 +1323,14 @@ Org capture setup.
 			))
   )
 #+end_src
-LaTeX stuff
+
+**** LaTeX
 #+begin_src elisp :tangle no
 (use-package cdlatex
 	:hook org-cdlatex-mode
 	)
 (use-package auctex)
 #+end_src
-
-**** LaTeX
 Adding Koma Script ~article~ class to org mode:
 #+begin_src elisp :tangle no
 (setq org-latex-classes '(("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}")) ("report" "\\documentclass[11pt]{report}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}")) ("book" "\\documentclass[11pt]{book}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
@@ -1267,6 +1345,47 @@ Add colors. This requires Koma Script _and_ Xcolor
 #+begin_src elisp :tangle no
 ;; (use-package ox-chameleon
 ;; 	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
+#+end_src
+"Ignore" headlines (promotes children) from =ox-extra=.
+#+begin_src elisp
+(defun org-export-ignore-headlines (data backend info)
+  "Remove headlines tagged \"ignore\" retaining contents and promoting children.
+Each headline tagged \"ignore\" will be removed retaining its
+contents and promoting any children headlines to the level of the
+parent."
+  (org-element-map data 'headline
+    (lambda (object)
+      (when (member "ignore" (org-element-property :tags object))
+        (let ((level-top (org-element-property :level object))
+              level-diff)
+          (mapc (lambda (el)
+                  ;; recursively promote all nested headlines
+                  (org-element-map el 'headline
+                    (lambda (el)
+                      (when (equal 'headline (org-element-type el))
+                        (unless level-diff
+                          (setq level-diff (- (org-element-property :level el)
+                                              level-top)))
+                        (org-element-put-property el
+                          :level (- (org-element-property :level el)
+                                    level-diff)))))
+                  ;; insert back into parse tree
+                  (org-element-insert-before el object))
+                (org-element-contents object)))
+        (org-element-extract-element object)))
+    info nil)
+  data)
+
+(add-hook 'org-export-filter-parse-tree-functions #'org-export-ignore-headlines)
+#+end_src
+
+**** Org-roam
+#+begin_src elisp
+(use-package org-roam
+    :config
+  (setq org-roam-directory "~/Personal/roam")
+  (setq org-roam-capture-templates '(("d" "default" plain "%?" :target (file+head "${slug}.org" "#+TITLE: ${title}\n#+CREATED: %u\n#+LAST_MODIFIED: %U") :unnarrowed t)))
+  (org-roam-db-autosync-mode))
 #+end_src
 
 *** TODO Python
@@ -1329,9 +1448,7 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
-    :mode "\\.md\\'"
-    :config
-    (with-eval-after-load 'doom-themes (custom-set-faces `(markdown-code-face ((t (:background ,(doom-color 'base1))))))))
+    :mode "\\.md\\'")
 #+end_src
 
 *** YAML
@@ -1351,14 +1468,14 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 *** Mathematica
 Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 #+begin_src elisp
-;; (use-package wolfram-mode
-;;     :mode "\\.m\\|\\(wl\\)\\'"
-;;     :config
-;;     ;; these are set to "default", which is a bogus value.
-;;     (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
-;;     (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face)))
-;; 	;;(setq org-babel-wolfram-command "mash")
-;; 	;;(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
+(use-package wolfram-mode
+    :mode "\\.m\\|\\(wl\\)\\'"
+    :config
+    ;; these are set to "default", which is a bogus value.
+    (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
+    (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face))
+	(setq org-babel-mathematica-command "mash")
+	(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
 #+end_src
 
 *** Sage
@@ -1391,9 +1508,32 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	('vterm-mode-map "M--" #'text-scale-decrease)
 	('vterm-mode-map "M-:" #'eval-expression)
 	:config
+    (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
 	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
+#+end_src
+*** Tramp
+#+begin_src elisp
+(use-package tramp
+    :init
+  (setq vc-handled-backends '(Git))
+  :config
+  (setq tramp-default-method "ssh")
+  (setq tramp-auto-save-directory (expand-file-name "tramp-autosave" user-emacs-directory))
+  (setq tramp-histfile-override nil)
+  (defun my-vc-off-if-remote ()
+    (if (file-remote-p (buffer-file-name))
+        (setq-local vc-handled-backends nil)))
+  (add-hook 'find-file-hook 'my-vc-off-if-remote))
+#+end_src
+I tried to add a project-aware shell command, but it's a bit too jank for my liking.
+#+begin_src elisp :tangle no
+  (defvar-local fysh/sh-shell #'vterm)
+  (defun fysh/sh ()
+    (interactive)
+    (funcall fysh/sh-shell))
+  (add-to-list 'safe-local-variable-values '(fysh/sh-shell lambda nil (interactive) '(lambda nil (let ((default-directory "/ssh:vermillion:~/ece411") (current-prefix-arg '(4))) (call-interactively #'vterm)))))
 #+end_src
 
 *** PDF Viewer
@@ -1422,17 +1562,18 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
 (use-package ibuffer
     :general
-  ('global "C-x C-i" #'ibuffer))
+  ('global "C-x C-b" nil)
+  ('global "C-x C-n" #'ibuffer))
 #+end_src
 
 *** TODO Perspective
 Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-bar-mode, which I've warmed up to significantly.
+https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
 #+begin_src elisp
 (use-package emacs
     :init
   (defcustom tab-bar-switch-hook nil
     "Hook run after `tab-switch` is finished."
-    ;;:group 'erc-hooks
     :type 'hook)
   (defun tab-name ()
     "Get name of current tab, or index if there's no name."
@@ -1443,14 +1584,15 @@ Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-ba
       (if explicit-name tab-name (+ 1 tab-index))))
   :general
   ;; this is a hack, but I'm content with it for the time being because emacs 30.1 adds a proper hook.
-  ('global "C-x p" (lambda () (interactive) (progn (tab-list) (run-with-timer 10 nil (lambda () (run-hooks 'tab-bar-switch-hook))))))
+  ('global "C-x p" (lambda () (interactive) (progn (call-interactively #'tab-switch) (run-with-timer 10 nil (lambda () (run-hooks 'tab-bar-switch-hook))))))
   :custom
   (tab-bar-show nil)
+  (tab-bar-new-tab-choice "*scratch*")
   :hook
   ;; TODO this doesn't work when creating a new perspective
   (tab-bar-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (tab-name)))))
-  :config
-  (tab-bar-mode))
+  ;; (after-init . (lambda () ((tab-bar-mode) (tab-bar-rename-tab "emacs"))))
+  )
 #+end_src
 
 *** Direnv
@@ -1490,11 +1632,23 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package magit
     :general-config
-  (leader-def "b" #'magit-blame)
+  (leader-def
+    "g b" #'magit-blame
+    "g f" #'magit-find-file
+    "g l" #'magit-log
+    "g g" #'magit-status
+    "g c" #'magit-clone
+    "g ." #'magit-file-dispatch
+    )
   ('magit-mode-map "K" nil)
   ('magit-mode-map "J" nil)
+  :config
+  (setq magit-delete-by-moving-to-trash nil)
   :init
   (setq vc-follow-symlinks t)
+  (add-to-list 'safe-local-variable-values '(vc-default-patch-addressee . "bug-gnu-emacs@gnu.org"))
+  (add-to-list 'safe-local-variable-values '(magit-revision-insert-related-refs))
+  (add-to-list 'safe-local-variable-values '(magit-refresh-buffers))
   (dir-locals-set-class-variables
    'huge-git-repository
    '((nil
@@ -1509,8 +1663,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream))
 		 ))
 	 ))
-  (dir-locals-set-directory-class
-   (concat (getenv "HOME") "/Personal/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class (expand-file-name "~/Personal/nixpkgs") 'huge-git-repository)
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
   (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))
@@ -1571,6 +1724,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 								   (java-mode . java-ts-mode)
 								   (ruby-mode . ruby-ts-mode)
 								   (python-mode . python-ts-mode)))
+	(setq auto-mode-case-fold nil)
 	(add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
@@ -1640,6 +1794,15 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 	:config
 	(setq dictionary-use-single-buffer t)
 	(setq dictionary-server "dict.org"))
+#+end_src
+
+*** Spellcheck
+#+begin_src elisp
+(use-package jinx
+    :hook (emacs-startup . global-jinx-mode)
+    :general
+    ('normal "z =" #'jinx-correct)
+    ('global "C-M-$" #'jinx-languages))
 #+end_src
 
 *** Zone
@@ -1760,6 +1923,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
     (load-theme 'doom-palenight t)
+    (with-eval-after-load 'markdown-mode (set-face-background 'markdown-code-face (doom-color 'base1)))
     (doom-themes-visual-bell-config)
     (doom-themes-org-config))
 #+end_src
@@ -1768,6 +1932,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 (use-package doom-modeline
     :hook (after-init . doom-modeline-mode)
     :config
+    (remove-hook 'after-save-hook #'doom-modeline-update-vcs-icon)
     ;; just moved the workspace to the right
     (doom-modeline-def-modeline 'main
         '(bar window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
@@ -1826,6 +1991,15 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
 	(variable-pitch-mode -1))))
 
 (add-hook 'after-init-hook 'fonts/default)
+
+;; (defun fysh/monitor-font-size ()
+;;   (let ((width (display-pixel-width))
+;;         (height (display-pixel-height)))
+;;     (pcase width
+;;       (3640 (global-text-scale-adjust 
+;;   )
+
+;; (add-hook 'window-size-change-functions 'fonts/default)
 #+end_src
 Ok, something in my Emacs config is definitely messing up native scroll.
 We add rainbow-mode to color hex codes, like #003b6f.
@@ -1833,25 +2007,8 @@ We add rainbow-mode to color hex codes, like #003b6f.
 (use-package rainbow-mode)
 #+end_src
 
-* TODO List
-** Mu4e: Get it to work with outlook (consistently)
-Also make it so I don't have to log back in every day
-** Evil: Add visual *​ and maybe number incrementing
-*** Bindings: Add bindings for most common M-x commands
-- Magit(?)
-  - Find file
-- Run-python (just unify "run-" as one keybinding, probably C-c C-c)
-** Consult: Make enter fill to every candidate, not fill to the highlighted candidate
-** Pdf-tools: wrap page not found errors such that they raise the bell, but don't throw an error
-+This might be fixed?+
-(advice-add pdf-tools-next-page (try ... except (ding)))
-** Latex org setup (very arduous)
-*** Create document class using exam
-And make a corresponding org class that automatically converts headings into questions, with tags as points
-** Ediff: Breaks persp-mode
-** Magit: Ignore stderr
 * Local variables
 ;; Local Variables:
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t) 
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
+;; eval: (add-hook 'after-save-hook (lambda () (if (y-or-n-p "Reload?") (load (concat user-init-file "c")))) nil t) 
+;; eval: (add-hook 'after-save-hook (lambda () (if (y-or-n-p "Tangle?") (let ((inhibit-redisplay t) (inhibit-message t)) (org-babel-tangle) (byte-compile-file user-init-file)))) nil t) 
 ;; End:

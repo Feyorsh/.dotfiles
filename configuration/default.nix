@@ -41,6 +41,7 @@ in
       source-sans-pro
       source-serif-pro
       sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
+      libertine
       jetbrains-mono
       twemoji-color-font
       emacs-all-the-icons-fonts

@@ -43,14 +43,6 @@ in
 
       vterm
       pdf-tools
-      (magit.overrideAttrs(prev: rec {
-        patches = (prev.patches or []) ++ [
-          (fetchpatch {
-            url = "https://github.com/magit/magit/commit/f31cf79b2731765d63899ef16bc8be0fa2cc7d32.patch";
-            sha256 = "sha256-1UClOoJ+M33dzmmq2HgM31mNxtczjw+ekL5GuXBF3d4=";
-          })
-        ];
-      })) forge
       direnv
 
       evil evil-collection evil-snipe
@@ -75,12 +67,23 @@ in
       helpful
       jinx
 
-      org org-modern org-pdftools ox-hugo engrave-faces
+      org org-contrib org-modern org-pdftools ox-hugo engrave-faces
+      (trivialBuild rec {
+        pname = "ob-mathematica";
+        version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
+        src = fetchFromGitHub {
+          owner = "tririver";
+          repo = pname;
+          rev = version;
+          sha256 = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
+        };
+      })
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
       haskell-mode
       markdown-mode
       nix-mode
+      verilog-ts-mode verilog-mode
       swift-mode
       terraform-mode
       zig-mode
@@ -88,7 +91,10 @@ in
       ledger-mode
       wolfram-mode
       sage-shell-mode ob-sagemath
+      # this seems to blow up the hm closure size... see NixOS/nix#4119
       treesit-grammars.with-all-grammars
+      # treesit-grammars.with-grammars (p: [ p.tree-sitter-bash p.tree-sitter-c  ])
+      # tree-sitter
       # eglot
 
       all-the-icons all-the-icons-completion
@@ -129,16 +135,29 @@ in
     finalPackage = emacsWithPackages config.programs.emacs.extraPackages;
 
     emacsclient = pkgs.writeShellScriptBin "emacsclientWithArgs" ''
-      ./emacsclient -c -a "" "$@"
+      ../../../../bin/emacsclient -c -a "" "$@"
     '';
     emacs = pkgs.symlinkJoin {
       name = "emacs-wrapped";
       paths = [ finalPackage emacsclient ];
       nativeBuildInputs = [
-        (pkgs.makeDarwinBundle {
-          name = "Emacsclient";
-          exec = "emacsclientWithArgs";
-          icon = ./emacs.icns;
+        # (pkgs.makeDarwinBundle {
+        #   name = "Emacsclient";
+        #   exec = "emacsclientWithArgs";
+        #   icon = ./emacs.icns;
+        # })
+
+        (pkgs.substitute {
+          src = (pkgs.makeDarwinBundle {
+            name = "Emacsclient";
+            exec = "emacsclientWithArgs";
+            icon = ./emacs.icns;
+          });
+          substitutions = [
+            "--replace-fail"
+            ''Args"''
+            ''Args" "${lib.removeSuffix ".icns" ./emacs.icns}" "${lib.boolToString true}"''
+          ];
         })
       ];
       postBuild = "makeDarwinBundlePhase";
