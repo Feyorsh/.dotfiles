@@ -58,6 +58,7 @@ in
       # feeling a little sus after that maplectf chal...
       accept-flake-config = true;
       trusted-users = [ "root" "@admin" ];
+      sandbox = true;
     };
     linux-builder.enable = true;
 
