@@ -53,7 +53,16 @@ in
       })) forge
       direnv
 
-      evil evil-collection evil-org evil-snipe
+      evil evil-collection evil-snipe
+      (evil-org.overrideAttrs(prev: rec {
+        src = fetchFromGitHub {
+          owner = "doomelpa";
+          repo = "evil-org-mode";
+          rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
+          sha256 = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
+        };
+      }))
+
       general
       corfu
       vertico
