@@ -33,9 +33,9 @@ in
     # I think this is useful if only to tell xcode cli to shut the fuck up
     pkgs.darwin.xcode_15_1
   ];
+  environment.variables = { EDITOR = "vim"; };
 
   fonts = {
-    # fontDir.enable = true;
     packages = with pkgs; [
       (nerdfonts.override { fonts = [ "CascadiaCode" ]; })
       source-sans-pro
@@ -104,7 +104,7 @@ in
     members = [ username ];
   };
 
-  # services.xquartz.enable = true;
+  services.xquartz.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
@@ -140,14 +140,11 @@ in
   system.defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
   system.defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
 
-  services.skhd.enable = true;
-  # TODO: config with yabai
   system.defaults.dock.autohide = true;
   system.defaults.dock.autohide-delay = 0.0;
   system.defaults.dock.autohide-time-modifier = 0.3;
   # system.defaults.dock.mru-spaces
 
-  # TODO spacebar status bar
   # TODO ubersicht: music
 
   security.pam.enableSudoTouchIdAuth = true;
@@ -186,6 +183,7 @@ in
       ];
       RunAtLoad = true;
     };
+    # how to make a "memory leak" for your harddrive ;)
     # "enableCoredump".serviceConfig = {
     #   ProgramArguments = [
     #     "/bin/launchctl"

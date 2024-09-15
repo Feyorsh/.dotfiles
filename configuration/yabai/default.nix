@@ -68,6 +68,7 @@ in
       yabai -m rule --add app="^Calendar$" title="^$" manage=off
       yabai -m rule --add app="^Ghidra" manage=off
       yabai -m rule --add app="^QuickTime" manage=off
+      yabai -m rule --add app="^X11.bin$" manage=off
 
       yabai -m rule --add app="^Spotify$" mouse_follows_focus=on scratchpad=spotify grid=11:11:1:1:9:9
       yabai -m rule --add app="^Alacritty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
