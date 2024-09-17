@@ -8,12 +8,12 @@ let
         url = "https://raw.githubusercontent.com/railwaycat/homebrew-emacsmacport/b825bfdd1a25883715034e4abef4f7ad871e604f/patches/emacs-26.2-rc1-mac-7.5-no-title-bar.patch";
         sha256 = "f2DRcUZq8Y18n6MJ6vtChN5hLGERduMB8B1mrrds6Ns=";
       })
-
       (pkgs.fetchpatch {
         name = "fix-yabai-tiling.patch";
         url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/61d588ce80fb4282e107f5ab97914e32451c3da1/patches/emacs-28/fix-window-role.patch";
         sha256 = "+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
       })
+      ./patches/xwidget.patch # fixes issue with org-modern and vertical scrolling; upstreamed
     ];
 
     configureFlags = (prev.configureFlags or []) ++ [
@@ -36,8 +36,8 @@ in
       ement
       (elfeed.overrideAttrs(prev: rec {
         patches = (prev.patches or []) ++ [
-          ./elfeed-collide-links.patch
-          ./elfeed-shr.patch
+          ./patches/elfeed-collide-links.patch
+          ./patches/elfeed-shr.patch
         ];
       })) elfeed-org
 
