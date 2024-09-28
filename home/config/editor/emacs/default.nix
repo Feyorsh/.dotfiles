@@ -53,6 +53,12 @@ in
           rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
           sha256 = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
         };
+        patchPhase = ''
+          echo ";; Local Variables:" >> evil-org.el
+          echo ";; no-native-compile: t" >> evil-org.el
+          echo ";; no-byte-compile: t" >> evil-org.el
+          echo ";; End:" >> evil-org.el
+        '';
       }))
 
       general
@@ -77,12 +83,19 @@ in
           rev = version;
           sha256 = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
         };
+        patches = [ ./patches/ob-mathematica.diff ];
       })
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
       haskell-mode
       markdown-mode
-      nix-mode
+      (nix-mode.overrideAttrs (prev: {
+        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
+          name = "flake-shebangs.patch";
+          url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
+          sha256 = "B0rG0Wxacns1iUEFzyIK2fjaxFqna1k+OgaKTqtQXOI=";
+        }) ];
+      }))
       verilog-ts-mode verilog-mode
       swift-mode
       terraform-mode
@@ -97,11 +110,19 @@ in
       # tree-sitter
       # eglot
 
-      all-the-icons all-the-icons-completion
+      all-the-icons
+      (all-the-icons-completion.overrideAttrs (prev: {
+        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
+          name = "marginalia.patch";
+          url = "https://patch-diff.githubusercontent.com/raw/iyefrat/all-the-icons-completion/pull/33.patch";
+          sha256 = "B0rG0Wxacns1iUEFzyIK2fjDxFqnj1k+OgqKTqtQXOI=";
+        }) ];
+      }))
+
       kind-icon
       marginalia
       doom-themes solaire-mode
-      (doom-modeline.overrideAttrs(prev: rec {
+      (doom-modeline.overrideAttrs (prev: rec {
         version = "3.4.0";
         src = fetchFromGitHub {
           owner = "seagle0128";

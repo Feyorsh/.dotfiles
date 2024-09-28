@@ -1,0 +1,23 @@
+diff -u a/ob-mathematica.el b/ob-mathematica.el
+--- a/ob-mathematica.el
++++ b/ob-mathematica.el
+@@ -15,15 +15,16 @@
+ (require 'ob-comint)
+ (require 'ob-eval)
+ ;; Optionally require mma.el for font lock, etc
+-(require 'mma nil 'noerror)
+-(add-to-list 'org-src-lang-modes '("mathematica" . "mma"))
++(require 'wolfram-mode nil 'noerror)
++(add-to-list 'org-src-lang-modes '("mathematica" . wolfram))
+ 
+ (defvar org-babel-tangle-lang-exts)
+ (add-to-list 'org-babel-tangle-lang-exts '("mathematica" . "m"))
+ 
+ (defvar org-babel-default-header-args:mathematica '())
+ 
+-(defvar org-babel-mathematica-command "MathematicaScript -script"
++;; requires daniel reeves' mash.pl
++(defvar org-babel-mathematica-command "mash"
+   "Name of the command for executing Mathematica code.")
+ 
+ (defun org-babel-expand-body:mathematica (body params)
