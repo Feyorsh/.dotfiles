@@ -9,7 +9,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     pwnypus = {
-      url = "git+file:///Users/ghuebner/Personal/pwnypus?ref=module-test";
+      url = "github:Feyorsh/pwnypus/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -57,7 +57,8 @@
                 cp $icon extra/osx/Alacritty.app/Contents/Resources/alacritty.icns
               '';
             });
-	  }) ];
+	        })
+        ];
       };
     in
       {

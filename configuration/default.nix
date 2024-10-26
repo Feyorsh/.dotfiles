@@ -61,7 +61,16 @@ in
       trusted-users = [ "root" "@admin" ];
       sandbox = true;
     };
-    linux-builder.enable = true;
+    linux-builder = {
+      enable = true;
+      config = {
+        virtualisation = {
+          darwin-builder = {
+            diskSize = 30 * 1024;
+          };
+        };
+      };
+    };
 
     registry = {
       templates = {
@@ -180,7 +189,7 @@ in
         "/bin/launchctl"
         "limit"
         "maxfiles"
-        "1024"
+        "4096"
         "4611686018427387904" # can't set unlimited
       ];
       RunAtLoad = true;

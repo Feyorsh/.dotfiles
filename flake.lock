@@ -22,11 +22,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1724561770,
-        "narHash": "sha256-zv8C9RNa86CIpyHwPIVO/k+5TfM8ZbjGwOOpTe1grls=",
+        "lastModified": 1726188813,
+        "narHash": "sha256-Vop/VRi6uCiScg/Ic+YlwsdIrLabWUJc57dNczp0eBc=",
         "owner": "LnL7",
         "repo": "nix-darwin",
-        "rev": "ac5694a0b855a981e81b4d9f14052e3ff46ca39e",
+        "rev": "21fe31f26473c180390cfa81e3ea81aca0204c80",
         "type": "github"
       },
       "original": {
@@ -180,11 +180,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1721865877,
-        "narHash": "sha256-7OLSn+dAOz69WN3Eu4zRj7QgbBNddjH6B65wYdJrr5M=",
+        "lastModified": 1725777308,
+        "narHash": "sha256-fV3wG3IX4Z2vx0+hWmK2sv1zWQzNh+tzt9zQrgPizPc=",
         "ref": "main",
-        "rev": "e86900ec51490734afb00a8a8c1b387be329f918",
-        "revCount": 16,
+        "rev": "2a2d392b87cc4fb566fc7211576855bd1e4cd2c2",
+        "revCount": 17,
         "type": "git",
         "url": "file:///Users/ghuebner/Personal/fyshpkgs"
       },
@@ -221,11 +221,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1724435763,
-        "narHash": "sha256-UNky3lJNGQtUEXT2OY8gMxejakSWPTfWKvpFkpFlAfM=",
+        "lastModified": 1726357542,
+        "narHash": "sha256-p4OrJL2weh0TRtaeu1fmNYP6+TOp/W2qdaIJxxQay4c=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "c2cd2a52e02f1dfa1c88f95abeb89298d46023be",
+        "rev": "e524c57b1fa55d6ca9d8354c6ce1e538d2a1f47f",
         "type": "github"
       },
       "original": {
@@ -259,11 +259,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1724395761,
-        "narHash": "sha256-zRkDV/nbrnp3Y8oCADf5ETl1sDrdmAW6/bBVJ8EbIdQ=",
+        "lastModified": 1726238386,
+        "narHash": "sha256-3//V84fYaGVncFImitM6lSAliRdrGayZLdxWlpcuGk0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ae815cee91b417be55d43781eb4b73ae1ecc396c",
+        "rev": "01f064c99c792715054dc7a70e4c1626dbbec0c3",
         "type": "github"
       },
       "original": {
@@ -298,18 +298,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1722311433,
-        "narHash": "sha256-AWnmvARUVhIrY00E66VxvkEmoGIuMPlEdA2QDwm86ZA=",
-        "ref": "module-test",
-        "rev": "a17ea51e31de1af5d32a4ed912f41a7d440d4582",
-        "revCount": 13,
-        "type": "git",
-        "url": "file:///Users/ghuebner/Personal/pwnypus"
+        "lastModified": 1726386443,
+        "narHash": "sha256-5QS2PjhyKNSePtu+wD5+9KVSXhOimKNsq3pAeo2Z3mY=",
+        "owner": "Feyorsh",
+        "repo": "pwnypus",
+        "rev": "59dd4eebf13a1bf9009ab526693fc75e291351be",
+        "type": "github"
       },
       "original": {
-        "ref": "module-test",
-        "type": "git",
-        "url": "file:///Users/ghuebner/Personal/pwnypus"
+        "owner": "Feyorsh",
+        "ref": "main",
+        "repo": "pwnypus",
+        "type": "github"
       }
     },
     "root": {
@@ -331,11 +331,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1721880720,
-        "narHash": "sha256-uZ78gVg/lzP6rWi5WYO3TyFeFqVDjJvrJZHOqgpMVIk=",
+        "lastModified": 1726287383,
+        "narHash": "sha256-20DoHPEml+by2U2yja09tprLDFcimQAeL7kDIjLtyeo=",
         "owner": "Gerg-L",
         "repo": "spicetify-nix",
-        "rev": "61bc3bb1d2fc56913c6f0a6917d46b35e6e4d065",
+        "rev": "bb37104c197760c5cfca571036a1d011c4c92754",
         "type": "github"
       },
       "original": {

@@ -18,8 +18,9 @@ in {
 
     packages = with pkgs; [
       gimp
-      
-      python312
+
+      (python312.withPackages(ps: with ps; [ requests numpy ]))
+
       alt-tab-macos
       monitorcontrol
       time-out-macos
@@ -59,28 +60,4 @@ in {
    mutableKeys = true;
    mutableTrust = true;
  };
- # services.gpg-agent = {
- #   enable = true;
- #   defaultCacheTtl = 1200;
- #   maxCacheTtl = 86400;
- #   pinentryFlavor = null;
- #   extraConfig = ''
- #     pinentry-program '' +
- #   pkgs.writeShellScript "custom-pinentry" ''
- #     case $PINENTRY_USER_DATA in
- #     emacs)
- #         exec ${pkgs.pinentry.emacs}/bin/pinentry "$@"
- #         ;;
- #     gtk)
- #         exec ${pkgs.pinentry.gtk2}/bin/pinentry "$@"
- #         ;;
- #     *)
- #         exec ${pkgs.pinentry.tty}/bin/pinentry "$@"
- #     esac
- #   '' + ''
-
- #     allow-emacs-pinentry
- #     allow-loopback-pinentry
- #   '';
- # };
 }
