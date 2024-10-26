@@ -1454,7 +1454,65 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
-    :mode "\\.md\\'")
+    :mode "\\.md\\'"
+    :config
+    (defun markdown-display-inline-images ()
+      "Add inline image overlays to image links in the buffer.
+This can be toggled with `markdown-toggle-inline-images'
+or \\[markdown-toggle-inline-images]."
+      (interactive)
+      (unless (display-images-p)
+        (error "Cannot show images"))
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (while (re-search-forward markdown-regex-link-inline nil t)
+            (let* ((start (match-beginning 0))
+                   (imagep (match-beginning 1))
+                   (end (match-end 0))
+                   (file (match-string-no-properties 6)))
+              (when (and imagep
+                         (not (zerop (length file))))
+                (unless (file-exists-p file)
+                  (let* ((download-file (funcall markdown-translate-filename-function file))
+                         (valid-url (ignore-errors
+                                      (member (downcase (url-type (url-generic-parse-url download-file)))
+                                              markdown-remote-image-protocols))))
+                    (if (and markdown-display-remote-images valid-url)
+                        (setq file (markdown--get-remote-image download-file))
+                      (when (not valid-url)
+                        ;; strip query parameter
+                        (setq file (replace-regexp-in-string "?.+\\'" "" file))
+                        (unless (file-exists-p file)
+                          (setq file (url-unhex-string file)))))))
+                (when (file-exists-p file)
+                  ;; BEGIN DIFF
+                  (let* ((filename (if (file-name-absolute-p file)
+                                      file
+                                    (concat default-directory file)))
+                         (abspath (if (file-remote-p filename) (file-local-copy filename) filename))
+                  ;; END DIFF
+                         (image
+                          (cond ((and markdown-max-image-size
+                                      (image-type-available-p 'imagemagick))
+                                 (create-image
+                                  abspath 'imagemagick nil
+                                  :max-width (car markdown-max-image-size)
+                                  :max-height (cdr markdown-max-image-size)))
+                                (markdown-max-image-size
+                                 (create-image abspath nil nil
+                                               :max-width (car markdown-max-image-size)
+                                               :max-height (cdr markdown-max-image-size)))
+                                (t (create-image abspath)))))
+                    (when image
+                      (let ((ov (make-overlay start end)))
+                        (overlay-put ov 'display image)
+                        (overlay-put ov 'face 'default)
+                        (push ov markdown-inline-image-overlays)))))))))))
+    (setq markdown-max-image-size '(3500 . 900))
+    ;; (setq markdown-command "marked")
+    )
 #+end_src
 
 *** YAML
@@ -1519,6 +1577,30 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
+**** TODO hl-warn-mode
+I /swear/ there has to be a built-in to do this, but I couldn't find it. Useful to toggle in vterm buffers to spot errors (in any shell, on any system)
+#+begin_src elisp
+(use-package emacs
+    :commands fysh/hl-warn-minor-mode
+    :config
+    (defvar fysh/hl-warn-keywords
+      '(("\\(?:Errors?\\|errors?\\)" 0 'error t)
+        ("\\(?:Fail\\(?:ed\\|ing\\|s\\)?\\|fail\\(?:ed\\|ing\\|s\\)?\\)" 0 'compilation-error t)
+        ("\\(?:Warnings?\\|warnings?\\)" 0 'warning t)
+        ("\\(?:[Nn]otice\\)" 0 'compilation-info t)
+        ("\\(?:Lint-\\)" 0 'compilation-line-number t)))
+
+    (define-minor-mode fysh/hl-warn-minor-mode
+        "Minor mode for highlighting warnings"
+      :init-value nil
+      (if (symbol-value fysh/hl-warn-minor-mode)
+          (progn
+            (font-lock-add-keywords 'vterm-mode fysh/hl-warn-keywords)
+            (font-lock-flush))
+        (font-lock-remove-keywords 'vterm-mode fysh/hl-warn-keywords)
+        (font-lock-flush))))
+#+end_src
+
 *** Tramp
 #+begin_src elisp
 (use-package tramp
@@ -1527,19 +1609,18 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
   :config
   (setq tramp-default-method "ssh")
   (setq tramp-auto-save-directory (expand-file-name "tramp-autosave" user-emacs-directory))
-  (setq tramp-histfile-override nil)
+  (setq enable-remote-dir-locals t)
+
+  ;; supposedly this allows reuse of ssh connections
+  (setq tramp-ssh-controlmaster-options
+        (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
+                "-o ControlMaster=auto -o ControlPersist=yes"))
+  ;; (setq tramp-histfile-override nil)
   (defun my-vc-off-if-remote ()
     (if (file-remote-p (buffer-file-name))
         (setq-local vc-handled-backends nil)))
   (add-hook 'find-file-hook 'my-vc-off-if-remote))
 #+end_src
-I tried to add a project-aware shell command, but it's a bit too jank for my liking.
-#+begin_src elisp :tangle no
-  (defvar-local fysh/sh-shell #'vterm)
-  (defun fysh/sh ()
-    (interactive)
-    (funcall fysh/sh-shell))
-  (add-to-list 'safe-local-variable-values '(fysh/sh-shell lambda nil (interactive) '(lambda nil (let ((default-directory "/ssh:vermillion:~/ece411") (current-prefix-arg '(4))) (call-interactively #'vterm)))))
 #+end_src
 
 *** PDF Viewer
