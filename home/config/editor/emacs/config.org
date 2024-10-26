@@ -291,11 +291,12 @@ See /System/Library/Sounds/ for valid sounds."
     :demand t
     :init
     (general-evil-setup)
+    :config
     (general-create-definer leader-def
         :prefix "SPC"
         :keymaps 'override
         :states '(normal visual motion))
-    :config)
+)
 #+end_src
 Rebind builtin bindings
 #+begin_src elisp
@@ -326,7 +327,6 @@ Rebind builtin bindings
 #+begin_src elisp
 (use-package evil
 	:demand t
-	:after general
 	:init
 	(setq evil-want-integration t)
 	(setq evil-want-keybinding nil)
@@ -338,6 +338,7 @@ Rebind builtin bindings
 	(setq evil-v$-excludes-newline t)
 	(setq evil-flash-delay most-positive-fixnum)
     (setq evil-ex-search-persistent-highlight nil)
+    (setq evil-kill-on-visual-paste nil)
 	;; disable state change echo
 	(setq evil-normal-state-message nil)
 	(setq evil-insert-state-message nil)
@@ -348,6 +349,7 @@ Rebind builtin bindings
     (defun fysh/kill-buffer-quiet ()
       (interactive)
       (kill-buffer (current-buffer)))
+    :hook (minibuffer-setup . evil-refresh-cursor) ;; HACK: I don't know why, but the cursor doesn't always change to insert mode in the minibuffer.
 	:general-config
 	('motion 'override "J" #'evil-scroll-down)
 	('normal "J" nil)
@@ -368,7 +370,6 @@ This has caused a huge pain in my backside because of how damn hard it is to ove
 See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issues with Magit; supposedly this is fixed in a newer release.
  #+begin_src elisp
 (use-package evil-collection
-	;; :after (evil magit)
 	:after evil
 	:demand t
 	:config
@@ -438,11 +439,12 @@ Oldest trick in the book! (Not really.)
 	(general-define-key
 	 :states 'insert
 	 :keymaps 'corfu-map
-	 "C-u" #'corfu-scroll-down
-	 "C-d" #'corfu-scroll-up
+	 "C-k" #'corfu-previous
+	 "C-j" #'corfu-next
 	 "M-k" #'corfu-popupinfo-scroll-down
 	 "M-j" #'corfu-popupinfo-scroll-up
 	 )
+	(general-unbind 'corfu-map "RET")
 	(general-define-key
 	 :states 'normal
 	 :keymaps 'minibuffer-mode-map
@@ -455,6 +457,7 @@ Oldest trick in the book! (Not really.)
 		(corfu-mode 1)))
 
 	(setq corfu-auto t)
+	(setq corfu-quit-no-match 'separator)
 	(setq tab-always-indent 'complete)
 	(setq completion-cycle-threshold nil)
 	(setq corfu-min-width 20)
@@ -714,6 +717,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (mu4e-compose-mode . fysh/message-sign)
     :general-config
     ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
+    ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "gR" #'mu4e-update-mail-and-index)
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "J" nil)
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "," #'mu4e-search-maildir)
     :commands mu4e
