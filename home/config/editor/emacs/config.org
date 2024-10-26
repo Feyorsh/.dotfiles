@@ -168,6 +168,121 @@ Forgot where I sourced all this, but basically take a rather conservative approa
          "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/" "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/")))))
 #+end_src
 
+** macOS Interaction
+This tidbit is copied straight from [[https://gist.github.com/a3ammar/2357d6115ddd999c23e6][this gist]].
+#+begin_src elisp
+(defun nscolor2hex (color)
+  "Converts colors from `NSColor' format to hex values"
+  (concat "#"                           ; Add # at the front
+          (mapconcat 'identity          ; concatenate the list
+                     (mapcar #'(lambda (x) ;returns ("hex" "hex" "hex")
+                                (let ((col (lsh (string-to-number x) -8)))
+                                  (if (< col 16)
+                                      (format "0%x" col)
+                                    (format "%x" col))))
+                             (split-string (s-replace "\"" "" color) ",")) "")))
+(defun color-picker (&optional list buffer-name callback)
+  "Calls OS X color picker and insert the chosen color."
+  (interactive)
+  (let ((result
+         (do-applescript "tell application \"Emacs\"
+set result to \"\"
+set x to (choose color)
+set result to item 1 of x as string
+set result to result & \",\"
+set result to result & item 2 of x as string
+set result to result & \",\"
+set result to result & item 3 of x as string
+return result
+end tell")))
+    (if callback ; For Easy Customization
+        (funcall callback (nscolor2hex result))
+      (message "Copied %s" (nscolor2hex result))
+      (kill-new (nscolor2hex result)))
+    (do-applescript "tell application \"Emacs\" to activate")))
+#+end_src
+Below are wrappers around Applescript primitives that can be used to send native UI alerts from Emacs.
+Note that macOS-level customization of these notifications (primarily the alerts) must be done through Notifications in System Settings.
+The length merits refactoring into a standalone package, but I'm hesitant to do so because I know there must be an existing package out there that does the same damn thing!
+#+begin_src elisp
+(defun fysh/notif-notification (body &optional title subtitle sound)
+  "Display a macOS notification (banner in upper right, no user interaction). Note that the display style (banner vs alert vs not displaying at all) must be configured by the user in System Settings.
+See /System/Library/Sounds/ for valid sounds."
+  (do-applescript
+      (concat
+       "display notification \"" body "\""
+       (when title (concat " with title \"" title "\""))
+       (when subtitle (concat " subtitle \"" subtitle "\""))
+       (when sound (concat " sound name \"" sound "\"")))))
+
+(defun fysh/notif-alert (title &optional description severity buttons default-button cancel-button timeout sound-file)
+  "Display a macOS alert (centered element with buttons). Returns the string representing the selected button, or nil if the alert timed out. The argument `sound', if non-nil, will continuously loop a sound file with afplay until the alert returns."
+  (let* ((alert-buf (get-buffer-create " *notif-alert*"))
+         (shell-file-name "/bin/sh")
+         (alert-proc (when sound-file (start-process-shell-command "notif-alert" alert-buf (concat "while :; do afplay " sound-file "; done"))))
+         (ret (do-applescript
+                  (concat
+                   "display alert \"" title "\""
+                   (when description (concat " message \"" description "\""))
+                   (when severity
+                     (if-let ((type (memq severity '(informational warning critical)))
+                              (val (symbol-value (car type))))
+                         (concat " as \"" val "\"")
+                       (error (format "%s must be either informational, warning, or critical." severity))))
+                   (cond ((and (or default-button cancel-button) (not buttons)) (error "Cannot set `default-buton' or `cancel-button' without `buttons'."))
+                         ((and buttons (not (listp buttons))) (error "`buttons' must be a list."))
+                         ((identity buttons) (if (length> buttons 3)
+                                                 (error "`buttons' can have at most 3 elements.")
+                                               (concat " buttons {\"" (string-join buttons "\", \"") "\"}")
+                                               (when default-button
+                                                 (if (not (memq default-button buttons))
+                                                     (error (format "%s must be one of %s." default-button buttons))
+                                                   (concat " default button \"" default-button "\"")))
+                                               (when cancel-button
+                                                 (cond (((string= cancel-button default-button) (error "`cancel-button' cannot be the same as `default-button'."))
+                                                        ((not (memq cancel-button buttons)) (error (format "%s must be one of %s." cancel-button buttons)))
+                                                        (t (concat " cancel button \"" cancel-button "\""))))))))
+                   (when timeout
+                     (if (integerp timeout)
+                         (concat " giving up after \"" (number-to-string timeout) "\"")
+                       (error (format "%s must be an integer." timeout))))))))
+         (when alert-proc (set-process-query-on-exit-flag alert-proc nil))
+         (when alert-buf (kill-buffer alert-buf))
+         (cond ((string-match "\", gave up:true}" ret) nil)
+               ((string-match "\"\\(.*\\)\"" ret) (match-string 1 ret)))))
+
+(defun fysh/notif-dialog (text &optional default-answer hide-answer buttons default-button cancel-button title icon timeout)
+  "Display a dialog (centered element with editable text and buttons). Returns the input text and the string representing the selected button, or nil if the alert timed out or the user canceled."
+  (let ((ret (ignore-error error (do-applescript
+                                     (concat
+                                      "display dialog \"" text "\""
+                                      (when default-answer (concat " default answer \"" default-answer "\""))
+                                      (when (eq hide-answer t) (concat " hidden answer true")) ;; explicit check for t instead of "truthiness"
+                                      (cond ((and (or default-button cancel-button) (not buttons)) (error "Cannot set `default-buton' or `cancel-button' without `buttons'."))
+                                            ((and buttons (not (listp buttons))) (error "`buttons' must be a list."))
+                                            ((identity buttons) (if (length> buttons 3)
+                                                                    (error "`buttons' can have at most 3 elements.")
+                                                                  (concat " buttons {\"" (string-join buttons "\", \"") "\"}")
+                                                                  (when default-button
+                                                                    (if (not (memq default-button buttons))
+                                                                        (error (format "%s must be one of %s." default-button buttons))
+                                                                      (concat " default button \"" default-button "\"")))
+                                                                  (when cancel-button
+                                                                    (cond (((string= cancel-button default-button) (error "`cancel-button' cannot be the same as `default-button'."))
+                                                                           ((not (memq cancel-button buttons)) (error (format "%s must be one of %s." cancel-button buttons)))
+                                                                           (t (concat " cancel button \"" cancel-button "\""))))))))
+                                      (when title (concat " with title \"" title "\""))
+                                      (when icon (concat " with icon \"" icon "\""))
+                                      (when timeout
+                                        (if (integerp timeout)
+                                            (concat " giving up after \"" (number-to-string timeout) "\"")
+                                          (error (format "%s must be an integer." timeout)))))))))
+    (when ret
+      (cond ((string-match "\", gave up:true}" ret) nil)
+            ;; this is 110% vulnerable to injection; assume the worst!
+            ((string-match "{button returned:\"\\(.*\\)\", text returned:\"\\(.*\\)\"}" ret) `(,(match-string 1 ret) ,(match-string 2 ret)))))))
+#+end_src
+
 * Packages
 ** Keybinds
 #+begin_src elisp
@@ -560,6 +675,20 @@ Null prefix argument turns off the mode."
 Make sure to make your GPG key discoverable; I also publish mine on my website.
 #+begin_src shell :eval no
 gpg --export <identity> | curl -T - https://keys.openpgp.org
+#+end_src
+
+**** Midnight-mode (cron)
+Midnight-mode suffers from a (likely longstanding) bug making it non-idempotent (it runs at eval-time, not just "midnight").
+This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01149.html][4745baf]], but I really only need a simple timer, so I'll do it myself.
+#+begin_src elisp
+(use-package midnight
+    :demand t
+    :config
+    (defun fysh/agenda-reminder () (fysh/notif-notification "Check agenda" "Emacs" "Org-mode"))
+    (unless (memq 'fysh/agenda-reminder midnight-hook)
+      (midnight-delay-set 'midnight-delay "8:00am")
+      (setq midnight-period (* 12 60 60))
+      (setq midnight-hook '(fysh/agenda-reminder))))
 #+end_src
 
 *** TODO Mail
@@ -1205,6 +1334,8 @@ Need to stop loading my Org files on startup...
 		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
 		org-agenda-current-time-string
 		"⭠ now ─────────────────────────────────────────────────")
+  (setq org-show-notification-timeout nil
+        org-show-notification-handler (lambda (message) (fysh/notif-alert "Org-mode" message nil nil nil nil org-show-notification-timeout "/System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/Resources/Ringtones/Radial-EncoreInfinitum.m4r")))
   (setq org-agenda-custom-commands
         '(("i" "Agenda/Inbox"
            ((agenda "")
