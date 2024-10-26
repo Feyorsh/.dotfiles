@@ -526,19 +526,8 @@ Oldest trick in the book! (Not really.)
 (use-package all-the-icons)
 
 (use-package all-the-icons-completion
-    :commands all-the-icons-completion-mode
-    :after (marginalia all-the-icons)
     :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-    :init
-    ;; https://github.com/minad/marginalia/issues/175
-    (define-minor-mode all-the-icons-completion-mode
-      "Add icons to completion candidates."
-      :global t
-      (require 'all-the-icons-completion)
-      (if all-the-icons-completion-mode
-  	  (advice-add (compat-function completion-metadata-get) :around #'all-the-icons-completion-completion-metadata-get)
-        (advice-remove (compat-function completion-metadata-get) #'all-the-icons-completion-completion-metadata-get)))
-    (all-the-icons-completion-mode))
+)
 
 (use-package kind-icon
 	:after corfu
@@ -599,7 +588,8 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
             "C-x b" #'consult-buffer)
   (leader-def "." #'consult-ripgrep)
   (leader-def "," #'consult-fd)
-  )
+  :config
+  (setq consult-ripgrep-args (concat consult-ripgrep-args " --follow")))
 
 (use-package marginalia
     :general-config

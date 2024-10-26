@@ -150,12 +150,6 @@ in
           rev = "refs/tags/v${version}";
           sha256 = "sha256-cTaMtLzolZckTsCzYT1Ij/ESvw+f+QI0jFKfPYbFrPw=";
         };
-
-        # I forgot why I put this here... eglot maybe?
-        # patches = (prev.patches or []) ++ [ (fetchpatch {
-        #   url = "https://github.com/seagle0128/doom-modeline/commit/9773ef765b5d530e9f6657bc24efb83059a3d888.patch";
-        #   sha256 = "sha256-vNqz3bD+E4XhxIsddAlOqyUnf9RsnZWkpWhJIqzav6Q=";
-        # }) ];
       }))
       rainbow-mode
     ]) ++ [
