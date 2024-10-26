@@ -1144,14 +1144,26 @@ This isn't strictly IRC related, but...
 
 ** Language
 *** TODO Org
+Need to stop loading my Org files on startup...
 #+begin_src elisp
 (use-package org
 	:init
-  (setq org-directory "~/Personal/org")
+  (add-to-list 'debug-ignored-errors "\\`Capture abort:")
   (setq org-fold-core-style 'overlays) ;; org-cycle bug
+
+  ;; inspiration from abo-abo's oremacs
+  (define-advice org-insert-link (:around (fn &rest args) fysh/dwim-clipboard)
+     (let ((clipboard-url (and kill-ring
+                             (string-match-p "^http" (current-kill 0))
+                             (current-kill 0))))
+       (when clipboard-url (org-link--add-to-stored-links clipboard-url nil))
+       (ignore-errors (funcall-interactively fn args))
+       (when clipboard-url (setq org-stored-links (delq (assoc clipboard-url org-stored-links) org-stored-links)))))
   :general
   ("C-c l" #'org-store-link)
-  :hook (org-mode . (lambda () (corfu-mode -1)))
+  (leader-def "a" (lambda () (interactive) (org-agenda nil "i")))
+  :hook ((org-mode . (lambda () (corfu-mode -1)))
+         (org-after-refile-insert . save-buffer))
   :config
   (setq org-src-preserve-indentation t
 		org-src-fontify-natively t
@@ -1166,6 +1178,11 @@ This isn't strictly IRC related, but...
         org-list-indent-offset 1
         org-list-demote-modify-bullet '(("-" . "+") ("+" . "*") ("*" . "-"))
 		org-agenda-skip-scheduled-if-done t
+        org-agenda-skip-deadline-if-done t
+        org-agenda-skip-timestamp-if-done t
+        org-log-into-drawer t
+        org-archive-location "archive.org::* %s"
+        org-archive-file-header-format nil
 		org-use-sub-superscripts "{}"
 		;; org-modern
 		org-auto-align-tags nil
@@ -1177,7 +1194,7 @@ This isn't strictly IRC related, but...
 		org-pretty-entities t
         org-ellipsis "…"
         org-use-fast-todo-selection 'expert
-                org-agenda-inhibit-startup t
+        org-agenda-inhibit-startup t
 		org-agenda-window-setup 'current-window
 		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
 		org-agenda-tags-column 0
@@ -1188,10 +1205,22 @@ This isn't strictly IRC related, but...
 		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
 		org-agenda-current-time-string
 		"⭠ now ─────────────────────────────────────────────────")
+  (setq org-agenda-custom-commands
+        '(("i" "Agenda/Inbox"
+           ((agenda "")
+            (tags-todo "INBOX"))
+           ((org-agenda-tag-filter-preset '("-STASIS"))
+            (org-agenda-show-inherited-tags nil)))))
+  (setq org-refile-use-outline-path 'file)
+  (setq org-outline-path-complete-in-steps nil)
   (add-to-list 'org-latex-packages-alist '("" "listings"))
   :custom
-  (org-agenda-files `(,(expand-file-name "agenda.org" org-directory) ,(expand-file-name "~/School")))
-  (org-refile-targets `(,(expand-file-name "agenda.org" org-directory))))
+  (org-directory "~/Personal/org")
+  (org-agenda-files `(,org-directory))
+  (org-refile-targets `((nil :maxlevel . 5)
+                        ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
+                        ;; this is an unorthodox usecase, but I only want top level refiling
+                        ,`(,(expand-file-name "stasis.org" org-directory) :level . 9000))))
 (add-hook 'emacs-startup-hook
 		  (lambda ()
 			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
@@ -1207,7 +1236,8 @@ And now to make it *pretty*
   (org-cdlatex-mode . fonts/literate-programming)
   :config
   (setq org-modern-star 'replace)
-  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELED(c@)")))
+  ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
+  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w)" "|" "DONE(d)" "LATE(l)" "CANCELED(c)")))
   (setq org-todo-keyword-faces '(("TODO" . org-todo)
                                  ("WAIT" . "orange red")
                                  ("PROG" . "deep pink")
@@ -1320,13 +1350,14 @@ Org capture setup.
   :config
   (setq org-capture-bookmark nil)
   (setq org-capture-templates
-        `(,`("t" "TODO" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
+        `(,`("t" "TODO" entry ,`(file ,(expand-file-name "inbox.org" org-directory))
                  "* TODO %?\nDEADLINE: %t\n  %i" :empty-lines 1)
-			,`("f" "TODO in file" entry ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Today")
+			,`("f" "TODO in file" entry ,`(file ,(expand-file-name "inbox.org" org-directory))
 				   "* TODO %A\nDEADLINE: %t\n  %i" :empty-lines 1)
+			,`("r" "Reading list" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Reading list")
+				   "- %(with-temp-buffer (org-insert-link) (buffer-substring-no-properties (point-min) (point-max)))")
 			,`("v" "Vocab" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Vocab List")
-				   "- %?")
-			))
+				   "- %?")))
   )
 #+end_src
 
