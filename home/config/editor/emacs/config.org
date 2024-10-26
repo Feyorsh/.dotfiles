@@ -1548,9 +1548,11 @@ I'd like to change the cursor blink behaviour.
 (use-package pdf-tools
     :magic ("%PDF" . pdf-view-mode)
     :hook
-	(pdf-view-mode . pdf-view-midnight-minor-mode)
+	((pdf-view-mode . pdf-view-midnight-minor-mode)
+     ;; isearch is kinda useless in PDFs imo
+     (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'pdf-view-mode-map "/" #'pdf-occur))))
 	:general-config
-	('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-down-or-next-page)
+	('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-down-or-previous-page)
 	('normal 'pdf-view-mode-map "K" #'pdf-view-scroll-up-or-next-page)
 	:config
     (add-to-list 'debug-ignored-errors "\\`No such page:")
