@@ -92,6 +92,9 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
 
+    (defun fysh/native-find-file (filename)
+      (interactive (list (read-file-name "Find file natively: " nil default-directory t)))
+      (org-open-file filename '(16)))
     (defun fysh/custom-find-file ()
       (interactive)
       (find-file custom-file))
@@ -141,26 +144,24 @@ Forgot where I sourced all this, but basically take a rather conservative approa
                                  "Kill the minibuffer."
                                  (when (and (>= (recursion-depth) 1)
                                             (active-minibuffer-window))
-                                   (abort-recursive-edit)))))
+                                   (abort-recursive-edit))))
+           (kill-emacs . (lambda () (append-to-file (emacs-uptime) nil (expand-file-name "uptime" user-emacs-directory))))
+           ((text-mode prog-mode) . (lambda () (setq show-trailing-whitespace t))))
 
     :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
     (safe-local-variable-values
-   '((eval add-hook 'after-save-hook
-      (lambda nil
-        (if
-            (y-or-n-p "Tangle?")
-            (let
-                ((inhibit-redisplay t)
-                 (inhibit-message t))
-              (org-babel-tangle)
-              (byte-compile-file user-init-file))))
-      nil t)
-     (eval add-hook 'after-save-hook
-      (lambda nil
-        (if
-            (y-or-n-p "Reload?")
-            (load (concat user-init-file "c"))))
-      nil t)))
+     '((eval add-hook 'after-save-hook
+        (lambda nil
+          (if
+              (y-or-n-p "Tangle?")
+              (org-babel-tangle)))
+        nil t)
+       (eval add-hook 'after-save-hook
+        (lambda nil
+          (if
+              (y-or-n-p "Reload?")
+              (load-file user-init-file)))
+        nil t)))
     (ignored-local-variables
      '((etags-regen-ignores "test/manual/etags/")
        (etags-regen-regexp-alist
@@ -313,6 +314,9 @@ Rebind builtin bindings
   (leader-def "#" #'comment-dwim)
   ("M-=" #'text-scale-increase)
   ("M--" #'text-scale-decrease)
+  ;; global-text-scale-adjust sets a transient map, which itself returns a function that can be called to exit the transient.
+  ("C-M-=" (lambda () (interactive) (funcall (global-text-scale-adjust 1))))
+  ("C-M--" (lambda () (interactive) (funcall (global-text-scale-adjust -1))))
   ("C-x C-c" (lambda () (interactive) (message "Ah ah ah, you didn't say the magic word!")))
   ("C-h C-c" nil)
   ("C-h C-w" nil))
