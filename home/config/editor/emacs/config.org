@@ -1783,6 +1783,19 @@ I /swear/ there has to be a built-in to do this, but I couldn't find it. Useful 
         (setq-local vc-handled-backends nil)))
   (add-hook 'find-file-hook 'my-vc-off-if-remote))
 #+end_src
+
+*** Man
+It's 2024; man is significantly better than woman. /s
+(Oh, and the man-db doesn't generate automatically on macOS, you have to run ~sudo mandb -c~.)
+#+begin_src elisp
+(use-package emacs
+    :general
+  (leader-def "m" #'consult-man)
+  (leader-def "i" #'consult-info) ;; not man, I know!
+  ('normal 'Info-mode-map "J" nil)
+  :config
+  (setq Man-notify-method 'pushy)
+  (setq Man-switches "-a"))
 #+end_src
 
 *** PDF Viewer
