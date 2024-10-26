@@ -1637,9 +1637,10 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 *** TODO Magit
 #+begin_src elisp
 (use-package magit
-    :general-config
+    :general
   (leader-def
     "g b" #'magit-blame
+    "g d" #'magit-diff
     "g f" #'magit-find-file
     "g l" #'magit-log
     "g g" #'magit-status
