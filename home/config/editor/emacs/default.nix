@@ -93,7 +93,7 @@ in
         patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
           name = "flake-shebangs.patch";
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
-          sha256 = "B0rG0Wxacns1iUEFzyIK2fjaxFqna1k+OgaKTqtQXOI=";
+          sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
       }))
       verilog-ts-mode verilog-mode

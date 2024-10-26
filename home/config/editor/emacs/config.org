@@ -1702,7 +1702,10 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 *** Nix
 #+begin_src elisp
 (use-package nix-mode
-    :mode "\\.nix\\'"
+    :mode (("\\.nix\\'" . nix-mode)
+           ("/flake\\.lock\\'" . json-ts-mode))
+    :interpreter (("nix-shell" . nix-shebang-mode)
+                  ("nix" . nix-shebang-mode))
     :hook (nix-mode . (lambda () (indent-tabs-mode -1))))
 #+end_src
 
