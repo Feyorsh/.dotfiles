@@ -1628,6 +1628,33 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 (setq asm-comment-char ?\#)
 #+end_src
 
+*** (System)Verilog
+The default verilog-mode just gets in my way tbh... slow, too opinionated, etc.
+Fortunately someone wrote a Tree-sitter grammar... perfect!
+#+begin_src elisp
+(use-package verilog-ts-mode
+    :mode "\\.svh?\\'"
+    :init
+	(add-to-list 'major-mode-remap-alist '(verilog-mode . verilog-ts-mode))
+    :general-config
+	('verilog-mode-map "RET" #'newline)
+	('normal 'verilog-mode-map "DEL" #'evil-join)
+	('normal 'verilog-mode-map "<backspace>" #'evil-join)
+    :config
+    ;; these defaults are truly horrible.
+    (setq verilog-auto-newline nil)
+    (setq verilog-auto-indent-on-newline nil)
+    (setq verilog-auto-endcomments nil)
+    (setq-default verilog-ts-indent-level 4
+                  verilog-indent-level             verilog-ts-indent-level
+                  verilog-indent-level-module      verilog-ts-indent-level
+                  verilog-indent-level-behavioural verilog-ts-indent-level
+                  verilog-indent-level-directive   verilog-ts-indent-level
+                  verilog-indent-level-declaration verilog-ts-indent-level)
+    (set-face-foreground 'verilog-ts-font-lock-grouping-keywords-face (doom-color 'base8))
+    )
+#+end_src
+
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode

@@ -96,7 +96,15 @@ in
           sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
       }))
-      verilog-ts-mode verilog-mode
+      (verilog-ts-mode.overrideAttrs (prev: rec {
+        version = "0.2.1";
+        src = fetchFromGitHub {
+          owner = "gmlarumbe";
+          repo = prev.pname;
+          rev = "refs/tags/v${version}";
+          sha256 = "Vrk8MYiqsyln3xIdQiAKKcYMkzc4HO5mQRT1zpQPF+k=";
+        };
+      }))
       swift-mode
       terraform-mode
       zig-mode
@@ -105,8 +113,20 @@ in
       wolfram-mode
       sage-shell-mode ob-sagemath
       # this seems to blow up the hm closure size... see NixOS/nix#4119
-      treesit-grammars.with-all-grammars
-      # treesit-grammars.with-grammars (p: [ p.tree-sitter-bash p.tree-sitter-c  ])
+      # treesit-grammars.with-all-grammars
+      (treesit-grammars.with-grammars (_: builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
+        tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
+          language = "tree-sitter-verilog";
+          version = "0.0.0+rev=0dacb91";
+          src = pkgs.fetchFromGitHub {
+            owner = "gmlarumbe";
+            repo = "tree-sitter-systemverilog";
+            rev = "0dacb911daa9614a7c7e79a594d4cb9f478e6554";
+            sha256 = "WATrVeP3c//tWLG8VibXZrYrChBs7d4V6LCcEGcofdg=";
+          };
+          meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
+        };
+      })))
       # tree-sitter
       # eglot
 
