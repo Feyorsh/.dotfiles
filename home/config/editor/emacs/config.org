@@ -1770,6 +1770,25 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 (use-package emacs
     :general
   (leader-def "d" (lambda () (interactive) (diff-buffer-with-file (current-buffer))))
+  :init
+  ;; create a diff (patchfile) for current buffer.
+  ;; also useful is `diff-apply-hunk'.
+  (defun fysh/create-diff (buffer dest-file)
+    (interactive "bBuffer: \nFSave diff to (*.diff): ")
+    (let* ((filename (file-name-nondirectory buffer-file-name))
+           (diff-switches (concat "-u --label a/" filename " --label b/" filename))
+           (diff-use-labels nil))
+      (save-window-excursion
+        (diff-buffer-with-file buffer)
+        (with-current-buffer "*Diff*"
+          (read-only-mode -1)
+          (kill-line)
+          (insert (concat "diff -u a/" filename " b/" filename))
+          (re-search-forward "Diff finished." nil t)
+          (forward-line -1)
+          (kill-whole-line 4)
+          (write-file (file-name-with-extension dest-file "diff"))
+          (kill-buffer)))))
   :config
   (add-to-list 'display-buffer-alist '("\\*Diff\\*" (lambda (buffer alist) (select-window  (display-buffer-use-some-window buffer alist))))))
 #+end_src
