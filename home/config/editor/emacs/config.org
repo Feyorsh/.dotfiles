@@ -1402,18 +1402,29 @@ And now to make it *pretty*
 Now for Babel:
 #+begin_src elisp
 (use-package org
-    :commands (org-babel-eval org-babel-tangle org-babel)
-    :after (wolfram-mode ob-sagemath)
+    :commands (org-babel-eval org-babel-tangle org-babel-execute-src-block)
+    ;; :after (wolfram-mode ob-sagemath)
+    :init
+    (define-advice org-babel-execute-src-block (:around (fn &rest args) fysh/load-language)
+      "Load language if needed"
+      (let* ((language (org-element-property :language (org-element-at-point)))
+             (src-alias (cdr (assoc language org-src-lang-modes)))
+             (lang-mode (if src-alias src-alias (intern language))))
+        (when (and (not (cdr (assoc lang-mode org-babel-load-languages)))
+                   (locate-library (concat "ob-" (symbol-name lang-mode))))
+          (add-to-list 'org-babel-load-languages (cons lang-mode t))
+          (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages))
+        (apply fn args)))
     :config
-    (use-package ob-sagemath :demand t)
     (setq org-babel-default-header-args:elisp '((:lexical . "yes")))
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (shell . t)
-       (python . t)
-       (mathematica . t)
-	   (sagemath . t))))
+    ;; (org-babel-do-load-languages
+    ;;  'org-babel-load-languages
+    ;;  '((emacs-lisp . t)
+    ;;    (shell . t)
+    ;;    (python . t)
+    ;;    (mathematica . t)
+	;;    (sagemath . t)))
+    )
 #+end_src
 
 Website stuff:
@@ -1695,13 +1706,15 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 #+begin_src elisp
 (use-package wolfram-mode
-    :mode "\\.m\\|\\(wl\\)\\'"
+    :mode ("\\.m\\'" "\\.wl\\'")
+    :init
+    (add-to-list 'org-src-lang-modes '("mathematica" . wolfram))
+    (add-to-list 'org-babel-tangle-lang-exts '("mathematica" . "wl"))
+	(setq org-babel-mathematica-command "mash")
     :config
     ;; these are set to "default", which is a bogus value.
     (add-to-list 'wolfram-font-lock-keywords '("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 'font-lock-variable-use-face))
-    (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face))
-	(setq org-babel-mathematica-command "mash")
-	(add-to-list 'org-src-lang-modes '("mathematica" . wolfram)))
+    (add-to-list 'wolfram-font-lock-keywords '("\\(&&\\)" 1 'font-lock-operator-face)))
 #+end_src
 
 *** Sage
