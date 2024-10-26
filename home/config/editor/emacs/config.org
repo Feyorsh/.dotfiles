@@ -1572,6 +1572,16 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
   ('global "C-x C-n" #'ibuffer))
 #+end_src
 
+*** Bookmarks
+Quite handy, and built-in! I wanted a transient-like interface to links I use a lot, and then remembered bookmarks exist.
+For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, and the RISC-V spec to open up in EWW (using PDF Tools!).
+#+begin_src elisp
+(use-package bookmark
+    :config
+  (setq bookmark-fringe-mark nil)
+    )
+#+end_src
+
 *** TODO Perspective
 Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-bar-mode, which I've warmed up to significantly.
 https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
