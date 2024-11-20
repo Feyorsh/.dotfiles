@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 {
   imports = [ ./fish.nix ];
 
@@ -22,4 +23,12 @@
       K back-scroll
     '';
   };
+
+  home.packages = with pkgs; [
+    (writeShellApplication {
+      name = "hydrate";
+      runtimeInputs = [ restic pass ];
+      text = builtins.readFile ./hydrate;
+    })
+  ];
 }

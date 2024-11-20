@@ -1,0 +1,60 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -i bash -p bash restic pass
+
+set -euo pipefail
+
+run () {
+    read -p "Going to run $1, please confirm (y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        eval "$1"
+        return
+    else
+        echo "cancelled by user"
+        return 1
+    fi
+}
+
+
+script_src=${BASH_SOURCE[0]}
+FULLPATH="$( cd -- "$(dirname "$script_src")" >/dev/null 2>&1 ; pwd -P )/$(basename "$script_src")"
+
+if [[ "$FULLPATH" == "$script_src" ]]; then
+    if [ $# -eq 1 ]; then
+        if [[ -d "$1" ]]; then
+            # dehydrate
+            FULLPATH="$( cd -- "$(dirname "$1")" >/dev/null 2>&1 ; pwd -P )/$(basename "$1")"
+            RESTIC_PASSWORD="$(pass show restic)"
+            export RESTIC_PASSWORD
+            set +e
+            run "restic -r rclone:gdrive:backups backup \"$FULLPATH\" --exclude-file \"/Users/ghuebner/.config/excludes.txt\" --one-file-system" || { echo "dehydration failed"; exit 1; }
+            rm -rf "$FULLPATH"
+            cp "$script_src" "$FULLPATH"
+            exit 0
+        elif [[ -f "$1" ]]; then
+            # delegate hydration to arg
+            if ! cmp -s "$FULLPATH" "$1"; then
+                echo "WARNING: \"$script_src\" and \"$1\" don't match"
+            fi
+            "./$1"
+            exit
+        fi
+    else
+        echo "usage: $(basename "$script_src") <path>"
+        exit 1
+    fi
+else
+    if [ ! $# -eq 0 ]; then
+        echo "$(basename "$script_src"): unexpected arguments $*"
+        exit 1
+    fi
+
+    tmp="$(mktemp)"
+    mv "$FULLPATH" "$tmp"
+    mkdir "$FULLPATH"
+    RESTIC_PASSWORD="$(pass show restic)"
+    export RESTIC_PASSWORD
+    set +e
+    run "restic -r rclone:gdrive:backups restore latest --path=\"$FULLPATH\" --target=\"/\"" || { rm -r "$FULLPATH"; mv "$tmp" "$FULLPATH"; echo "hydration failed"; exit 1; }
+    exit 0
+fi
