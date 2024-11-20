@@ -4,7 +4,6 @@ let
     buildInputs = (prev.buildInputs or []) ++ [ pkgs.makeWrapper ];
     postInstall = (prev.postInstall or "") + "wrapProgram $out/bin/skhd --set SHELL ${pkgs.bash}/bin/bash";
   });
-  userShell = let t = config.users.users.${username}.shell; in "${t}${t.shellPath}";
 
   yabaiScript = pkgs.writeShellScript "yabai-sa" ''
     ${pkgs.yabai}/bin/yabai --load-sa
@@ -87,7 +86,7 @@ in
     skhd = "${skhd'}/bin/skhd";
     yabai = "${pkgs.yabai}/bin/yabai";
     jq = "${pkgs.jq}/bin/jq";
-    alacritty = args: "${pkgs.alacritty}/bin/alacritty msg create-window ${args} || open -a ${pkgs.alacritty}/Applications/Alacritty.app --env SHELL=${userShell} ${lib.optionalString (builtins.stringLength != 0) "--args"} ${args}";
+    alacritty = args: "${pkgs.alacritty}/bin/alacritty msg create-window ${args} || open -a ${pkgs.alacritty}/Applications/Alacritty.app ${lib.optionalString (builtins.stringLength != 0) "--args"} ${args}";
 
     lab = "0x2B";
     rab = "0x2F";
