@@ -105,64 +105,71 @@ in
 
   networking.localHostName = "Aqua";
   networking.computerName = "Aqua";
+  time.timeZone = "America/Chicago";
 
   security.chmodbpf = {
     enable = true;
     members = [ username ];
   };
+  security.pam.enableSudoTouchIdAuth = true;
 
   services.xquartz.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
 
-  system.keyboard.enableKeyMapping = true;
-  system.keyboard.remapCapsLockToControl = true;
-  time.timeZone = "America/Chicago";
-  system.defaults.screencapture.location = "${home}/Images/Screenshots";
-  system.defaults.menuExtraClock.Show24Hour = true;
-  system.defaults.loginwindow.GuestEnabled = false;
-  system.defaults.finder.CreateDesktop = true;
-  system.defaults.finder.AppleShowAllFiles = true;
-  system.defaults.finder.AppleShowAllExtensions = true;
-  system.defaults.finder.FXPreferredViewStyle = "icnv";
-  system.defaults.dock.tilesize = 64;
-  system.defaults.dock.show-recents = false;
-  system.defaults.dock.mru-spaces = false;
-  system.defaults.dock.minimize-to-application = true;
-  system.defaults.dock.mineffect = "scale";
-  system.defaults.dock.launchanim = false;
-  system.defaults.WindowManager.EnableStandardClickToShowDesktop = false;
-  system.defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
+  system = {
+    # misc aesthetics
+    startup.chime = false;
+    defaults.screencapture.location = "${home}/Images/Screenshots";
+    defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
+    defaults.menuExtraClock.Show24Hour = true;
+    defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
 
-  system.defaults.alf.stealthenabled = 1;
-  system.defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
-  system.defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
+    # finder/files
+    defaults.finder.CreateDesktop = true;
+    defaults.finder.AppleShowAllFiles = true;
+    defaults.finder.AppleShowAllExtensions = true;
+    defaults.finder.FXPreferredViewStyle = "icnv";
+    defaults.finder._FXShowPosixPathInTitle = true;
+    defaults.CustomUserPreferences = {
+      "com.apple.desktopservices" = {
+        # Avoid creating .DS_Store files on external drives
+        DSDontWriteNetworkStores = true;
+        DSDontWriteUSBStores = true;
+      };
+    };
+    defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
+    defaults.NSGlobalDomain.AppleShowAllFiles = true;
 
-  system.defaults.NSGlobalDomain.InitialKeyRepeat = 20;
-  system.defaults.NSGlobalDomain.KeyRepeat = 2;
+    # dock
+    defaults.dock.autohide = true;
+    defaults.dock.autohide-delay = 0.0;
+    defaults.dock.autohide-time-modifier = 0.3;
+    defaults.dock.tilesize = 64;
+    defaults.dock.show-recents = false;
+    defaults.dock.mru-spaces = false;
+    defaults.dock.minimize-to-application = true;
+    defaults.dock.mineffect = "scale";
+    defaults.dock.launchanim = false;
+    defaults.universalaccess.reduceMotion = true;
+    defaults.WindowManager.EnableStandardClickToShowDesktop = false;
+    defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
+    defaults.NSGlobalDomain.AppleScrollerPagingBehavior = true;
 
-  system.defaults.NSGlobalDomain.AppleShowAllFiles = true;
-  system.defaults.NSGlobalDomain.AppleScrollerPagingBehavior = true;
-  system.defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
-  system.defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
+    # system/security
+    defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
+    defaults.alf.stealthenabled = 1;
+    defaults.loginwindow.GuestEnabled = false;
 
-  system.defaults.dock.autohide = true;
-  system.defaults.dock.autohide-delay = 0.0;
-  system.defaults.dock.autohide-time-modifier = 0.3;
-  # system.defaults.dock.mru-spaces
-
-  # TODO ubersicht: music
-
-  security.pam.enableSudoTouchIdAuth = true;
-
-  system.defaults.CustomUserPreferences = {
-	  "com.apple.desktopservices" = {
-		  # Avoid creating .DS_Store files on external drives
-		  DSDontWriteNetworkStores = true;
-		  DSDontWriteUSBStores = true;
-	  };
+    # keyboard
+    keyboard.enableKeyMapping = true;
+    keyboard.remapCapsLockToControl = true;
+    defaults.NSGlobalDomain.InitialKeyRepeat = 20;
+    defaults.NSGlobalDomain.KeyRepeat = 2;
+    defaults.NSGlobalDomain."com.apple.trackpad.forceClick" = true;
   };
+
 
   system.activationScripts.postUserActivation.text = ''
     # Following line should allow us to avoid a logout/login cycle
