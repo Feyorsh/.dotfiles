@@ -26,12 +26,6 @@ in {
       time-out-macos
       keycastr
 
-      # (writeScript "hydrate" ''
-      #    #!${pkgs.python3}/bin/python3
-
-      #    import sys
-      #    import itertools
-      #  '')
 
       # bloated, but occasionally useful (still don't like it)
       pkgs.darwin.xcode_15_1
@@ -40,10 +34,6 @@ in {
     stateVersion = "23.05";
   };
   programs.home-manager.enable = true;
-
-  # TODO: add custom git command
-  # git add --intent-to-add extra/flake.nix
-  # git update-index --skip-worktree extra/flake.nix
 
   fonts.fontconfig.enable = true;
 

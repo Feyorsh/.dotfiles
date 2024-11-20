@@ -118,9 +118,9 @@ in
 
     stack_dir = pkgs.writeShellScript "stack_dir" ''
       dir=$1 # north,east,south,west
-      
+
       window=$(${yabai} -m query --windows --window | ${jq} -r '.id')
-      
+
       # Stack this window onto existing stack if possible
       ${yabai} -m window $dir --stack $window
       if [[ $? -ne 0 ]]; then
@@ -131,7 +131,7 @@ in
           ${yabai} -m window $window --toggle float
       fi
     '';
-    
+
     # focus the `$1`th on the current display, if it exists.
     focus_nth_space = pkgs.writeShellScript "focus_nth_space" ''
       IDX=$(${yabai} -m query --spaces --display | ${jq} -er ".[$(($1-1))].index") && ${yabai} -m space --focus $IDX
@@ -139,8 +139,10 @@ in
 
     # something has gone horribly wrong...
     reset = pkgs.writeShellScript "reset" ''
-      launchctl stop org.nixos.yabai 
-      launchctl start org.nixos.yabai 
+      /bin/launchctl stop org.nixos.yabai
+      /bin/launchctl start org.nixos.yabai
+      /bin/launchctl stop org.nixos.skhd
+      /bin/launchctl start org.nixos.skhd
 
       ${yabai} -m window --scratchpad recover
     '';
@@ -166,7 +168,7 @@ in
       ${yabai} -m space --toggle gap
     '';
 
-    # fit focused window to the entire screen, 
+    # fit focused window to the entire screen
     windowed_fullscreen = pkgs.writeShellScript "windowed_fullscreen" ''
       LABEL=$(${yabai} -m query --spaces --space | ${jq} '.label')
       if [[ ! $LABEL == _* ]] ; then

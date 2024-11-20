@@ -27,9 +27,6 @@ in
     curl
     ripgrep
     fd
-
-    #samba # TODO: move to the 391 flake and just do ugly impure stuff there
-    # https://apple.stackexchange.com/questions/445372/samba-dot-org-smbd-does-not-start-on-macos-monterey-12-5
   ];
   environment.variables = { EDITOR = "vim"; };
 
@@ -55,7 +52,7 @@ in
       auto-optimise-store = false;
       keep-outputs = true;
       experimental-features = "nix-command flakes";
-      # feeling a little sus after that maplectf chal...
+      # more like pwn-me-mommy
       accept-flake-config = true;
       trusted-users = [ "root" "@admin" ];
       sandbox = true;
@@ -161,20 +158,10 @@ in
 
   system.defaults.CustomUserPreferences = {
 	  "com.apple.desktopservices" = {
-		  # Avoid creating .DS_Store files
+		  # Avoid creating .DS_Store files on external drives
 		  DSDontWriteNetworkStores = true;
 		  DSDontWriteUSBStores = true;
 	  };
-    # this also doesn't work. meh.
-	  "com.apple.Accessibility" = {
-		  ReduceMotionEnabled = 1;
-	  };
-
-    # this doesn't work. this allows Console.app to actually... work
-    # also requires disabling SIP
-    #	"com.apple.system.logging" = {
-    #		System = { Enable-Private-Data = true; }
-    #};
   };
 
   system.activationScripts.postUserActivation.text = ''
@@ -193,17 +180,6 @@ in
       ];
       RunAtLoad = true;
     };
-    # how to make a "memory leak" for your harddrive ;)
-    # "enableCoredump".serviceConfig = {
-    #   ProgramArguments = [
-    #     "/bin/launchctl"
-    #     "limit"
-    #     "core"
-    #     "4611686018427387904"
-    #     "4611686018427387904"
-    #   ];
-    #   RunAtLoad = true;
-    # };
   };
 
   launchd.user.agents = {
@@ -218,87 +194,6 @@ in
       StandardErrorPath = "/tmp/beorg_sync.err.log";
     };
   };
-
-	# FUCK SAMBA FUCK THIS BULLSHIT
-
-
-  # system.activationScripts.samba_lock.text = lib.stringAfter [ "var" ] ''
-    # mkdir -p /var/lock/samba
-    # mkdir -p /var/cache/samba
-    # mkdir -p /var/cache/samba
-  # '';
-# 
-# 
-  # environment.etc."samba/smb.conf".text = ''
-    # [global]
-        # security = user
-        # passdb backend = tdbsam:/etc/samba/private/passdb.tdb
-        # browseable = yes
-        # log file = /var/log/samba/log.%m
-        # writeable = yes
-        # min protocol = NT1
-        # hosts allow = ;	
-        # ntlm auth = yes
-        # lanman auth = no
-        # client lanman auth = no
-    # [ece391_share]
-        # comment = ECE391Shared
-        # path = /Users/ghuebner/School/ECE391/share/
-        # valid users = ghuebner
-        # browseable = yes
-        # writable = yes
-        # guest ok = yes
-  # '';
-# 
-# 
-  # environment.launchDaemons."org.samba.nmbd.plist".text = ''
-    # <?xml version="1.0" encoding="UTF-8"?>
-    # <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    # <plist version="1.0">
-    # <dict>
-    # <key>Label</key>
-    # <string>org.samba.nmbd</string>
-    # <key>OnDemand</key>
-    # <false/>
-    # <key>ProgramArguments</key>
-    # <array>
-    # <string>${pkgs.samba.outPath}/sbin/nmbd</string>
-    # <string>-D</string>
-    # </array>
-    # <key>RunAtLoad</key>
-    # <true/>
-    # <key>WorkingDirectory</key>
-    # <string>/var/lock/samba</string>
-    # <key>ServiceDescription</key>
-    # <string>netbios</string>
-    # </dict>
-    # </plist>
-  # '';
-# 
-  # environment.launchDaemons."org.samba.smbd.plist".text = ''
-    # <?xml version="1.0" encoding="UTF-8"?>
-    # <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    # <plist version="1.0">
-    # <dict>
-    # <key>Label</key>
-    # <string>org.samba.smbd</string>
-    # <key>OnDemand</key>
-    # <false/>
-    # <key>ProgramArguments</key>
-    # <array>
-    # <string>${pkgs.samba.outPath}/sbin/smbd</string>
-    # <string>-D</string>
-    # </array>
-    # <key>RunAtLoad</key>
-    # <true/>
-    # <key>ServiceDescription</key>
-    # <string>netbios</string>
-    # </dict>
-    # </plist>
-# '';
-
-
-  # end samba bullshit
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog

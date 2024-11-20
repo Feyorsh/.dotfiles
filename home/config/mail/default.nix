@@ -14,19 +14,19 @@ let
 
       # from thunderbird, see
       # https://blog.thunderbird.net/2023/01/important-message-for-microsoft-office-365-enterprise-users/
-      msft_client_id = "9e5f94bc-e8a4-4e73-b8be-63364c29d753"; 
+      msft_client_id = "9e5f94bc-e8a4-4e73-b8be-63364c29d753";
       goog_client_id = "";
 
       subs = writeScript "mutt_sed" ''
         #!${pkgs.python3}/bin/python3
         import sys
         import itertools
-        
+
         client_id = {
             "google": "${goog_client_id}",
             "microsoft": "${msft_client_id}",
-                                                                   }
-        
+        }
+
         seen = None
         out = []
         with open(sys.argv[1], 'r') as f:
