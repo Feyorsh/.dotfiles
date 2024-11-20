@@ -44,6 +44,7 @@ in
       vterm
       pdf-tools
       direnv
+      restclient
 
       evil evil-collection evil-snipe
       (evil-org.overrideAttrs(prev: rec {
@@ -73,7 +74,17 @@ in
       helpful
       jinx
 
-      org org-contrib org-modern org-pdftools ox-hugo engrave-faces
+      org org-contrib org-modern org-pdftools engrave-faces
+      (ox-hugo.overrideAttrs(prev: rec {
+        patchPhase = ''
+          for f in ./*.el; do
+              echo ";; Local Variables:" >> $f
+              echo ";; no-native-compile: t" >> $f
+              echo ";; no-byte-compile: t" >> $f
+              echo ";; End:" >> $f
+          done
+        '';
+      }))
       (trivialBuild rec {
         pname = "ob-mathematica";
         version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
@@ -81,12 +92,15 @@ in
           owner = "tririver";
           repo = pname;
           rev = version;
-          sha256 = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
+          sha256 = "NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
         };
         patches = [ ./patches/ob-mathematica.diff ];
       })
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
+
+      # prog-modes
+      jedi # python
       haskell-mode
       markdown-mode
       (nix-mode.overrideAttrs (prev: {
@@ -114,7 +128,9 @@ in
       sage-shell-mode ob-sagemath
       # this seems to blow up the hm closure size... see NixOS/nix#4119
       # treesit-grammars.with-all-grammars
-      (treesit-grammars.with-grammars (_: builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
+      (treesit-grammars.with-grammars (grammars: [
+        grammars.tree-sitter-typst
+      ] ++ (builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
         tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
           language = "tree-sitter-verilog";
           version = "0.0.0+rev=0dacb91";
@@ -126,7 +142,18 @@ in
           };
           meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
         };
-      })))
+      }))))
+      (trivialBuild rec {
+        pname = "typst-ts-mode";
+        version = "42094eb2508f30ca2aba26786768e969476d98fa";
+        src = fetchFromGitea {
+          domain = "codeberg.org";
+          owner = "meow_king";
+          repo = pname;
+          rev = version;
+          sha256 = "KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
+        };
+      })
       # tree-sitter
       # eglot
 
@@ -154,7 +181,8 @@ in
       rainbow-mode
     ]) ++ [
       clang-tools
-      pyright
+      nixfmt-rfc-style
+      # pyright # this is so dogshit lmao
       # pkgs.sourcekit-lsp # swift
       # nil # nix
       # zls # zig

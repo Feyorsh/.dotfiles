@@ -803,7 +803,8 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                                                   (:name "All Mail" :maildir "/school/Archive" :key ?a)
 												  (:name "Spam" :maildir "/personal/Junk Email" :key ?q)
                                                   ))
-                       (mu4e-bookmarks . ((:name "Unread" :query "maildir:/school/INBOX AND flag:unread" :key ?u)
+                       (mu4e-bookmarks . ((:name "Personal" :query "maildir:/school/INBOX AND flag:personal" :key ?p)
+                                          (:name "Unread" :query "maildir:/school/INBOX AND flag:unread" :key ?u)
                                           (:name "Lab" :query "maildir:/school/INBOX AND (from:kwiat@illinois.edu OR subject:Kwiat OR to:phys-kwiat-mailers@mx.uillinois.edu)" :key ?l)))))
              ))
 
@@ -1025,6 +1026,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
     :commands (elfeed)
     :config
     (use-package elfeed-org
+	    :after org
         :demand t
         :config
         (elfeed-org)
@@ -1042,10 +1044,14 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
     (defface elfeed-search-trashed-title-face
         '((((class color)) (:foreground "red" :weight extra-bold)))
       "Face used in search mode for trashed entries.")
-    (push '(trash elfeed-search-trashed-title-face) elfeed-search-face-alist)
+    (defface elfeed-search-prog-title-face
+        '((t :inherit org-todo :slant italic))
+      "Face used in search mode for in-progress entries.")
+    (add-to-list 'elfeed-search-face-alist '(trash elfeed-search-trashed-title-face))
+    (add-to-list 'elfeed-search-face-alist '(prog elfeed-search-prog-title-face))
 
     (setq-default elfeed-search-filter "-trash @6-months-ago +unread")
-    (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("News" . "-trash @1-week-ago +aggregator +unread")))
+    (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("In progress" . "-trash +prog") ("News" . "-trash @1-week-ago +aggregator +unread")))
     (defun fysh/elfeed-pick-filter (filter)
       (interactive (list (alist-get (completing-read "Filter: " (mapcar (lambda (s) (car s)) fysh/elfeed-filters)) fysh/elfeed-filters nil nil 'equal)))
       (setq elfeed-search-filter filter)
@@ -1405,12 +1411,20 @@ Now for Babel:
     :init
     (define-advice org-babel-execute-src-block (:around (fn &rest args) fysh/load-language)
       "Load language if needed"
-      (let* ((language (org-element-property :language (org-element-at-point)))
+      (let* ((element (org-element-at-point))
+             (language (cond
+                        ((eq 'src-block (org-element-type element)) (org-element-property :language element))
+                        ((eq 'babel-call (car (last args))) (car (cadr args)))))
+             (language-sym (intern language))
              (src-alias (cdr (assoc language org-src-lang-modes)))
-             (lang-mode (if src-alias src-alias (intern language))))
-        (when (and (not (cdr (assoc lang-mode org-babel-load-languages)))
-                   (locate-library (concat "ob-" (symbol-name lang-mode))))
-          (add-to-list 'org-babel-load-languages (cons lang-mode t))
+             (unloaded-mode (cond ((and (not (cdr (assoc src-alias org-babel-load-languages)))
+                                    (locate-library (concat "ob-" (symbol-name src-alias))))
+                               src-alias)
+                              ((and (not (cdr (assoc language-sym org-babel-load-languages)))
+                                    (locate-library (concat "ob-" language)))
+                               language-sym))))
+        (when unloaded-mode
+          (add-to-list 'org-babel-load-languages (cons unloaded-mode t))
           (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages))
         (apply fn args)))
     :config
@@ -1563,6 +1577,14 @@ parent."
   (setq org-roam-directory "~/Personal/roam")
   (setq org-roam-capture-templates '(("d" "default" plain "%?" :target (file+head "${slug}.org" "#+TITLE: ${title}\n#+CREATED: %u\n#+LAST_MODIFIED: %U") :unnarrowed t)))
   (org-roam-db-autosync-mode))
+#+end_src
+
+*** Typst
+#+begin_src elisp
+(use-package typst-ts-mode
+    :mode ("\\.typ\\'" . typst-ts-mode)
+    :general-config
+    ('normal 'typst-ts-mode-map "C-c C-c" (lambda () (interactive) (typst-ts-compile 4))))
 #+end_src
 
 *** TODO Python
@@ -1734,6 +1756,7 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 #+begin_src elisp
 (use-package wolfram-mode
+    :after org
     :mode ("\\.m\\'" "\\.wl\\'")
     :init
     (add-to-list 'org-src-lang-modes '("mathematica" . wolfram))
@@ -1781,15 +1804,15 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
 **** TODO hl-warn-mode
-I /swear/ there has to be a built-in to do this, but I couldn't find it. Useful to toggle in vterm buffers to spot errors (in any shell, on any system)
+hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my own version.
 #+begin_src elisp
 (use-package emacs
     :commands fysh/hl-warn-minor-mode
     :config
     (defvar fysh/hl-warn-keywords
-      '(("\\(?:Errors?\\|errors?\\)" 0 'error t)
+      '(("\\(?:%Error:\\|[Ee]rrors?\\)" 0 'error t)
         ("\\(?:Fail\\(?:ed\\|ing\\|s\\)?\\|fail\\(?:ed\\|ing\\|s\\)?\\)" 0 'compilation-error t)
-        ("\\(?:Warnings?\\|warnings?\\)" 0 'warning t)
+        ("\\(?:%Warning-\\|Warnings?\\|warnings?\\)" 0 'warning t)
         ("\\(?:[Nn]otice\\)" 0 'compilation-info t)
         ("\\(?:Lint-\\)" 0 'compilation-line-number t)))
 
@@ -1847,7 +1870,9 @@ I'd like to change the cursor blink behaviour.
     :hook
 	((pdf-view-mode . pdf-view-midnight-minor-mode)
      ;; isearch is kinda useless in PDFs imo
-     (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'pdf-view-mode-map "/" #'pdf-occur))))
+     (evil-collection-setup . (lambda (&rest _)
+                                (general-def 'pdf-view-mode-map "gr" #'revert-buffer-quick)
+                                (general-def 'normal 'pdf-view-mode-map "/" #'pdf-occur))))
 	:general-config
 	('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-down-or-previous-page)
 	('normal 'pdf-view-mode-map "K" #'pdf-view-scroll-up-or-next-page)
@@ -2011,7 +2036,7 @@ Eglot!
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
           . (lambda () (when eglot-enabled (eglot-ensure)))))
   :init
-  (setq eglot-enabled t) ;; let me globally disable eglot
+  (setq eglot-enabled nil) ;; opt-in to use eglot
   :config
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
