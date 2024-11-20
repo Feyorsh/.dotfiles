@@ -207,6 +207,19 @@ in
     # };
   };
 
+  launchd.user.agents = {
+    beorg-sync.serviceConfig = {
+      Program = lib.getExe (pkgs.writeShellApplication {
+        name = "beorg-sync";
+        runtimeInputs = [ pkgs.coreutils ];
+        text = builtins.readFile ./org-sync.sh;
+      });
+      StartInterval = 2 * 60;
+      StandardOutPath = "/tmp/beorg_sync.out.log";
+      StandardErrorPath = "/tmp/beorg_sync.err.log";
+    };
+  };
+
 	# FUCK SAMBA FUCK THIS BULLSHIT
 
 
