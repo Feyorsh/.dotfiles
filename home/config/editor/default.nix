@@ -1,8 +1,10 @@
+{ pkgs, ... }:
 {
   imports = [ ./emacs ];
 
   programs.vim = {
     enable = true;
+    packageConfigurable = pkgs.vim-darwin;
     extraConfig = ''
       if $INSIDE_EMACS == "vterm"
         silent! !vterm_printf "51;Eevil-emacs-state"

@@ -24,6 +24,7 @@ in {
       alt-tab-macos
       monitorcontrol
       time-out-macos
+      keycastr
 
       # (writeScript "hydrate" ''
       #    #!${pkgs.python3}/bin/python3
@@ -31,6 +32,9 @@ in {
       #    import sys
       #    import itertools
       #  '')
+
+      # bloated, but occasionally useful (still don't like it)
+      pkgs.darwin.xcode_15_1
     ];
 
     stateVersion = "23.05";
@@ -55,9 +59,26 @@ in {
     colorScheme = "RosePineMoon";
   };
 
- programs.gpg = {
-   enable = true;
-   mutableKeys = true;
-   mutableTrust = true;
- };
+  launchd.agents = {
+    time-out = {
+      enable = true;
+      config = {
+        Program = "${pkgs.time-out-macos}/Applications/Time Out.app/Contents/MacOS/Time Out";
+        RunAtLoad = true;
+      };
+    };
+    monitorcontrol = {
+      enable = true;
+      config = {
+        Program = "${pkgs.monitorcontrol}/Applications/MonitorControl.app/Contents/MacOS/MonitorControl";
+        RunAtLoad = true;
+      };
+    };
+  };
+
+  programs.gpg = {
+    enable = true;
+    mutableKeys = true;
+    mutableTrust = true;
+  };
 }

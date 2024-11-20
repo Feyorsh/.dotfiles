@@ -8,6 +8,7 @@ in
   ];
 
   # essential packages; my perl-less swiss army chainsaw
+  # some of these are shadowed by per-user packages, these are meant to be user- and machine-agnostic
   environment.systemPackages = with pkgs; [
     coreutils
     findutils
@@ -29,9 +30,6 @@ in
 
     #samba # TODO: move to the 391 flake and just do ugly impure stuff there
     # https://apple.stackexchange.com/questions/445372/samba-dot-org-smbd-does-not-start-on-macos-monterey-12-5
-
-    # I think this is useful if only to tell xcode cli to shut the fuck up
-    pkgs.darwin.xcode_15_1
   ];
   environment.variables = { EDITOR = "vim"; };
 
@@ -50,6 +48,7 @@ in
 
   services.nix-daemon.enable = true;
   nix = {
+    package = pkgs.nixVersions.nix_2_20;
     # https://github.com/NixOS/nix/issues/7273
     # settings.auto-optimise-store = true;
     settings = {
