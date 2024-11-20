@@ -16,7 +16,24 @@
     ignores = lib.splitString "\n" (builtins.readFile ./ignore);
   };
 
-  home.packages = with pkgs; [ git git-lfs git-crypt ];
+  home.packages = with pkgs; [
+    git-crypt
+    (writeShellApplication {
+      name = "git-ignore";
+      runtimeInputs = [ git ];
+      text = ''
+        git add --intent-to-add "$@"
+        git update-index --skip-worktree "$@"
+      '';
+    })
+    (writeShellApplication {
+      name = "git-unignore";
+      runtimeInputs = [ git ];
+      text = ''
+        git update-index --no-skip-worktree "$@"
+      '';
+    })
+  ];
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     magit
