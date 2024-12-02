@@ -182,7 +182,7 @@ in
         "/bin/launchctl"
         "limit"
         "maxfiles"
-        "4096"
+        "10000"
         "4611686018427387904" # can't set unlimited
       ];
       RunAtLoad = true;

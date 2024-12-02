@@ -19,6 +19,12 @@ let
     configureFlags = (prev.configureFlags or []) ++ [
       "--with-xwidgets"
     ];
+    preConfigure = ''
+      configureFlagsArray+=(
+        "CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT"
+      )
+    '';
+
 
     buildInputs = (prev.buildInputs or []) ++ [
       pkgs.darwin.apple_sdk_11_0.frameworks.WebKit
@@ -180,9 +186,11 @@ in
       }))
       rainbow-mode
     ]) ++ [
-      clang-tools
       nixfmt-rfc-style
-      # pyright # this is so dogshit lmao
+
+      # LSP
+      clang-tools
+      pyright # really annoying in practice; need to raise fd limit
       # pkgs.sourcekit-lsp # swift
       # nil # nix
       # zls # zig

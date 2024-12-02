@@ -2042,8 +2042,7 @@ Eglot!
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0
         eglot-autoshutdown t
-        eglot-autoreconnect nil
-        eglot-ignored-server-capabilities '(:workspace/didChangeWatchedFiles)))
+        eglot-autoreconnect nil))
 #+end_src
 
 *** Treesitter
