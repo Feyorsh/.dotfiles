@@ -28,7 +28,7 @@ in {
 
 
       # bloated, but occasionally useful (still don't like it)
-      pkgs.darwin.xcode_15_1
+      pkgs.darwin.xcode_16_1
     ];
 
     stateVersion = "23.05";

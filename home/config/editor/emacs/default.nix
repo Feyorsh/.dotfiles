@@ -165,6 +165,9 @@ in
 
       all-the-icons
       (all-the-icons-completion.overrideAttrs (prev: {
+        packageRequires = (prev.packageRequires or []) ++ [
+          epkgs.compat
+        ];
         patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
           name = "marginalia.patch";
           url = "https://patch-diff.githubusercontent.com/raw/iyefrat/all-the-icons-completion/pull/33.patch";
