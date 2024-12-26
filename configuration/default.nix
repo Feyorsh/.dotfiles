@@ -103,7 +103,7 @@ in
   programs.fish.enable = true;
   programs.zsh.enable = true;
 
-  networking.localHostName = "Aqua";
+  networking.hostName = "Aqua";
   networking.computerName = "Aqua";
   time.timeZone = "America/Chicago";
 
