@@ -26,6 +26,7 @@ in {
       time-out-macos
       keycastr
 
+      firefox-bin
 
       # bloated, but occasionally useful (still don't like it)
       pkgs.darwin.xcode_16_1

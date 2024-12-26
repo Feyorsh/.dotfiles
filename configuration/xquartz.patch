@@ -1,0 +1,29 @@
+diff --git a/pkgs/by-name/xq/xquartz/package.nix b/pkgs/by-name/xq/xquartz/package.nix
+index 7f9b368d1dc0..c23b05eb7767 100644
+--- a/pkgs/by-name/xq/xquartz/package.nix
++++ b/pkgs/by-name/xq/xquartz/package.nix
+@@ -222,8 +222,8 @@ stdenv.mkDerivation {
+     EOF
+     chmod +x $out/etc/X11/xinit/xinitrc.d/99-quartz-wm.sh
+ 
+-    substituteInPlace $out/etc/X11/xinit/privileged_startx.d/20-font_cache \
+-      --replace ${xorg.xinit} $out
++    #substituteInPlace $out/etc/X11/xinit/privileged_startx.d/20-font_cache \
++    #  --replace ${xorg.xinit} $out
+ 
+     cp ${./font_cache} $out/bin/font_cache
+     substituteInPlace $out/bin/font_cache \
+diff --git a/pkgs/servers/x11/xorg/overrides.nix b/pkgs/servers/x11/xorg/overrides.nix
+index 69f8f2ac8801..6fa2355d88f8 100644
+--- a/pkgs/servers/x11/xorg/overrides.nix
++++ b/pkgs/servers/x11/xorg/overrides.nix
+@@ -770,7 +770,8 @@ self: super:
+       version = lib.getVersion attrs;
+       commonBuildInputs = attrs.buildInputs ++ [ xorg.xtrans xorg.libxcvt ];
+       commonPropagatedBuildInputs = [
+-        dbus libGL libGLU xorg.libXext xorg.libXfont xorg.libXfont2 libepoxy libunwind
++        dbus libGL libGLU xorg.libXext xorg.libXfont xorg.libXfont2 libepoxy
++      ] ++ lib.optional (!stdenv.hostPlatform.isDarwin) libunwind ++ [
+         xorg.libxshmfence xorg.pixman xorg.xorgproto zlib
+       ];
+       # XQuartz requires two compilations: the first to get X / XQuartz,

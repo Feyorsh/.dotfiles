@@ -30,6 +30,10 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    firefox-darwin = {
+      url = "github:bandithedoge/nixpkgs-firefox-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
@@ -41,6 +45,7 @@
         config = { allowUnfree = true; };
         overlays = [
           fyshpkgs.overlay.${system}
+          inputs.firefox-darwin.overlay
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
               icon = ./assets/icons/spotify.icns;
