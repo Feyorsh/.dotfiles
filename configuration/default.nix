@@ -32,7 +32,7 @@ in
 
   fonts = {
     packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "CascadiaCode" ]; })
+      cascadia-code
       source-sans-pro
       source-serif-pro
       sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
@@ -45,7 +45,7 @@ in
 
   services.nix-daemon.enable = true;
   nix = {
-    package = pkgs.nixVersions.nix_2_20;
+    package = pkgs.nixVersions.latest;
     # https://github.com/NixOS/nix/issues/7273
     # settings.auto-optimise-store = true;
     settings = {
@@ -114,6 +114,14 @@ in
   security.pam.enableSudoTouchIdAuth = true;
 
   services.xquartz.enable = true;
+
+  programs.ccache = {
+    enable = true;
+    packageNames = [
+      "emacs29-macport"
+      "llvm"
+    ];
+  };
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 

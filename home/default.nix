@@ -28,8 +28,10 @@ in {
 
       firefox-bin
 
-      # bloated, but occasionally useful (still don't like it)
-      pkgs.darwin.xcode_16_1
+      (runCommandLocal "xcode" {} ''
+         mkdir -p $out/Applications/Xcode.app
+         ln -s ${pkgs.darwin.xcode_16_1}/* $out/Applications/Xcode.app/
+       '')
     ];
 
     stateVersion = "23.05";

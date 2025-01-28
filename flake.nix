@@ -39,6 +39,7 @@
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
     let
       system = "aarch64-darwin";
+      inherit (nixpkgs) lib;
       inherit (darwin.lib) darwinSystem;
       pkgs = import nixpkgs {
         inherit system;
@@ -85,6 +86,7 @@
                       inputs.mac-app-util.darwinModules.default
 		                  inputs.pwnypus.darwinModules.chmodbpf
 		                  inputs.pwnypus.darwinModules.xquartz
+		                  inputs.fyshpkgs.darwinModules.ccache
 	                  ];
         };
 
