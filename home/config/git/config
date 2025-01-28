@@ -2,6 +2,8 @@
 	email = george@feyor.sh
 	name = George Huebner
 	signingkey = ~/.ssh/id_ed25519
+[github]
+	user = Feyorsh
 [gpg]
 	format = ssh
 #[gpg "ssh"]
@@ -16,6 +18,8 @@
 	rebase = true
 [rebase]
 	autoStash = true
+[help]
+	autoCorrect = prompt
 [core]
 	editor = vim
 [alias]
