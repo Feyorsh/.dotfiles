@@ -145,7 +145,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
                                  (when (and (>= (recursion-depth) 1)
                                             (active-minibuffer-window))
                                    (abort-recursive-edit))))
-           (kill-emacs . (lambda () (append-to-file (emacs-uptime) nil (expand-file-name "uptime" user-emacs-directory))))
+           (kill-emacs . (lambda () (append-to-file (concat (emacs-uptime) "\n") nil (expand-file-name "uptime" user-emacs-directory))))
            ((text-mode prog-mode) . (lambda () (setq show-trailing-whitespace t))))
 
     :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
@@ -1797,6 +1797,7 @@ Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
+    :commands (vterm-at-file)
 	:general
 	(leader-def "t" #'vterm)
 	:general-config
@@ -1804,6 +1805,14 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	('vterm-mode-map "M--" #'text-scale-decrease)
 	('vterm-mode-map "M-:" #'eval-expression)
 	:config
+    (defun vterm-at-file (FILENAME)
+      "Create a new Vterm buffer at FILENAME"
+      (interactive (nbutlast (find-file-read-args "Spawn Vterm at: " t)))
+      (if (and (not (called-interactively-p 'interactive))
+               (not (file-exists-p FILENAME)))
+          (error "%s does not exist" FILENAME)
+        (let ((default-directory (file-name-directory FILENAME)))
+          (vterm '(4)))))
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
 	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
@@ -1836,12 +1845,30 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
 *** Tramp
 #+begin_src elisp
 (use-package tramp
-    :init
+  :commands (sudo-find-file sudo-this-file)
+  :init
   (setq vc-handled-backends '(Git))
   :config
   (setq tramp-default-method "ssh")
   (setq tramp-auto-save-directory (expand-file-name "tramp-autosave" user-emacs-directory))
   (setq enable-remote-dir-locals t)
+
+  ;; from karthinks
+  (defun sudo-find-file (file)
+    "Open FILE as root."
+    (interactive "FOpen file as root: ")
+    (when (file-writable-p file)
+      (user-error "File is user writeable, aborting sudo"))
+    (find-file (if (file-remote-p file)
+                   (concat "/" (file-remote-p file 'method) ":"
+                           (file-remote-p file 'user) "@" (file-remote-p file 'host)
+                           "|sudo:root@"
+                           (file-remote-p file 'host) ":" (file-remote-p file 'localname))
+                 (concat "/sudo:root@localhost:" file))))
+  (defun sudo-this-file ()
+    "Open the current file as root."
+    (interactive)
+    (sudo-find-file (file-truename buffer-file-name)))
 
   ;; supposedly this allows reuse of ssh connections
   (setq tramp-ssh-controlmaster-options
