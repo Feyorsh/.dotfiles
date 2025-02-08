@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
-  imports = [ ./emacs ];
+  imports = [
+    ./emacs
+    ./spell.nix
+  ];
 
   programs.vim = {
     enable = true;

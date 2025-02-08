@@ -1671,6 +1671,12 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
     )
 #+end_src
 
+*** Shell
+#+begin_src elisp
+(use-package sh-script
+  :hook (sh-mode . flymake-mode))
+#+end_src
+
 *** Markdown
 #+begin_src elisp
 (use-package markdown-mode
@@ -2162,6 +2168,16 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
     :general
     ('normal "z =" #'jinx-correct)
     ('global "C-M-$" #'jinx-languages))
+
+(use-package flymake-vale
+    :hook ((text-mode org-mode markdown-mode message-mode) . flymake-vale-load)
+    :config
+    (setq flymake-vale-program-args `("--config" ,(expand-file-name "~/.config/vale/.vale.ini")))
+    )
+
+(use-package flymake
+    :hook (flymake-mode . eldoc-mode)
+    )
 #+end_src
 
 *** Zone

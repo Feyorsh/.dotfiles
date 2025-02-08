@@ -1,6 +1,5 @@
 { config, lib, pkgs, ... }:
 let
-  aspell = with pkgs; (aspellWithDicts (dicts: with dicts; [ en en-computers en-science ]));
   emacs' = pkgs.emacs29-macport.overrideAttrs (prev: {
     patches = (prev.patches or []) ++ [
       (pkgs.fetchpatch {
@@ -78,7 +77,6 @@ in
 
       gcmh
       helpful
-      jinx
 
       org org-contrib org-modern org-pdftools engrave-faces
       (ox-hugo.overrideAttrs(prev: rec {
@@ -190,6 +188,7 @@ in
       rainbow-mode
     ]) ++ [
       nixfmt-rfc-style
+      shellcheck
 
       # LSP
       clang-tools
@@ -199,9 +198,6 @@ in
       # zls # zig
       # gopls # go
     ]);
-
-
-  home.file.".aspell.conf".text = "data-dir ${aspell}/lib/aspell";
 
   home.packages = let
     emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
