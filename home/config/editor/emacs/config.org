@@ -1396,10 +1396,6 @@ Need to stop loading my Org files on startup...
                         ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
                         ;; this is an unorthodox usecase, but I only want top level refiling
                         ,`(,(expand-file-name "stasis.org" org-directory) :level . 9000))))
-(add-hook 'emacs-startup-hook
-		  (lambda ()
-			(progn (find-file-noselect (expand-file-name "agenda.org" org-directory))
-				   (find-file-noselect "~/.dotfiles/home/config/editor/emacs/config.org"))))
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -2056,7 +2052,6 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode
     :mode "\\.ledger\\'"
-    :hook (emacs-startup . (lambda () (find-file-noselect "~/Personal/Finances/expenses.ledger")))
     :custom
     (ledger-reports
      '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
