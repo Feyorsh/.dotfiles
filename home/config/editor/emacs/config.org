@@ -169,6 +169,14 @@ Forgot where I sourced all this, but basically take a rather conservative approa
          "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/" "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/")))))
 #+end_src
 
+#+begin_src elisp
+(use-package recentf
+  :hook (after-init . recentf-mode)
+  :general-config (leader-def "r" #'recentf-open-most-recent-file)
+  :config
+  (setq recentf-max-saved-items 15))
+#+end_src
+
 ** macOS Interaction
 This tidbit is copied straight from [[https://gist.github.com/a3ammar/2357d6115ddd999c23e6][this gist]].
 #+begin_src elisp
