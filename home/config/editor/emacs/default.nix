@@ -51,7 +51,14 @@ in
       direnv
       restclient
 
-      evil evil-collection evil-snipe
+      evil evil-snipe
+      (evil-collection.overrideAttrs {
+        patches = [(fetchpatch {
+          url = "https://github.com/emacs-evil/evil-collection/commit/05731c551be8cdda40ae6479adfb30b7e9c7fe39.patch";
+          hash = "sha256-QAYIVyj5bmBNItiLn7ObeAY+aup13xX6ahv9TZ5+7sg=";
+          revert = true;
+        })];
+      })
       (evil-org.overrideAttrs(prev: rec {
         src = fetchFromGitHub {
           owner = "doomelpa";

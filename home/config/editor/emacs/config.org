@@ -868,7 +868,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 	(setq mu4e-get-mail-command "mbsync -a"
 		  sendmail-program "msmtp"
 		  send-mail-function 'sendmail-send-it
-		  mu4e-update-interval 120
+		  mu4e-update-interval 240
 		  mu4e-change-filenames-when-moving t)
 
 	(setq message-kill-buffer-on-exit t
