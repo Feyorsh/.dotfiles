@@ -75,6 +75,8 @@ in
       embark embark-consult
       prescient
 
+      gptel
+
       gcmh
       helpful
 

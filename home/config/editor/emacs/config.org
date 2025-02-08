@@ -585,6 +585,38 @@ Oldest trick in the book! (Not really.)
 	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode"))))
 #+end_src
 
+**** LLMs
+#+begin_src elisp
+(use-package gptel
+    :config
+  (setq gptel-default-mode 'org-mode)
+
+  (setq gptel-backend (gptel-make-openai "Perplexity-WebUI"
+    :protocol "http"
+    :host "localhost:4149"
+    :key "nil"
+    :endpoint "/openai/v1/chat/completions"
+    :stream t
+    :models '((claude-3-5-sonnet
+              :description "Highest level of intelligence and capability"
+              :capabilities (nosystem media tool cache)
+              :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp" "application/pdf")
+              :context-window 200
+              :cutoff-date "2024-04"))))
+
+  (defun fysh/start-perplexity-webui ()
+    "Startup local OpenAI API shim. If session has expired, user will be prompted for a sign-in link (sent to their email)."
+    (interactive)
+  (let ((default-directory (expand-file-name "~/.cache/perplexity-webui")))
+  (unless (file-exists-p default-directory) (make-directory default-directory t))
+  (set-process-filter
+   (start-process "perplexity-webui-server" nil
+                  "nix" "run" "github:feyorsh/perplexity-webui-server"
+                  "-s" "PERPLEXITY_WEBUI_EMAIL" "georgeh3@illinois.edu"
+                  "-s" "PERPLEXITY_WEBUI_PORT" "4149")
+   (lambda (proc string) (when (string-match "paste the link you received by email:" string) (process-send-string proc (concat (read-string "Sign in link for Perplexity AI: ") "\n"))))))
+  ))
+#+end_src
 **** TODO Other stuff
 At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
 #+begin_src elisp
