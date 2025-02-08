@@ -38,6 +38,7 @@ in
       sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
       libertine
       jetbrains-mono
+      julia-mono
       twemoji-color-font
       emacs-all-the-icons-fonts
     ];

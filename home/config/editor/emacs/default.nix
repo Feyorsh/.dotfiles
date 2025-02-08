@@ -139,10 +139,8 @@ in
       ledger-mode
       wolfram-mode
       sage-shell-mode ob-sagemath
-      # this seems to blow up the hm closure size... see NixOS/nix#4119
-      # treesit-grammars.with-all-grammars
+      # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
       (treesit-grammars.with-grammars (grammars: [
-        grammars.tree-sitter-typst
       ] ++ (builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
         tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
           language = "tree-sitter-verilog";
@@ -167,8 +165,15 @@ in
           sha256 = "KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
         };
       })
-      # tree-sitter
-      # eglot
+      (julia-ts-mode.overrideAttrs (prev: {
+        src = fetchFromGitHub {
+          owner = "JuliaEditorSupport";
+          repo = "julia-ts-mode";
+          rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
+          sha256 = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
+        };
+      }))
+      julia-mode julia-vterm ob-julia-vterm
 
       all-the-icons
       (all-the-icons-completion.overrideAttrs (prev: {

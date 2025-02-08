@@ -1453,16 +1453,21 @@ Now for Babel:
       "Load language if needed"
       (let* ((element (org-element-at-point))
              (language (cond
-                        ((eq 'src-block (org-element-type element)) (org-element-property :language element))
-                        ((eq 'babel-call (car (last args))) (car (cadr args)))))
-             (language-sym (intern language))
+                         ((eq 'src-block (org-element-type element)) (org-element-property :language element))
+                         ((eq 'babel-call (car (last args))) (car (cadr args)))))
+             (language-sym (ignore-errors (intern language)))
+             (try-ob-load (lambda (sym)
+                            (let* ((symstr (symbol-name sym))
+                                   (ob-alias-p (function-alias-p (intern (concat "org-babel-execute:" symstr))))
+                                   (ob-alias (when ob-alias-p (string-trim-left
+                                                               (symbol-name (car ob-alias-p))
+                                                               "org-babel-execute:"))))
+                              (when (and
+                                     (not (cdr (assoc sym org-babel-load-languages)))
+                                     (locate-library (concat "ob-" (if ob-alias-p ob-alias symstr))))
+                                (if ob-alias-p (intern ob-alias) sym)))))
              (src-alias (cdr (assoc language org-src-lang-modes)))
-             (unloaded-mode (cond ((and (not (cdr (assoc src-alias org-babel-load-languages)))
-                                    (locate-library (concat "ob-" (symbol-name src-alias))))
-                               src-alias)
-                              ((and (not (cdr (assoc language-sym org-babel-load-languages)))
-                                    (locate-library (concat "ob-" language)))
-                               language-sym))))
+             (unloaded-mode (seq-some try-ob-load (list src-alias language-sym))))
         (when unloaded-mode
           (add-to-list 'org-babel-load-languages (cons unloaded-mode t))
           (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages))
@@ -1633,6 +1638,27 @@ parent."
     :mode ("\\.py\\'" . python-ts-mode)
     :interpreter ("python" . python-ts-mode))
 #+end_src
+
+*** Julia
+#+begin_src elisp
+(use-package julia-ts-mode
+    :mode ("\\.jl\\'" . julia-ts-mode)
+    :interpreter ("julia" . julia-ts-mode)
+    )
+
+(use-package julia-vterm
+    :hook (julia-ts-mode . julia-vterm-mode))
+
+(use-package ob-julia-vterm
+	;; :after julia-vterm
+	:init
+    ;; (add-to-list 'org-src-lang-modes '("mathematica" . wolfram))
+    ;; (add-to-list 'org-babel-tangle-lang-exts '("mathematica" . "wl"))
+    (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
+    (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm)
+	(setq org-babel-default-header-args:julia-vterm '((:session . t))))
+#+end_src
+
 
 *** TODO Zig
 Panic because chals are due soon 😰
@@ -2136,6 +2162,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 								   (csharp-mode . csharp-ts-mode)
 								   (java-mode . java-ts-mode)
 								   (ruby-mode . ruby-ts-mode)
+								   (julia-mode . julia-ts-mode)
 								   (python-mode . python-ts-mode)))
 	(setq auto-mode-case-fold nil)
 	(add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-ts-mode))
@@ -2408,7 +2435,8 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
   (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
   (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
   (set-fontset-font "fontset-default" 'symbol (font-spec :family "Sarasa UI J" :size 15))
-  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji")))
+  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji"))
+  (set-fontset-font "fontset-default" 'braille (font-spec :family "JuliaMono")))
 
 (defun fonts/org ()
   (if org-modern-mode
