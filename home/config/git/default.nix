@@ -4,6 +4,9 @@
     enable = true;
     lfs.enable = true;
     delta.enable = true;
+    iniContent.delta.magit-delta = {
+      line-numbers = false;
+    };
 
     includes = [
       {
@@ -37,7 +40,7 @@
   ];
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
-    magit
+    magit magit-delta
     forge
   ]);
 }

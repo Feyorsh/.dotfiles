@@ -2072,7 +2072,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 (use-package magit
     :general
   (leader-def
-    "g b" #'magit-blame
+      "g b" #'magit-blame
     "g d" #'magit-diff
     "g f" #'magit-find-file
     "g l" #'magit-log
@@ -2112,6 +2112,9 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     :after magit
     :general
     ('magit-status-mode-map "@" #'forge-dispatch))
+
+(use-package magit-delta
+    :hook (magit-mode . magit-delta-mode))
 #+end_src
 
 *** TODO Debugger
