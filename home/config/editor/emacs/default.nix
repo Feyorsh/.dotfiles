@@ -50,6 +50,7 @@ in
       pdf-tools
       direnv
       restclient
+      disaster
 
       evil evil-snipe
       (evil-collection.overrideAttrs {

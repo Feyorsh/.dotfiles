@@ -1704,6 +1704,27 @@ I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at
 ~gas-mode~ was pretty bad last time I tried it
 #+begin_src elisp
 (setq asm-comment-char ?\#)
+
+(use-package disaster
+    :config
+  (setq disaster-cflags (setq disaster-cxxflags "-Wno-everything"))
+    :init
+  (define-advice disaster (:around (fn &rest args) cross-compile)
+    (interactive)
+    (if (and current-prefix-arg (mapc (lambda (exe)
+                                        (or (executable-find exe) (user-error "disaster: %s not found" exe)))
+                                      '("zig" "jq")))
+        (let* ((monch (lambda (prompt collection default)
+                        (completing-read prompt (split-string collection " ") nil nil nil nil default)))
+               (targets (split-string (shell-command-to-string "zig targets | jq -r '.arch,.os,.abi | join(\" \")'") "\n" t))
+               (host-target (mapcar (lambda (s) (car (split-string s "[ \.\t\n\r]+"))) (split-string (shell-command-to-string "zig env | jq -r '.target'") "-")))
+               (target-arg (apply #'format " -target %s-%s-%s" (cl-mapcar #'monch '("Arch: " "OS: " "ABI: ") targets host-target)))
+               (disaster-cc "zig cc")
+               (disaster-cxx "zig c++")
+               (disaster-cflags (concat disaster-cflags target-arg))
+               (disaster-cxxflags (concat disaster-cxxflags target-arg)))
+          (apply fn args))
+      (apply fn args))))
 #+end_src
 
 *** (System)Verilog
