@@ -27,8 +27,8 @@ in
     curl
     ripgrep
     fd
+    jq
   ];
-  environment.variables = { EDITOR = "vim"; };
 
   fonts = {
     packages = with pkgs; [

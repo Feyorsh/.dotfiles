@@ -23,6 +23,9 @@
       K back-scroll
     '';
   };
+  home.sessionVariables = {
+    PAGER = "less -FR";
+  };
 
   home.packages = with pkgs; [
     (writeShellApplication {
