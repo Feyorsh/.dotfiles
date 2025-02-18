@@ -29,13 +29,55 @@ let
       pkgs.darwin.apple_sdk_11_0.frameworks.WebKit
     ];
   });
+
+  emacsWrapped = let
+    emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
+                        in (epkgs.overrideScope config.programs.emacs.overrides).emacsWithPackages;
+    final = emacsWithPackages config.programs.emacs.extraPackages;
+  in
+    pkgs.symlinkJoin {
+      name = "emacs";
+      paths = [ final ];
+      nativeBuildInputs = [
+        # (pkgs.substitute {
+        #   src = (pkgs.makeDarwinBundle {
+        #     name = "emacsclient";
+        #     exec = "emacsclient";
+        #     icon = "Emacs.icns";
+        #   });
+        #   substitutions = [
+        #     "--replace-fail"
+        #     ''"emacsclient" "emacsclient"''
+        #     ''"emacsclient" "emacsclient" "Emacs" "${lib.boolToString true}"''
+        #   ];
+        # })
+        pkgs.makeWrapper
+      ];
+      # incredibly cursed setup: this ensures emacsclient starts up the server if it isn't running (the path to emacs is important because of pathing) and that it doesn't create a new frame if run from within emacs.
+      postBuild = ''
+        # rm $out/Applications/Emacs.app/Contents/MacOS/Emacs
+        # makeWrapper $out/bin/emacsclient $out/Applications/Emacs.app/Contents/MacOS/Emacs --inherit-argv0 --add-flags "-c -a $out/Applications/Emacs.app/Contents/MacOS/.Emacs-wrapped"
+        rm $out/bin/emacsclient
+        makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _t "-c" --add-flags "\"\''${_t/\''${INSIDE_EMACS:+*}/-u}\" -a $out/Applications/Emacs.app/Contents/MacOS/Emacs"
+
+        rm $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
+        cp ${./emacs.icns} $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
+      '';
+    };
 in
 {
   imports = [ ../../mail ];
 
-  programs.emacs.enable = false; # this is intentional
-  programs.emacs.package = emacs';
-  programs.emacs.extraPackages = epkgs: with pkgs; ((with epkgs; [
+  home.packages = [ emacsWrapped ];
+
+  home.sessionVariables = {
+    EDITOR = "emacsclient";
+  };
+
+  programs.emacs = {
+    enable = false; # intentional
+    package = emacs';
+    extraPackages = epkgs: with pkgs; ((with epkgs; [
       erc erc-hl-nicks
       insert-kaomoji
       ement
@@ -214,6 +256,7 @@ in
       # zls # zig
       # gopls # go
     ]);
+  };
 
   home.packages = let
     emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
