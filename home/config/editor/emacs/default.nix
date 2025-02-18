@@ -132,7 +132,24 @@ in
       helpful
       devdocs
 
-      org org-contrib org-modern org-pdftools engrave-faces
+      (trivialBuild rec {
+        pname = "org";
+        version = "9.7.18-git";
+        src = fetchFromGitea {
+          domain = "code.tecosaur.net";
+          owner = "tec";
+          repo = "org-mode";
+          rev = version;
+          hash = "sha256-KcBjdo+WWnwXdYGkF0seuvuuc1edaG6TM9e14TG7Brg=";
+          forceFetchGit = true;
+        };
+        buildPhase = ''
+          emacs -batch -Q -L lisp -l ../mk/org-fixup \
+            --eval '(progn (setq org-fake-release "${version}" org-fake-git-version "${version}-fake") (org-make-autoloads))'
+        '';
+        preInstall = "cd lisp";
+      })
+      org-contrib org-modern org-pdftools engrave-faces
       (ox-hugo.overrideAttrs(prev: rec {
         patchPhase = ''
           for f in ./*.el; do
@@ -142,7 +159,7 @@ in
               echo ";; End:" >> $f
           done
         '';
-      }))
+      })) ox-clip
       (trivialBuild rec {
         pname = "ob-mathematica";
         version = "b358d4e55705a00162d7615ae7594235da7b2e4e";

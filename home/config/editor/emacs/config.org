@@ -1510,81 +1510,83 @@ Need to stop loading my Org files on startup...
 #+begin_src elisp
 (use-package org
 	:init
-  (add-to-list 'debug-ignored-errors "\\`Capture abort:")
+  (setq pdf-annot-latex-header "\\documentclass{article}
+\[DEFAULT-PACKAGES]
+\[PACKAGES]
+\\usepackage{xcolor}
+\\setlength{\\textwidth}{12cm}")
   (setq org-fold-core-style 'overlays) ;; org-cycle bug
 
   ;; inspiration from abo-abo's oremacs
   (define-advice org-insert-link (:around (fn &rest args) fysh/dwim-clipboard)
-     (let ((clipboard-url (and kill-ring
-                             (string-match-p "^http" (current-kill 0))
-                             (current-kill 0))))
-       (when clipboard-url (org-link--add-to-stored-links clipboard-url nil))
-       (ignore-errors (funcall-interactively fn args))
-       (when clipboard-url (setq org-stored-links (delq (assoc clipboard-url org-stored-links) org-stored-links)))))
+    (let ((clipboard-url (and kill-ring
+                              (string-match-p "^http" (current-kill 0))
+                              (current-kill 0))))
+      (when clipboard-url (org-link--add-to-stored-links clipboard-url nil))
+      (unwind-protect
+           (funcall-interactively fn args)
+        (when clipboard-url (setq org-stored-links (delq (assoc clipboard-url org-stored-links) org-stored-links))))))
   :general
   ("C-c l" #'org-store-link)
-  (leader-def "a" (lambda () (interactive) (org-agenda nil "i")))
-  :hook ((org-mode . (lambda () (corfu-mode -1)))
+  :hook ((org-mode . (lambda () (jinx-mode -1)))
          (org-after-refile-insert . save-buffer))
   :config
   (setq org-src-preserve-indentation t
 		org-src-fontify-natively t
+        org-src-window-setup 'current-window
+        org-indirect-buffer-display 'current-window
 		org-export-with-smart-quotes t
 		org-latex-prefer-user-labels t
 		org-list-allow-alphabetical t
 		org-confirm-babel-evaluate nil
-		org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -xelatex %f")
+		org-return-follows-link t
+		;; org-latex-pdf-process '("latexmk -shell-escape -bibtex -f -latex %f")
         org-latex-image-default-width ".5\\textwidth"
 		org-startup-folded t
 		org-cycle-include-plain-lists 'integrate
         org-list-indent-offset 1
         org-list-demote-modify-bullet '(("-" . "+") ("+" . "*") ("*" . "-"))
-		org-agenda-skip-scheduled-if-done t
-        org-agenda-skip-deadline-if-done t
-        org-agenda-skip-timestamp-if-done t
-        org-log-into-drawer t
-        org-archive-location "archive.org::* %s"
-        org-archive-file-header-format nil
-		org-use-sub-superscripts "{}"
+		org-use-sub-superscripts '{}
 		;; org-modern
 		org-auto-align-tags nil
 		org-tags-column 0
 		org-catch-invisible-edits 'show-and-error
 		org-special-ctrl-a/e t
-		org-insert-heading-respect-content t
-		org-hide-emphasis-markers t
+		org-insert-heading-respect-content nil
 		org-pretty-entities t
-        org-ellipsis "…"
-        org-use-fast-todo-selection 'expert
-        org-agenda-inhibit-startup t
-		org-agenda-window-setup 'current-window
-		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
-		org-agenda-tags-column 0
-		org-agenda-block-separator ?─
-		org-agenda-time-grid
-		'((daily today require-timed)
-		  (800 1000 1200 1400 1600 1800 2000)
-		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-		org-agenda-current-time-string
-		"⭠ now ─────────────────────────────────────────────────")
+        org-ellipsis " ▾"
+        org-use-fast-todo-selection 'expert)
   (setq org-show-notification-timeout nil
         org-show-notification-handler (lambda (message) (fysh/notif-alert "Org-mode" message nil nil nil nil org-show-notification-timeout "/System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/Resources/Ringtones/Radial-EncoreInfinitum.m4r")))
-  (setq org-agenda-custom-commands
-        '(("i" "Agenda/Inbox"
-           ((agenda "")
-            (tags-todo "INBOX"))
-           ((org-agenda-tag-filter-preset '("-STASIS"))
-            (org-agenda-show-inherited-tags nil)))))
-  (setq org-refile-use-outline-path 'file)
-  (setq org-outline-path-complete-in-steps nil)
   (add-to-list 'org-latex-packages-alist '("" "listings"))
-  :custom
-  (org-directory "~/Personal/org")
-  (org-agenda-files `(,org-directory))
-  (org-refile-targets `((nil :maxlevel . 5)
-                        ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
-                        ;; this is an unorthodox usecase, but I only want top level refiling
-                        ,`(,(expand-file-name "stasis.org" org-directory) :level . 9000))))
+  (add-to-list 'display-buffer-alist '("\\*Org Links\\*" display-buffer-no-window (allow-no-window . t))))
+#+end_src
+#+begin_src elisp
+(use-package org
+    :hook (org-mode . org-setup-<>-syntax-fix)
+    :init
+    (defun org-mode-<>-syntax-fix (start end)
+      "Change syntax of characters ?< and ?> to symbol within source code blocks."
+      (let ((case-fold-search t))
+        (when (eq major-mode 'org-mode)
+          (save-excursion
+            (goto-char start)
+            (while (re-search-forward "<\\|>" end t)
+              (when (save-excursion
+                      (and
+                       (re-search-backward "[[:space:]]*#\\+\\(begin\\|end\\)_src\\_>" nil t)
+                       (string-equal (downcase (match-string 1)) "begin")))
+                ;; This is a < or > in an org-src block
+                (put-text-property (point) (1- (point))
+                                   'syntax-table (string-to-syntax "_"))))))))
+
+    (defun org-setup-<>-syntax-fix ()
+      "Setup for characters ?< and ?> in source code blocks.
+Add this function to `org-mode-hook'."
+      (make-local-variable 'syntax-propertize-function)
+      (setq syntax-propertize-function 'org-mode-<>-syntax-fix)
+      (syntax-propertize (point-max)))
+    )
 #+end_src
 And now to make it *pretty*
 #+begin_src elisp
@@ -1609,8 +1611,6 @@ And now to make it *pretty*
           ("PROG" :background "deep pink" :foreground "white")
           ("LATE" :background "dark red" :foreground "white")
           ("CANCELED" :background "dark red" :foreground "white"))))
-;;:custom-face
-;;(org-modern-block-name ((t (:weight light :height 0.9)))))
 
 ;; tecosaur the goat for this one
 (defvar +org-mode-left-margin-width 1
@@ -1729,6 +1729,7 @@ Adding links to PDFs with Org.
 Org capture setup.
 #+begin_src elisp
 (use-package org
+    :init (add-to-list 'debug-ignored-errors "\\`Capture abort:")
     :general
   (leader-def "c" #'org-capture)
   :config
@@ -1740,9 +1741,87 @@ Org capture setup.
 				   "* TODO %A\nDEADLINE: %t\n  %i" :empty-lines 1)
 			,`("r" "Reading list" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Reading list")
 				   "- %(with-temp-buffer (org-insert-link) (buffer-substring-no-properties (point-min) (point-max)))")
+            ,`("e" "Email" entry ,`(file ,(expand-file-name "inbox.org" org-directory))
+                   "* TODO %:fromname: %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t))")
 			,`("v" "Vocab" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Vocab List")
 				   "- %?")))
   )
+#+end_src
+Agenda stuff
+#+begin_src elisp
+(use-package org
+    :general
+  (leader-def "a" (lambda () (interactive) (org-agenda nil "i")))
+  :config
+  (setq org-log-into-drawer t
+        org-archive-location "archive.org::* %s"
+        org-archive-file-header-format nil
+
+        org-extend-today-until 3
+        org-use-effective-time t
+
+		org-agenda-skip-scheduled-if-done t
+        org-agenda-skip-deadline-if-done t
+        org-agenda-skip-timestamp-if-done t
+        org-agenda-inhibit-startup t
+		org-agenda-window-setup 'current-window
+		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
+		org-agenda-tags-column 0
+		org-agenda-block-separator ?─
+		org-agenda-time-grid
+		'((daily today require-timed)
+		  (800 1000 1200 1400 1600 1800 2000)
+		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+		org-agenda-current-time-string
+		"⭠ now ─────────────────────────────────────────────────")
+  (setq org-agenda-custom-commands
+        '(("i" "Agenda/Inbox"
+           ((agenda "")
+            (tags-todo "INBOX"))
+           ((org-agenda-tag-filter-preset '("-STASIS"))
+            (org-agenda-show-inherited-tags nil)))))
+  (setq org-refile-use-outline-path 'file)
+  (setq org-outline-path-complete-in-steps nil)
+  :custom
+  (org-directory "~/Personal/org")
+  (org-agenda-files `(,org-directory))
+  (org-refile-targets `((nil :maxlevel . 5)
+                        ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
+                        ;; this is an unorthodox usecase, but I only want top level refiling
+                        ,`(,(expand-file-name "stasis.org" org-directory) :level . 9000))))
+#+end_src
+
+"Formatted copy" functions from Doom (e.g. for pasting code into Google Slides)
+#+begin_src elisp
+(defun fysh/ox-clip-yank-buffer (buffer)
+  (require 'ox-clip)
+  (with-current-buffer buffer
+    (shell-command-on-region (point-min) (point-max) ox-clip-osx-cmd)))
+
+(defun fysh/ox-yank (backend)
+  "Exports selection and copy to the clipboard.
+
+Taken from Doom Emacs."
+  (interactive (list (intern (completing-read "Export to: " (progn (require 'ox) org-export-backends)))))
+  (require 'ox)
+  (let* ((org-export-show-temporary-export-buffer nil)
+         (buffer (org-export-to-buffer backend "*Formatted Copy*" nil nil t t)))
+    (unwind-protect
+        (with-current-buffer buffer
+          (kill-new (buffer-string)))
+      (kill-buffer buffer))))
+
+(defun fysh/rtf-yank (beg end)
+  "Export region to HTML then copies it to clipboard as rich text.
+
+Taken from Doom Emacs."
+  (interactive "r")
+  (pcase major-mode
+    ((or `markdown-mode `gfm-mode)
+     (fysh/ox-clip-yank-buffer (markdown)))
+    (_
+     (cl-letf (((symbol-function 'htmlize-add-before-after-strings) (lambda (_ _ text) text)))
+       (ox-clip-formatted-copy beg end)))))
 #+end_src
 
 **** LaTeX
@@ -1813,6 +1892,8 @@ parent."
 #+begin_src elisp
 (use-package typst-ts-mode
     :mode ("\\.typ\\'" . typst-ts-mode)
+    :custom-face
+    (typst-ts-markup-item-indicator-face ((t (:inherit org-list-dt))))
     :general-config
     ('normal 'typst-ts-mode-map "C-c C-c" (lambda () (interactive) (typst-ts-compile 4))))
 #+end_src
@@ -1954,6 +2035,7 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
 (use-package markdown-mode
     :mode "\\.md\\'"
     :config
+    (setq markdown-fontify-code-blocks-natively t)
     (defun markdown-display-inline-images ()
       "Add inline image overlays to image links in the buffer.
 This can be toggled with `markdown-toggle-inline-images'
