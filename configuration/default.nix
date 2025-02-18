@@ -203,7 +203,7 @@ in
       Program = lib.getExe (pkgs.writeShellApplication {
         name = "beorg-sync";
         runtimeInputs = [ pkgs.coreutils ];
-        text = builtins.readFile ./org-sync.sh;
+        text = builtins.readFile ./beorg-sync.sh;
       });
       StartInterval = 2 * 60;
       StandardOutPath = "/tmp/beorg_sync.out.log";

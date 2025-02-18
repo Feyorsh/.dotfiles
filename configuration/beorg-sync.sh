@@ -29,9 +29,16 @@ function get_mod_time() {
     fi
 }
 
+function force_sync() {
+    if [[ $1 =~ "iCloud" ]]; then
+        head -c 1 "$1" > /dev/null
+    fi
+}
+
 function update_file() {
     from="$1"
     to="$2"
+    for f in "$from" "$to"; do force_sync "$f"; done
 
     # check that $from is newer than $to and that they are different
     if [ "$(get_mod_time "$from")" -gt "$(get_mod_time "$to")" ] && ! cmp -s "$from" "$to"; then
@@ -39,9 +46,6 @@ function update_file() {
         echo "Synced from $from to $to"
     fi
 }
-
-# always sync agenda to remote
-update_file "$local/agenda.org" "$remote/agenda.org"
 
 # sync remote to local first for inbox.org
 # check if remote file is newer than local file
@@ -55,3 +59,15 @@ else
     # otherwise, sync local to remote
     update_file "$local/inbox.org" "$remote/inbox.org"
 fi
+
+# sync local to remote for all other org files
+for f in "$local"/*.org; do
+    if [[ "$(basename "$f")" != "inbox.org" ]]; then
+        update_file "$f" "$remote/$(basename "$f")"
+    fi
+done
+
+# sync beorg's own files from remote to local
+for f in "$remote"/beorg-*.org; do
+    update_file "$f" "$local/$(basename "$f")"
+done
