@@ -548,6 +548,16 @@ Oldest trick in the book! (Not really.)
 	(setq corfu-popupinfo-max-width 40)
 	(setq corfu-popupinfo-min-height 4)
 	)
+
+(use-package cape
+    :init
+    ;; order matters
+    (add-hook 'completion-at-point-functions #'yasnippet-capf)
+    (add-hook 'completion-at-point-functions #'cape-dabbrev)
+    (add-hook 'completion-at-point-functions #'cape-file)
+    (add-hook 'completion-at-point-functions #'cape-elisp-block)
+    :hook (minibuffer-setup . (lambda () (setq-local completion-at-point-functions nil)))
+  )
 #+end_src
 
 **** Vertico
@@ -712,6 +722,9 @@ Oldest trick in the book! (Not really.)
                      (bound-and-true-p org-cdlatex-mode)))
             (cdlatex-tab)
           (yas-next-field-or-maybe-expand))))
+
+(use-package yasnippet-capf)
+#+end_src
 
 **** LLMs
 #+begin_src elisp

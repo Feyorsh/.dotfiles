@@ -118,7 +118,7 @@ in
       }))
 
       general
-      corfu
+      corfu cape
       vertico
       orderless
       consult
