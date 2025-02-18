@@ -6,6 +6,7 @@ in {
     mac-app-util.homeManagerModules.default
 
     ./config/git
+    ./config/git/jujutsu.nix
     ./config/games
     ./config/editor
     ./config/terminal
