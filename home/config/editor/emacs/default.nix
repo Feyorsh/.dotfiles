@@ -129,6 +129,7 @@ in
 
       gcmh
       helpful
+      devdocs
 
       org org-contrib org-modern org-pdftools engrave-faces
       (ox-hugo.overrideAttrs(prev: rec {

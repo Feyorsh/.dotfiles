@@ -13,6 +13,15 @@ defaults write org.gnu.Emacs HideDocumentIcon YES
 defaults write org.gnu.Emacs TransparentTitleBar YES
 #+end_src
 
+Good .emacs.ds:
+- [[https://github.com/kaz-yos/emacs/blob/master/init.d/500_org-mode-related.el][Kazuki Yoshida]]
+- [[https://github.com/doomemacs/doomemacs][Doom Emacs]]
+- [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]
+- [[https://github.com/syohex/dot_files][Shohei Yoshida]]
+- [[https://github.com/purcell/emacs.d][Steve Purcell]]
+- [[https://github.com/richyliu/config][Richard Liu]]
+- [[https://github.com/jwiegley/dot-emacs][John Wiegley]]
+
 * Emacs
 ** Lexical binding
 #+begin_src elisp :tangle "~/.config/emacs/early-init.el"
@@ -82,6 +91,16 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     :demand t
     :init
     (blink-cursor-mode -1)
+
+    (setq inhibit-startup-message t)
+    (define-advice display-startup-echo-area-message (:override () hush) nil)
+    (setq initial-scratch-message ";; Happy hacking.\n\n")
+
+    (setq echo-keystrokes 0.5)
+    (setq enable-recursive-minibuffers t)
+    (setq x-stretch-cursor t)
+    (setq confirm-kill-processes nil)
+    (setq frame-resize-pixelwise t)
 
     (setq use-file-dialog nil)
     (setq use-dialog-box nil)
@@ -169,12 +188,11 @@ Forgot where I sourced all this, but basically take a rather conservative approa
          "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/" "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/")))))
 #+end_src
 
+** Server/Client
+Man, I spent /waaaay/ too long on this.
 #+begin_src elisp
-(use-package recentf
-  :hook (after-init . recentf-mode)
-  :general-config (leader-def "r" #'recentf-open-most-recent-file)
-  :config
-  (setq recentf-max-saved-items 15))
+(use-package server
+    :hook (after-init . server-start))
 #+end_src
 
 ** macOS Interaction
@@ -2113,7 +2131,11 @@ I'd like to change the cursor blink behaviour.
 *** TODO Dired
 I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
-(put 'dired-find-alternate-file 'disabled nil)
+(use-package dired
+    :config
+  (put 'dired-find-alternate-file 'disabled nil)
+  (setq dired-vc-rename-file t)
+  )
 #+end_src
 
 *** Ibuffer
@@ -2131,7 +2153,48 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
 (use-package bookmark
     :config
   (setq bookmark-fringe-mark nil)
+  (setq bookmark-save-flag 1)
     )
+#+end_src
+
+*** Projects
+#+begin_src elisp
+(use-package project
+    :general (leader-def "P" '(:keymap project-prefix-map))
+    :init
+    (defun project-try-nix (dir)
+      (if-let ((root (locate-dominating-file dir "flake.lock")))
+          (cons 'transient root)))
+    (defun project-vterm ()
+      "Start Vterm in the current project's root."
+      (interactive)
+      (let ((default-directory (project-root (project-current t))))
+        (vterm '(4))))
+    (defun project-rg ()
+      "Run ripgrep in the current project's root."
+      (interactive)
+      (consult-ripgrep (project-root (project-current t))))
+    (defun project-fd ()
+      "Run fd in the current project's root."
+      (interactive)
+      (consult-fd (project-root (project-current t))))
+    :config
+    (add-to-list 'project-vc-extra-root-markers ".jj")
+
+    (setq project-switch-commands
+          '((?f "Find file" project-find-file)
+            (?d "Dired" project-dired)
+            (?b "Buffer" project-switch-to-buffer)
+            (?t "Vterm" project-vterm)
+            (?t "ripgrep" project-rg)
+            (?t "fd" project-fd)
+            (?! "Shell command" project-shell-command)
+            (?v "Magit" project-magit-status)
+            (?k "Kill buffers" project-kill-buffers)))
+
+    (setq project-vc-merge-submodules nil)
+    (setq project-find-functions '(project-try-vc
+                                   project-try-nix)))
 #+end_src
 
 *** TODO Perspective
@@ -2316,6 +2379,17 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 	(add-to-list 'auto-mode-alist '("cmake" . cmake-ts-mode)))
 #+end_src
 
+*** Recentf
+#+begin_src elisp
+(use-package recentf
+    :hook (after-init . recentf-mode)
+    :general
+    (leader-def "r" #'recentf-open-most-recent-file)
+    :config
+    (setq recentf-max-saved-items 25)
+    (setq recentf-exclude '("/tmp/")))
+#+end_src
+
 *** Help
 #+begin_src elisp
 (use-package helpful
@@ -2338,6 +2412,11 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 					(select-window window norecord)
 					(switch-to-buffer buffer nil))
 				(pop-to-buffer buffer action norecord))))))
+#+end_src
+
+#+begin_src elisp
+(use-package devdocs
+	:general ('global "C-h d" #'devdocs-lookup))
 #+end_src
 
 *** Diff
@@ -2400,6 +2479,10 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 #+begin_src elisp
 (use-package jinx
     :hook (emacs-startup . global-jinx-mode)
+    :config
+    (let ((org-faces (alist-get 'org-mode jinx-exclude-faces))
+      (tex-faces (alist-get 'tex-mode jinx-exclude-faces)))
+     (setf (alist-get 'org-mode jinx-exclude-faces) (seq-uniq (append org-faces tex-faces))))
     :general
     ('normal "z =" #'jinx-correct)
     ('global "C-M-$" #'jinx-languages))
@@ -2616,7 +2699,9 @@ Trying to patch swathes of Unicode blocks is... a losing battle. Consider using 
 Ok, something in my Emacs config is definitely messing up native scroll.
 We add rainbow-mode to color hex codes, like #003b6f.
 #+begin_src elisp
-(use-package rainbow-mode)
+(use-package rainbow-mode
+    :hook ((prog-mode text-mode) . rainbow-mode)
+    )
 #+end_src
 
 * Local variables
