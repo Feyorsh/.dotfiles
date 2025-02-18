@@ -2607,6 +2607,9 @@ Eglot!
   :init
   (setq-default eglot-enabled t) ;; opt-in to use eglot
   :config
+  (use-package eglot-booster
+      :demand t
+      :config (eglot-booster-mode))
   (add-to-list 'eglot-server-programs
                '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
   (setq eldoc-echo-area-prefer-doc-buffer t

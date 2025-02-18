@@ -68,16 +68,10 @@ in
 {
   imports = [ ../../mail ];
 
-  home.packages = [ emacsWrapped ];
-
-  home.sessionVariables = {
-    EDITOR = "emacsclient";
-  };
-
   programs.emacs = {
     enable = false; # intentional
     package = emacs';
-    extraPackages = epkgs: with pkgs; ((with epkgs; [
+    extraPackages = epkgs: with pkgs; (with epkgs; [
       erc erc-hl-nicks
       insert-kaomoji
       ement
@@ -286,21 +280,28 @@ in
           hash = "sha256-U2QTbxkch/oGdXXnzf2EPX3Ga3VYmQlnjC/JKBq5DEI=";
         };
       })
-    ]) ++ [
-      nixfmt-rfc-style
-      shellcheck
-
-      # LSP
-      emacs-lsp-booster
-      clang-tools # c/c++
-      rust-analyzer # rust
-      basedpyright # python
-      sourcekit-lsp # swift
-      zls # zig
-      gopls # go
-      nil # nix
     ]);
   };
+
+  home.packages = [ emacsWrapped ] ++ (with pkgs; [
+    nixfmt-rfc-style
+    shellcheck
+
+    # LSP
+    emacs-lsp-booster
+    clang-tools # c/c++
+    rust-analyzer # rust
+    basedpyright # python
+    sourcekit-lsp # swift
+    zls # zig
+    gopls # go
+    nil # nix
+  ]);
+
+  home.sessionVariables = {
+    EDITOR = "emacsclient";
+  };
+
 
   programs.fish = {
     interactiveShellInit = lib.mkAfter ''
