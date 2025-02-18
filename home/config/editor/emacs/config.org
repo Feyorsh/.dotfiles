@@ -178,6 +178,33 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 #+end_src
 
 ** macOS Interaction
+#+begin_src elisp
+(use-package ultra-scroll
+    :demand t
+    :init
+    (setq scroll-conservatively 101
+          scroll-margin 0)
+    :config
+    ;; can be removed once evil-collection is updated
+    (defvar evil-collection-ultra-scroll-hide-cursor-states
+      '(evil-motion-state-cursor evil-normal-state-cursor)
+      "States in which to hide the cursor when scrolling.")
+    (defun evil-collection-ultra-scroll--hide-cursor ()
+      "A special Evil cursor type that simply hides the cursor."
+      (setq cursor-type nil))
+    (defun evil-collection-ultra-scroll--set-cursor-visible (arg)
+      "Make the cursor invisible when called with ARG < 1, or visible otherwise."
+      (when (bound-and-true-p evil-local-mode)
+        (if (and (numberp arg) (< arg 1))
+            (dolist (var evil-collection-ultra-scroll-hide-cursor-states)
+              (make-local-variable var)
+              (set var #'evil-collection-ultra-scroll--hide-cursor))
+          (mapc #'kill-local-variable evil-collection-ultra-scroll-hide-cursor-states)
+          (evil-refresh-cursor))))
+    (add-hook 'ultra-scroll-hide-functions #'evil-collection-ultra-scroll--set-cursor-visible)
+    (ultra-scroll-mode 1))
+#+end_src
+
 This tidbit is copied straight from [[https://gist.github.com/a3ammar/2357d6115ddd999c23e6][this gist]].
 #+begin_src elisp
 (defun nscolor2hex (color)

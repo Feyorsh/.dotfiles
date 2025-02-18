@@ -244,6 +244,17 @@ in
         };
       }))
       rainbow-mode
+
+      (trivialBuild rec {
+        pname = "ultra-scroll";
+        version = "0.3.2";
+        src = fetchFromGitHub {
+          owner = "jdtsmith";
+          repo = pname;
+          rev = "2c517bf9b61bf432f706ff8a585ba453c7476be2";
+          hash = "sha256-U2QTbxkch/oGdXXnzf2EPX3Ga3VYmQlnjC/JKBq5DEI=";
+        };
+      })
     ]) ++ [
       nixfmt-rfc-style
       shellcheck
