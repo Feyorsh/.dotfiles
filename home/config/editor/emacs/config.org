@@ -1594,8 +1594,6 @@ And now to make it *pretty*
 	:hook
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
-  (org-modern-mode . fonts/org)
-  (org-cdlatex-mode . fonts/literate-programming)
   :config
   (setq org-modern-star 'replace)
   ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
@@ -1825,11 +1823,143 @@ Taken from Doom Emacs."
 #+end_src
 
 **** LaTeX
-#+begin_src elisp :tangle no
+#+begin_src elisp
+(use-package org
+    :init
+  (define-advice org-mode (:before (&rest _) direnv-update) (direnv-update-environment))
+  :config
+  (setq org-highlight-latex-and-related '(native)
+        org-image-align 'center
+        org-hide-emphasis-markers t
+        org-fontify-quote-and-verse-blocks t)
+
+  (copy-face 'fixed-pitch 'fysh/org-mode-latex-face)
+  (advice-add 'org-src-font-lock-fontify-block
+              :after
+              (defun no-latex-background-face (lang start end)
+                (when (equal lang "latex")
+                  (alter-text-property
+                   start end 'face
+                   (lambda (l) (-replace 'org-block 'fysh/org-mode-latex-face l))))))
+
+  (defvar lit-mode--cookies nil)
+  (defface lit-mode-variable-face '((t :family "Libertinus Serif" :weight medium :height 2.0)) nil)
+  (defface lit-mode-fixed-face '((t :family "Sarasa Mono J" :weight regular)) nil)
+  (defface lit-mode-header-face '((t :family "ETBembo" :weight bold)) nil)
+  (define-minor-mode lit-mode
+      "Literate programming with Org"
+    :global nil
+    (unless (derived-mode-p 'org-mode)
+      (error "`lit-mode' should be enabled only in `org-mode'"))
+    (require 'org-indent)
+    (if lit-mode
+        (progn
+          (set-face-attribute 'lit-mode-variable-face nil :height 1.2)
+          (set-face-attribute 'lit-mode-fixed-face nil :height 1.0)
+          (set-face-attribute 'lit-mode-header-face nil :height 1.0)
+          (set-face-attribute 'org-modern-symbol nil :height 1.0)
+          (set-face-attribute 'org-modern-tag nil :height 1.0)
+          (set-face-attribute 'org-modern-todo nil :height 1.0)
+
+          (push (face-remap-add-relative 'fysh/org-mode-latex-face 'lit-mode-fixed-face :height 1.2) lit-mode--cookies)
+          (push (face-remap-add-relative 'variable-pitch nil :inherit 'lit-mode-variable-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'fixed-pitch nil :inherit 'lit-mode-fixed-face) lit-mode--cookies)
+
+          (push (face-remap-add-relative 'org-level-1 'lit-mode-header-face :height 1.5) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-2 'lit-mode-header-face :height 1.25) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-3 'lit-mode-header-face :height 1.1) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-4 'lit-mode-header-face :height 1.05) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-5 'lit-mode-header-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-6 'lit-mode-header-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-7 'lit-mode-header-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-level-8 'lit-mode-header-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-document-title 'lit-mode-header-face :height 1.25) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-document-info 'lit-mode-header-face :height 1.25) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-document-info-keyword 'lit-mode-fixed-face :height 1.1) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-meta-line 'lit-mode-fixed-face) lit-mode--cookies)
+
+          (push (face-remap-add-relative 'org-block 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-code 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-indent '(org-hide lit-mode-fixed-face)) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-meta-line 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-property-value 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-table 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-tag 'lit-mode-fixed-face) lit-mode--cookies)
+          (push (face-remap-add-relative 'org-verbatim 'lit-mode-fixed-face) lit-mode--cookies)
+
+          (variable-pitch-mode +1)
+          (turn-on-org-cdlatex))
+      (progn
+        (dolist (c lit-mode--cookies)
+          (face-remap-remove-relative c))
+        (variable-pitch-mode -1))))
+
+  (define-advice org-raise-scripts (:after (_) org-raise-scripts-no-braces)
+    (when (and (eq (char-after (match-beginning 3)) ?{)
+	           (eq (char-before (match-end 3)) ?}))
+      (remove-text-properties (match-beginning 3) (1+ (match-beginning 3))
+		                      (list 'invisible nil))
+      (remove-text-properties (1- (match-end 3)) (match-end 3)
+		                      (list 'invisible nil))))
+
+  )
+(use-package org-latex-preview
+    :hook (org-mode . org-latex-preview-auto-mode)
+    :config
+    (setq org-latex-preview-appearance-options (progn (plist-put org-format-latex-options :background "Transparent")
+                                                              ;; (plist-put org-latex-preview-appearance-options :foreground 'default)
+                                                              (plist-put org-latex-preview-appearance-options :foreground 'auto)
+                                                              (plist-put org-latex-preview-appearance-options :page-width 0.5)
+                                                              (plist-put org-latex-preview-appearance-options :zoom 1.1))
+
+                  org-startup-with-latex-preview t
+                  org-latex-preview-numbered nil
+                  org-latex-preview-live-debounce 1.0
+                  org-latex-preview-auto-track-inserts t
+                  org-latex-preview-live t
+                  org-latex-preview-process-active-indicator nil)
+
+    (setq org-latex-preview-process-default 'dvisvgm)
+    (setq org-latex-preview--dvisvgm3-minor-version 2)
+
+    (setq org-latex-preview-auto-ignored-commands
+          '(mwheel-scroll scroll-up-command scroll-down-command))
+
+    ;; from https://karthinks.com/software/scaling-latex-previews-in-emacs/
+    (defun kthk/text-scale-adjust-latex-previews ()
+      "Adjust the size of latex preview fragments when changing the buffer's text scale."
+      (pcase major-mode
+        ('latex-mode
+         (dolist (ov (overlays-in (point-min) (point-max)))
+           (if (eq (overlay-get ov 'category)
+                   'preview-overlay)
+               (kthk/text-scale--resize-fragment ov))))
+        ('org-mode
+         (dolist (ov (overlays-in (point-min) (point-max)))
+           (if (eq (overlay-get ov 'org-overlay-type)
+                   'org-latex-overlay)
+               (kthk/text-scale--resize-fragment ov))))))
+
+    (defun kthk/text-scale--resize-fragment (ov)
+      (overlay-put
+       ov 'display
+       (cons 'image
+             (plist-put
+              (cdr (overlay-get ov 'display))
+              :scale (+ 1.0 (* 0.25 text-scale-mode-amount))))))
+
+    (add-hook 'text-scale-mode-hook #'kthk/text-scale-adjust-latex-previews)
+    )
+(use-package latex ;; aka AUCTeX
+    :hook (LaTeX-mode . prettify-symbols-mode)
+    )
 (use-package cdlatex
-	:hook org-cdlatex-mode
-	)
-(use-package auctex)
+    :hook (LaTeX-mode . turn-on-cdlatex)
+    :config
+    (setq cdlatex-simplify-sub-super-scripts t)
+    ;; (add-to-list 'cdlatex-math-symbol-alist-default '(?d)
+    :general-config
+	('org-cdlatex-mode-map "<tab>" #'cdlatex-tab))
 #+end_src
 Adding Koma Script ~article~ class to org mode:
 #+begin_src elisp :tangle no
@@ -2793,51 +2923,24 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 I still need to rice Org fonts, and test LaTeX fonts out. Defaults should be sane, though.
 
 Trying to patch swathes of Unicode blocks is... a losing battle. Consider using [[https://github.com/rolandwalker/unicode-fonts][Unicode Fonts]] instead.
+I could use ~display-monitors-changed-functions~ to try and maintain a good font height on both my laptop screen and external monitor, but it's probably more trouble than it's worth.
 #+begin_src elisp
-(add-hook 'text-mode-hook 'visual-line-mode)
-(add-hook 'prog-mode-hook 'visual-line-mode)
-
-(defun fonts/default ()
-  (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium))
-  (set-face-attribute 'variable-pitch nil :font (font-spec :family "Source Sans Pro" :size 15 :weight 'semi-bold))
-  (set-fontset-font "fontset-default" 'symbol (font-spec :family "Sarasa UI J" :size 15))
-  (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji"))
-  (set-fontset-font "fontset-default" 'braille (font-spec :family "JuliaMono")))
-
-(defun fonts/org ()
-  (if org-modern-mode
-  (progn
-	(setq fonts/org-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
-	(setq fonts/org-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Sarasa Mono J" :size 15 :weight 'normal)))
-	(variable-pitch-mode +1))
-  (progn
-	(face-remap-remove-relative fonts/org-fixed-cookie)
-	(face-remap-remove-relative fonts/org-variable-cookie)
-	(variable-pitch-mode -1))))
-;; note that I still need to set these in `custom` for org
-
-(defun fonts/literate-programming ()
-  (if org-cdlatex-mode
-  (progn
-	(setq fonts/literate-programming-fixed-cookie (face-remap-add-relative 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :size 13 :weight 'medium)))
-	(setq fonts/literate-programming-variable-cookie (face-remap-add-relative 'variable-pitch nil :font (font-spec :family "Latin Modern Roman" :size 15 :weight 'normal)))
-	(variable-pitch-mode +1))
-  (progn
-	(face-remap-remove-relative fonts/literate-programming-fixed-cookie)
-	(face-remap-remove-relative fonts/literate-programming-variable-cookie)
-	(variable-pitch-mode -1))))
-
-(add-hook 'after-init-hook 'fonts/default)
-
-;; (defun fysh/monitor-font-size ()
-;;   (let ((width (display-pixel-width))
-;;         (height (display-pixel-height)))
-;;     (pcase width
-;;       (3640 (global-text-scale-adjust 
-;;   )
-
-;; (add-hook 'window-size-change-functions 'fonts/default)
+(use-package emacs
+    :hook (after-init . fonts/default)
+    :hook ((text-mode . visual-line-mode)
+           (prog-mode . visual-line-mode))
+    :init
+    (defun fonts/default ()
+      (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 15 :height 100 :weight 'medium))
+      (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :height 1.0 :weight 'medium))
+      (set-face-attribute 'variable-pitch nil :font (font-spec :family "Sarasa UI J" :height 1.1 :weight 'regular))
+      (set-fontset-font "fontset-default" 'symbol (font-spec :family "Libertinus Math"))
+      (set-fontset-font "fontset-default" '(?◉ . ?○) (font-spec :height 1.1))
+      (set-fontset-font "fontset-default" 'emoji (font-spec :family "Twitter Color Emoji"))
+      (set-fontset-font "fontset-default" 'braille (font-spec :family "JuliaMono")))
+    :config
+    (setq use-default-font-for-symbols nil)
+    )
 #+end_src
 Ok, something in my Emacs config is definitely messing up native scroll.
 We add rainbow-mode to color hex codes, like #003b6f.
