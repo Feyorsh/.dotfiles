@@ -566,35 +566,29 @@ Oldest trick in the book! (Not really.)
 	:demand t
 	:hook ((minibuffer-setup . vertico-repeat-save)
 		   (rfn-eshadow-update-overlay . vertico-directory-tidy))
-
+	:general-config
+    ('(normal insert) 'vertico-map
+	 "C-j" #'vertico-next
+	 "C-k" #'vertico-previous
+	 "C-u" #'vertico-scroll-down
+	 "C-d" #'vertico-scroll-up)
+    ('normal 'vertico-map
+	 "<escape>" #'abort-recursive-edit)
+    ('insert 'vertico-map
+	 "RET" #'vertico-directory-enter
+	 "DEL" #'vertico-directory-delete-char)
 	:init
-    (use-package vertico-directory :demand t)
-    (use-package vertico-repeat :demand t)
 	(setq vertico-cycle nil)
 	(setq read-file-name-completion-ignore-case t
 		  read-buffer-completion-ignore-case t
 		  completion-ignore-case t)
 	(setq read-extended-command-predicate #'command-completion-default-include-p)
 	:config
-	(general-define-key
-	 :keymaps 'vertico-map
-	 :states 'insert
-	 "C-j" #'vertico-next
-	 "C-k" #'vertico-previous
-	 "C-u" #'vertico-scroll-down
-	 "C-d" #'vertico-scroll-up
-	 "RET" #'vertico-directory-enter
-	 "DEL" #'vertico-directory-delete-char
-	 )
-	(general-define-key
-	 :keymaps 'vertico-map
-	 :states 'normal
-	 "C-j" #'vertico-next
-	 "C-k" #'vertico-previous
-	 "C-u" #'vertico-scroll-down
-	 "C-d" #'vertico-scroll-up
-	 "<escape>" #'abort-recursive-edit
-	 )
+    (use-package vertico-directory :demand t)
+    (use-package vertico-repeat :demand t)
+    (use-package vertico-multiform :demand t)
+    (add-to-list 'vertico-multiform-categories '(embark-keybinding grid))
+    (vertico-multiform-mode)
 	(vertico-mode))
 #+end_src
 
@@ -770,6 +764,12 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
   (leader-def "." #'consult-ripgrep)
   (leader-def "," #'consult-fd)
   :config
+  (setq consult-buffer-sources '(consult--source-hidden-buffer consult--source-modified-buffer consult--source-buffer consult--source-bookmark consult--source-recent-file consult--source-file-register consult--source-project-buffer-hidden consult--source-project-recent-file-hidden))
+  (setq consult-preview-excluded-buffers
+        (lambda (buf)
+          (if-let ((fp (buffer-file-name buf)))
+              (file-remote-p fp)
+            nil)))
   (setq consult-ripgrep-args (concat consult-ripgrep-args " --follow")))
 
 (use-package marginalia
@@ -781,33 +781,81 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
   (marginalia-mode))
 
 (use-package embark
-	:disabled
-  :bind
-  (("C-." . embark-act)			;; pick some comfortable binding
-   ("C-;" . embark-dwim)		;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-
+    :general
+  ('(global normal)
+    "C-." #'embark-act
+    "C-;" #'embark-dwim)
+  :general-config
+  ('embark-file-map
+   "S" #'sudo-find-file)
+  ('(embark-file-map embark-library-map embark-buffer-map embark-bookmark-map)
+    "$" #'vterm-at-file)
   :init
-  ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
-
-  ;; Show the Embark target at point via Eldoc.	 You may adjust the Eldoc
-  ;; strategy, if you want to see the documentation from multiple providers.
-  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
-  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
-
-  :config
 
   ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
-			   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-				 nil
-				 (window-parameters (mode-line-format . none)))))
+               '("\\`\\*Embark Live \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none))))
+
+  :config
+  (setq embark-quit-after-action
+        '((kill-buffer . nil)
+          (delete-file . nil)
+          (delete-directory . nil)
+          (copy-file . nil)
+          (rename-file . nil)
+          (make-directory . nil)
+          (t . t)))
+
+  ;; indicator/prompter display
+  (setq embark-mixed-indicator-delay 0.3)
+  (setq embark-verbose-indicator-display-action
+        '(display-buffer-at-bottom
+          (window-height . (lambda (win) (fit-window-to-buffer win (floor (frame-height) 3))))))
+
+  (require 'which-key)
+  (defun embark-which-key-indicator ()
+    "An embark indicator that displays keymaps using which-key.
+The which-key help message will show the type and value of the
+current target followed by an ellipsis if there are further
+targets."
+    (lambda (&optional keymap targets prefix)
+      (if (null keymap)
+          (which-key--hide-popup-ignore-command)
+        (which-key--show-keymap
+         (if (eq (plist-get (car targets) :type) 'embark-become)
+             "Become"
+           (format "Act on %s '%s'%s"
+                   (plist-get (car targets) :type)
+                   (embark--truncate-target (plist-get (car targets) :target))
+                   (if (cdr targets) "…" "")))
+         (if prefix
+             (pcase (lookup-key keymap prefix 'accept-default)
+               ((and (pred keymapp) km) km)
+               (_ (key-binding prefix 'accept-default)))
+           keymap)
+         nil nil t (lambda (binding)
+                     (not (string-suffix-p "-argument" (cdr binding))))))))
+
+  (setq embark-indicators
+        '(embark-which-key-indicator
+          embark-highlight-indicator
+          embark-isearch-highlight-indicator))
+
+  (defun embark-hide-which-key-indicator (fn &rest args)
+    "Hide the which-key indicator immediately when using the completing-read prompter."
+    (which-key--hide-popup-ignore-command)
+    (let ((embark-indicators
+           (remq #'embark-which-key-indicator embark-indicators)))
+      (apply fn args)))
+
+  (advice-add #'embark-completing-read-prompter :around #'embark-hide-which-key-indicator))
+
 
 (use-package embark-consult
-    :disabled
-  :ensure t
-  :hook
+    :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 

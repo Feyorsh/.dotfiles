@@ -123,6 +123,7 @@ in
       orderless
       consult
       embark embark-consult
+      which-key # added to emacs 30; just using for embark!
       prescient
 
       gptel
