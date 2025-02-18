@@ -32,13 +32,17 @@ in
 
   fonts = {
     packages = with pkgs; [
-      cascadia-code
       source-sans-pro
       source-serif-pro
-      sarasa-gothic # TODO: override to select fonts like nerdfonts, cause this boi is BIG
-      libertine
+      sarasa-gothic
+      libertinus
+      etBook
+      atkinson-hyperlegible
+
       jetbrains-mono
       julia-mono
+      cascadia-code
+
       twemoji-color-font
       emacs-all-the-icons-fonts
     ];
