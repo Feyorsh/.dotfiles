@@ -2612,8 +2612,10 @@ Eglot!
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
           . (lambda () (when eglot-enabled (eglot-ensure)))))
   :init
-  (setq eglot-enabled nil) ;; opt-in to use eglot
+  (setq-default eglot-enabled t) ;; opt-in to use eglot
   :config
+  (add-to-list 'eglot-server-programs
+               '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0

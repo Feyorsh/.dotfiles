@@ -177,7 +177,7 @@ in
       yasnippet yasnippet-capf
 
       # prog-modes
-      jedi # python
+      python-mls
       haskell-mode
       markdown-mode
       (nix-mode.overrideAttrs (prev: {
@@ -239,6 +239,17 @@ in
       }))
       julia-mode julia-vterm ob-julia-vterm
 
+      (trivialBuild rec {
+        pname = "eglot-booster";
+        version = "0.1.0";
+        src = fetchFromGitHub {
+          owner = "jdtsmith";
+          repo = pname;
+          rev = "e6daa6bcaf4aceee29c8a5a949b43eb1b89900ed";
+          hash = "sha256-PLfaXELkdX5NZcSmR1s/kgmU16ODF8bn56nfTh9g6bs=";
+        };
+      })
+
       all-the-icons
       (all-the-icons-completion.overrideAttrs (prev: {
         packageRequires = (prev.packageRequires or []) ++ [
@@ -280,47 +291,64 @@ in
       shellcheck
 
       # LSP
-      clang-tools
-      pyright # really annoying in practice; need to raise fd limit
-      # pkgs.sourcekit-lsp # swift
-      # nil # nix
-      # zls # zig
-      # gopls # go
+      emacs-lsp-booster
+      clang-tools # c/c++
+      rust-analyzer # rust
+      basedpyright # python
+      sourcekit-lsp # swift
+      zls # zig
+      gopls # go
+      nil # nix
     ]);
   };
 
-  home.packages = let
-    emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
-                    in (epkgs.overrideScope config.programs.emacs.overrides).emacsWithPackages;
-    finalPackage = emacsWithPackages config.programs.emacs.extraPackages;
+  programs.fish = {
+    interactiveShellInit = lib.mkAfter ''
+      functions --copy fish_prompt vterm_old_fish_prompt
+      function fish_prompt --description 'Write out the prompt; do not replace this. Instead, put this at end of your file.'
+          # Remove the trailing newline from the original prompt. This is done
+          # using the string builtin from fish, but to make sure any escape codes
+          # are correctly interpreted, use %b for printf.
+          printf "%b" (string join "\n" (vterm_old_fish_prompt))
+          vterm_prompt_end
+      end
 
-    emacsclient = pkgs.writeShellScriptBin "emacsclientWithArgs" ''
-      ../../../../bin/emacsclient -c -a "" "$@"
+      if begin; [ -n "$INSIDE_EMACS" ]; end
+         fish_default_key_bindings
+      end
     '';
-    emacs = pkgs.symlinkJoin {
-      name = "emacs-wrapped";
-      paths = [ finalPackage emacsclient ];
-      nativeBuildInputs = [
-        # (pkgs.makeDarwinBundle {
-        #   name = "Emacsclient";
-        #   exec = "emacsclientWithArgs";
-        #   icon = ./emacs.icns;
-        # })
-
-        (pkgs.substitute {
-          src = (pkgs.makeDarwinBundle {
-            name = "Emacsclient";
-            exec = "emacsclientWithArgs";
-            icon = ./emacs.icns;
-          });
-          substitutions = [
-            "--replace-fail"
-            ''Args"''
-            ''Args" "${lib.removeSuffix ".icns" ./emacs.icns}" "${lib.boolToString true}"''
-          ];
-        })
-      ];
-      postBuild = "makeDarwinBundlePhase";
+    shellAliases = {
+      ff = "vterm_find_file";
     };
-  in [ emacs ];
+    functions = {
+      vterm_printf = ''
+        if begin; [ -n "$TMUX" ]; and string match -q -r "screen|tmux" "$TERM"; end
+            # tell tmux to pass the escape sequences through
+            printf "\ePtmux;\e\e]%s\007\e\\" "$argv"
+        else if string match -q -- "screen*" "$TERM"
+            # GNU screen (screen, screen-256color, screen-256color-bce)
+            printf "\eP\e]%s\007\e\\" "$argv"
+        else
+            printf "\e]%s\e\\" "$argv"
+        end
+      '';
+      vterm_cmd =  {
+        description = "Run an Emacs command among the ones been defined in vterm-eval-cmds.";
+        body = ''
+          set -l vterm_elisp ()
+          for arg in $argv
+              set -a vterm_elisp (printf '"%s" ' (string replace -a -r '([\\\\"])' '\\\\\\\\$1' $arg))
+          end
+          vterm_printf '51;E'(string join ''' $vterm_elisp)
+        '';
+      };
+      vterm_find_file = ''
+        set -q argv[1]; or set argv[1] "."
+        vterm_cmd find-file (realpath "$argv")
+      '';
+      vterm_prompt_end = ''
+        vterm_printf '51;A'(whoami)'@'(hostname)':'(pwd)
+      '';
+    };
+  };
 }
