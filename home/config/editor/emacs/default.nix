@@ -94,7 +94,7 @@ in
       restclient
       disaster
 
-      evil evil-snipe
+      evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
         patches = [(fetchpatch {
           url = "https://github.com/emacs-evil/evil-collection/commit/05731c551be8cdda40ae6479adfb30b7e9c7fe39.patch";

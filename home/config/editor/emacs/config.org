@@ -346,7 +346,7 @@ Rebind builtin bindings
         (window-configuration-to-register '_)
         (delete-other-windows))))
   :general-config
-  (leader-def "=" #'toggle-maximize-buffer)
+  (leader-def "`" #'toggle-maximize-buffer)
   (leader-def "#" #'comment-dwim)
   ("M-=" #'text-scale-increase)
   ("M--" #'text-scale-decrease)
@@ -368,6 +368,7 @@ Rebind builtin bindings
 	(setq evil-want-Y-yank-to-eol t)
 	(setq evil-move-cursor-back nil)
 	(setq evil-undo-system 'undo-redo)
+	(setq evil-want-fine-undo t)
 	(setq evil-want-minibuffer t)
 	(setq evil-ex-visual-char-range t)
 	(setq evil-v$-excludes-newline t)
@@ -416,6 +417,25 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
 #+begin_src elisp
 (use-package evil-org
     :hook (org-mode . evil-org-mode)
+    :general-config
+    ('(insert normal) 'org-read-date-minibuffer-local-map
+     "C-H" (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-month 1)))
+     "C-h" (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-day 1)))
+     "C-L" (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-month 1)))
+     "C-l" (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-day 1)))
+     "C-K" (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-year 1)))
+     "C-k" (lambda () (interactive) (org-eval-in-calendar '(calendar-backward-week 1)))
+     "C-J" (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-year 1)))
+     "C-j" (lambda () (interactive) (org-eval-in-calendar '(calendar-forward-week 1))))
+    ('(insert normal) 'calendar-mode-map
+     "C-h" (lambda () (interactive) (calendar-backward-day 1))
+     "C-H" (lambda () (interactive) (calendar-backward-month 1))
+     "C-l" (lambda () (interactive) (calendar-forward-day 1))
+     "C-L" (lambda () (interactive) (calendar-forward-month 1))
+     "C-k" (lambda () (interactive) (calendar-backward-week 1))
+     "C-K" (lambda () (interactive) (calendar-backward-year 1))
+     "C-j" (lambda () (interactive) (calendar-forward-week 1))
+     "C-J" (lambda () (interactive) (calendar-forward-year 1)))
     :config
     (setq evil-org-key-theme '(textobjects insert navigation additional calendar))
     (evil-org-set-key-theme))
@@ -425,10 +445,15 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
     (evil-org-agenda-set-keys))
 #+end_src
 
-***** TODO Evil Numbers
-https://github.com/juliapath/evil-numbers
+***** Evil Numbers
+#+begin_src elisp
+(use-package evil-numbers
+    :general
+    (leader-def "=" #'evil-numbers/inc-at-pt)
+    (leader-def "-" #'evil-numbers/dec-at-pt))
+#+end_src
 
-***** TODO Evil Snipe
+***** Evil Snipe
 #+begin_src elisp
 (use-package evil-snipe
   :after evil
@@ -442,9 +467,17 @@ https://github.com/juliapath/evil-numbers
         evil-snipe-char-fold t))
 #+end_src
 
-***** TODO Evil Surround
-***** TODO Evil Visualstar
-(This should be quite easy to replace myself if I don't like it)
+***** Evil Visualstar
+#+begin_src elisp
+(use-package evil-visualstar
+    :commands (evil-visualstar/begin-search
+               evil-visualstar/begin-search-forward
+               evil-visualstar/begin-search-backward)
+    :general
+    ('visual
+      "*" #'evil-visualstar/begin-search-forward
+      "#" #'evil-visualstar/begin-search-backward))
+#+end_src
 
 ** Performance
 Oldest trick in the book! (Not really.)
@@ -2175,10 +2208,20 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     "g c" #'magit-clone
     "g ." #'magit-file-dispatch
     )
-  ('magit-mode-map "K" nil)
-  ('magit-mode-map "J" nil)
+  ('magit-blob-mode-map
+   "n" nil
+   "C-n" #'magit-blob-next
+   "p" nil
+   "C-p" #'magit-blob-previous
+   )
+  ('magit-mode-map
+   "K" nil
+   "J" nil
+   )
   :config
   (setq magit-delete-by-moving-to-trash nil)
+  (setq magit-status-show-hashes-in-headers 't)
+  (setq magit-save-repository-buffers nil)
   :init
   (setq vc-follow-symlinks t)
   (add-to-list 'safe-local-variable-values '(vc-default-patch-addressee . "bug-gnu-emacs@gnu.org"))
