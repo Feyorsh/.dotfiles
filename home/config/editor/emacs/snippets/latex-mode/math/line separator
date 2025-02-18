@@ -1,0 +1,5 @@
+# name: line separator
+# key: ;;
+# condition: (and (texmathp) 'auto)
+# --
+\\\\ $0

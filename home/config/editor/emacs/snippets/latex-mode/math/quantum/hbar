@@ -1,0 +1,5 @@
+# name: reduced planck constant
+# key: hbar
+# condition: (and (texmathp) 'auto)
+# --
+\\hbar

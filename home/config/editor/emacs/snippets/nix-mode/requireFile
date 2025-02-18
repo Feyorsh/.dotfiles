@@ -1,0 +1,17 @@
+# name: requireFile
+# key: reqfile
+# --
+requireFile rec {
+  name = "$1";
+  ${2:url = "${3}";
+  }message = ''
+      ${4:${5:\${pname\}} cannot be installed automatically.
+      Please go to ${6:${3:$(if (string-empty-p yas-text) "<url>" "${url}")}} and add the installer to the store like so:
+
+      nix-prefetch-url file://\\\$PWD/\${name\}
+      rm -rf \${name\}}
+    '';
+    sha256 = "${8:sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=}";
+  };
+
+  $0

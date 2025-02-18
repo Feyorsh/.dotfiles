@@ -1,0 +1,4 @@
+# name: Ledger date
+# key: dt
+# --
+`(when (save-excursion (re-search-backward ledger-iso-date-regexp nil t)) (insert (match-string 0)))` $0

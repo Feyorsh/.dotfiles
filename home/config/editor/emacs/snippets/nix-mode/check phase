@@ -1,0 +1,8 @@
+# name: check phase
+# key: checkp
+# --
+checkPhase = ''
+  runHook preCheck
+  $1
+  runHook postCheck
+'';

@@ -1,0 +1,4 @@
+# name: complex exponential
+# key: ei
+# --
+e^{i $0}

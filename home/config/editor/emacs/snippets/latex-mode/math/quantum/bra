@@ -1,0 +1,5 @@
+# name: bra
+# key: bra
+# condition: (and (texmathp) 'auto)
+# --
+\\bra{${1:\\psi}}

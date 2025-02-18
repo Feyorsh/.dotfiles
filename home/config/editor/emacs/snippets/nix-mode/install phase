@@ -1,0 +1,8 @@
+# name: install phase
+# key: installp
+# --
+installPhase = ''
+  runHook preInstall
+  $1
+  runHook postInstall
+'';

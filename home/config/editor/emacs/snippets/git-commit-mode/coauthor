@@ -1,0 +1,4 @@
+# name: Co-authored-by
+# key: coauthor
+# --
+Co-authored-by: ${1:username} <${2:$1@users.noreply.github.com}>

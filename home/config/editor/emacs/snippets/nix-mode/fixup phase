@@ -1,0 +1,8 @@
+# name: fixup phase
+# key: fixupp
+# --
+fixupPhase = ''
+  runHook preFixup
+  $1
+  runHook postFixup
+'';

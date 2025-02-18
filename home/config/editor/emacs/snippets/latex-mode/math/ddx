@@ -1,0 +1,5 @@
+# name: d-by-dx
+# key: ddx
+# condition: (and (texmathp) 'auto)
+# --
+\\frac{d $1}{d ${2:x}}$0

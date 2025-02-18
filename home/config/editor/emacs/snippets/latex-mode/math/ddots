@@ -1,0 +1,5 @@
+# name: ddots
+# key: /...
+# condition: (and (texmathp) 'auto)
+# --
+\\ddots$0

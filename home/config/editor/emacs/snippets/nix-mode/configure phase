@@ -1,0 +1,8 @@
+# name: configure phase
+# key: configurep
+# --
+configurePhase = ''
+  runHook preConfigure
+  $1
+  runHook postConfigure
+'';

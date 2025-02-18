@@ -1,0 +1,5 @@
+# key: ->
+# name: to
+# condition: (and (texmathp) (quote auto))
+# --
+\to$0

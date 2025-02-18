@@ -1,0 +1,5 @@
+# name: vdots
+# key: |...
+# condition: (and (texmathp) 'auto)
+# --
+\\vdots$0

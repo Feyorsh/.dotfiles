@@ -1,0 +1,11 @@
+# name: fetch github
+# key: fetchgh
+# --
+fetchFromGitHub {
+    owner = "$1";
+    repo = "$2";
+    rev = "${3:v\$\{version\}}";
+    hash = "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=";
+};
+
+$0

@@ -1,0 +1,5 @@
+# name: dagger
+# key: dag
+# condition: (and (texmathp) 'auto)
+# --
+`(delete-backward-char 1)`^\\dagger $0

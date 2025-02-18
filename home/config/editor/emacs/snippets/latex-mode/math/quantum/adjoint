@@ -1,0 +1,6 @@
+# name: adjoint
+# key: adj
+# condition: (and (texmathp) 'auto)
+# type: command
+# --
+(yas-expand-snippet (yas-lookup-snippet "dagger"))

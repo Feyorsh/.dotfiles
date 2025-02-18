@@ -1,0 +1,5 @@
+# name: spin down
+# key: spdn
+# condition: (and (texmathp) 'auto)
+# --
+\\ket{\\downarrow}

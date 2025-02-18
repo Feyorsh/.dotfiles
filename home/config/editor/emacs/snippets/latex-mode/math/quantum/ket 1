@@ -1,0 +1,5 @@
+# name: ket 1
+# key: k1
+# condition: (and (texmathp) 'auto)
+# --
+\\ket{1}

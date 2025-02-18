@@ -1,0 +1,8 @@
+# name: build phase
+# key: buildp
+# --
+buildPhase = ''
+  runHook preBuild
+  $1
+  runHook postBuild
+'';

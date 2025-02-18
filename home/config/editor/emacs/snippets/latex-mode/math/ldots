@@ -1,0 +1,5 @@
+# name: ldots
+# key: ...
+# condition: (and (texmathp) 'auto)
+# --
+\\ldots$0

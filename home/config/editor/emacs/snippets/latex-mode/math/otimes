@@ -1,0 +1,5 @@
+# key: tens
+# name: otimes
+# condition: (and (texmathp) 'auto)
+# --
+\otimes

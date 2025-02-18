@@ -1,0 +1,5 @@
+# name: much greater
+# key: >>
+# condition: (and (texmathp) 'auto)
+# --
+\\gg

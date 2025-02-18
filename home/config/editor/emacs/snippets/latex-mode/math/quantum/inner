@@ -1,0 +1,5 @@
+# name: inner product
+# key: inner
+# condition: (and (texmathp) 'auto)
+# --
+\\braket{$1|${2:$1}}$0

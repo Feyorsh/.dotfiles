@@ -1,0 +1,5 @@
+# name: X Rotation
+# key: rx
+# condition: (and (texmathp) 'auto)
+# --
+R_x(${1:\\theta})

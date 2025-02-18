@@ -1,0 +1,9 @@
+# name: fetch url
+# key: fetchurl
+# --
+src = fetchurl {
+  url = "$1";
+  hash = "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=";
+};
+
+$0

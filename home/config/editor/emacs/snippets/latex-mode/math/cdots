@@ -1,0 +1,5 @@
+# name: cdots
+# key: -...
+# condition: (and (texmathp) 'auto)
+# --
+\\cdots$0

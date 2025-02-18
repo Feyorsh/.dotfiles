@@ -1,0 +1,5 @@
+# name: Z Rotation
+# key: rz
+# condition: (and (texmathp) 'auto)
+# --
+R_z(${1:\\theta})

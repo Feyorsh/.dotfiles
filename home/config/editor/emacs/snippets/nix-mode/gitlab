@@ -1,0 +1,12 @@
+# name: fetch gitlab
+# key: fetchgl
+# --
+fetchFromGitLab {
+    ${1:domain = "${2:gitlab.org}";
+    }owner = "$3";
+    repo = ${4:pname};
+    rev = "${5:v\$\{version\}}";
+    hash = "${6:sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=}";
+};
+
+$0

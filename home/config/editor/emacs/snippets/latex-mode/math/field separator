@@ -1,0 +1,5 @@
+# name: field separator
+# key: ,,
+# condition: (and (texmathp) 'auto)
+# --
+& $0

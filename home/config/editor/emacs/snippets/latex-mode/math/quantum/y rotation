@@ -1,0 +1,5 @@
+# name: Y Rotation
+# key: ry
+# condition: (and (texmathp) 'auto)
+# --
+R_y(${1:\\theta})

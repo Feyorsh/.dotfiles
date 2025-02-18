@@ -433,30 +433,22 @@ Oldest trick in the book! (Not really.)
 **** Corfu
 #+begin_src elisp
 (use-package corfu
-    ;; :demand t
     :hook ((after-init . global-corfu-mode)
 		   (minibuffer-setup . corfu-enable-always-in-minibuffer)
 		   (corfu-history-mode . savehist-mode))
+    :general-config
+	('insert 'corfu-map
+	         "C-k" #'corfu-previous
+	         "C-j" #'corfu-next
+	         "M-k" #'corfu-popupinfo-scroll-down
+	         "M-j" #'corfu-popupinfo-scroll-up
+	         "RET" nil)
+	('normal 'minibuffer-mode-map "<escape>" #'abort-recursive-edit)
 	:config
     (use-package corfu-popupinfo :demand t)
     (use-package corfu-history :demand t)
-	;; (with-eval-after-load 'doom-themes
-	;;   (custom-set-faces `(corfu-current ((t (:background ,(doom-color 'base4)))))))
 	(with-eval-after-load 'savehist
 	  (add-to-list 'savehist-additional-variables 'corfu-history))
-	(general-define-key
-	 :states 'insert
-	 :keymaps 'corfu-map
-	 "C-k" #'corfu-previous
-	 "C-j" #'corfu-next
-	 "M-k" #'corfu-popupinfo-scroll-down
-	 "M-j" #'corfu-popupinfo-scroll-up
-	 )
-	(general-unbind 'corfu-map "RET")
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'minibuffer-mode-map
-	 "<escape>" #'abort-recursive-edit)
 
 	(defun corfu-enable-always-in-minibuffer ()
 	  "Enable Corfu in the minibuffer if Vertico is not active."
@@ -584,6 +576,64 @@ Oldest trick in the book! (Not really.)
 	   (variable	   "va"	 :icon "symbol-variable"	:face font-lock-variable-name-face	   :collection "vscode")
 	   (t			   "."	 :icon "question"			:face font-lock-warning-face		   :collection "vscode"))))
 #+end_src
+**** Snippets
+#+begin_src elisp :var snippets-dir=(expand-file-name "./snippets")
+(use-package yasnippet
+    :hook ((post-self-insert . kthk/yas-try-expanding-auto-snippets)
+           (after-init . yas-global-mode))
+    :init
+    (setq yas-alias-to-yas/prefix-p nil)
+    :config
+    (setq yas-snippet-dirs (list snippets-dir))
+    (setq yas-triggers-in-field t)
+
+    (setq yas-verbosity 1)
+    (cl-pushnew '(yasnippet backquote-change) warning-suppress-types :test 'equal)
+
+    ;; add conditional snippets like so:
+    ;; # condition: (and (texmathp) 'auto)
+    (defun kthk/yas-try-expanding-auto-snippets ()
+      (when (and (boundp 'yas-minor-mode) yas-minor-mode)
+        (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+          (yas-expand))))))
+
+(use-package cdlatex
+    :hook ((cdlatex-tab . yas-expand)
+           (cdlatex-tab . cdlatex-in-yas-field))
+    :config
+    (use-package yasnippet
+        :general
+      ('yas-keymap "<tab>" #'yas-next-field-or-cdlatex)
+      :config
+      (defun cdlatex-in-yas-field ()
+        ;; Check if we're at the end of the Yas field
+        (when-let* ((_ (overlayp yas--active-field-overlay))
+                    (end (overlay-end yas--active-field-overlay)))
+          (if (>= (point) end)
+              ;; Call yas-next-field if cdlatex can't expand here
+              (let ((s (thing-at-point 'sexp)))
+                (unless (and s (assoc (substring-no-properties s)
+                                      cdlatex-command-alist-comb))
+                  (yas-next-field-or-maybe-expand)
+                  t))
+            ;; otherwise expand and jump to the correct location
+            (let (cdlatex-tab-hook minp)
+              (setq minp
+                    (min (save-excursion (cdlatex-tab)
+                                         (point))
+                         (overlay-end yas--active-field-overlay)))
+              (goto-char minp) t))))
+
+      (defun yas-next-field-or-cdlatex nil
+        (interactive)
+        "Jump to the next Yas field correctly with cdlatex active."
+        (if (and (not (save-excursion
+                        (beginning-of-line)
+                        (looking-at org-keyword-regexp)))
+                 (or (bound-and-true-p cdlatex-mode)
+                     (bound-and-true-p org-cdlatex-mode)))
+            (cdlatex-tab)
+          (yas-next-field-or-maybe-expand))))
 
 **** LLMs
 #+begin_src elisp

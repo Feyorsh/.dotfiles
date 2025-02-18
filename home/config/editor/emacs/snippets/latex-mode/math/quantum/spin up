@@ -1,0 +1,5 @@
+# name: spin up
+# key: spup
+# condition: (and (texmathp) 'auto)
+# --
+\\ket{\\uparrow}

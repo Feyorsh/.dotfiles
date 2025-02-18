@@ -112,6 +112,7 @@ in
       })
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
+      yasnippet yasnippet-capf
 
       # prog-modes
       jedi # python

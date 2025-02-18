@@ -1,0 +1,7 @@
+# name: pauli z
+# key: pauliz
+# --
+${1:\\frac{\\hbar\}{2\} }\\begin{pmatrix}
+1 & 0 \\\\
+0 & -1
+\\end{pmatrix}

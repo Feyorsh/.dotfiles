@@ -1,0 +1,5 @@
+# name: complex conjugate
+# key: conj
+# condition: (and (texmathp) 'auto)
+# --
+`(delete-backward-char 1)`^* $0

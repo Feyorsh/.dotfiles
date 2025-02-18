@@ -1,0 +1,5 @@
+# name: ceiling
+# key: ceil
+# condition: (and (texmathp) 'auto)
+# --
+\\left\\lceil $1 \\right\\rceil $0

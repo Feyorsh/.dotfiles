@@ -1,0 +1,6 @@
+# name: lib.strings.optionalString
+# key: optstr
+# --
+lib.strings.optionalString ($1) ''
+  $2
+''$0

@@ -1,0 +1,7 @@
+# name: equation
+# key: eq
+# --
+${1:#+NAME: eqn:${2:n}
+}\begin{equation}${1:$(unless (string-empty-p yas-text) (concat " \\\\tag{" (yas-field-value 2) "}"))}
+$0
+\end{equation}

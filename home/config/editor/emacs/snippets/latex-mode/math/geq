@@ -1,0 +1,5 @@
+# name: greater than or equal to
+# key: geq
+# condition: (and (texmathp) 'auto)
+# --
+\\geq$0
