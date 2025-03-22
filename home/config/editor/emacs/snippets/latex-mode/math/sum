@@ -1,0 +1,4 @@
+# key: sum
+# name: summation
+# --
+\sum_{${1:$2 \in $3}}^{${4:\infty}}$0

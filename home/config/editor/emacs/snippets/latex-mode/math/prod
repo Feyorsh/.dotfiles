@@ -1,0 +1,4 @@
+# key: prod
+# name: product
+# --
+\prod_{${1:$2 \in $3}}^{${4:\infty}}$0

@@ -1,0 +1,5 @@
+# name: permittivity of free space
+# key: epsngt
+# condition: (and (texmathp) 'auto)
+# --
+\\varepsilon_0

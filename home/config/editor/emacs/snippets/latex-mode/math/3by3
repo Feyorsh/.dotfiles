@@ -1,5 +1,5 @@
 # name: bmatrix (3 x 3)
-# key: 3mat
+# key: 3by3
 # --
 \\begin{pmatrix}
 ${1:1} & ${2:0} & ${3:$2} \\\\
