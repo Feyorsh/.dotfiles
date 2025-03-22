@@ -1,3 +1,3 @@
 {
-  imports = [ ./nethack ];
+  imports = [ ./nethack ./go.nix ];
 }
