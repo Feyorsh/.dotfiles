@@ -414,6 +414,11 @@ Rebind builtin bindings
 	('normal "ZK" #'fysh/kill-buffer-quiet)
 	('normal "ZD" #'fysh/delete-visited-file)
 	:config
+    (defun fysh/evil-recenter (&rest _) (evil-scroll-line-to-center (line-number-at-pos)))
+    (advice-add 'evil-ex-search-next :after 'fysh/evil-recenter)
+    (advice-add 'evil-ex-search-previous :after 'fysh/evil-recenter)
+    (advice-add 'evil-ex-start-search :after 'fysh/evil-recenter)
+    (advice-add 'evil-goto-mark-line :after 'fysh/evil-recenter)
     (evil-select-search-module 'evil-search-module 'evil-search)
     (add-to-list 'debug-ignored-errors 'search-failed)
 	(evil-ex-define-cmd "bkill" #'fysh/kill-buffer-quiet)
@@ -480,7 +485,7 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
   :hook (after-init . evil-snipe-mode)
   :init
   (setq evil-snipe-smart-case t
-        evil-snipe-scope 'line
+        evil-snipe-scope 'visible
         evil-snipe-repeat-scope 'visible
         evil-snipe-char-fold t))
 #+end_src
