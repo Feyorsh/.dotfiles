@@ -6,22 +6,42 @@
 	user = Feyorsh
 [gpg]
 	format = ssh
-#[gpg "ssh"]
-	#allowedSignersFile = ~/.ssh/allowed_signers
+[core]
+    fsmonitor = true
+    untrackedCache = true
 [commit]
 	gpgsign = true
 [status]
 	showUntrackedFiles = all
 [init]
 	defaultBranch = main
+[column]
+    ui = auto
 [pull]
 	rebase = true
 [rebase]
 	autoStash = true
+	updateRefs = true
+[branch]
+    sort = -committerdate
+[tag]
+    sort = version:refname
+[diff]
+	algorithm = histogram
+	colorMoved = plain
+	mnemonicPrefix = true
+	renames = true
+[merge]
+    conflictstyle = zdiff3
+[push]
+    autoSetupRemote = true
+[fetch]
+    prune = true
+    pruneTags = true
+[commit]
+    verbose = true
 [help]
 	autoCorrect = prompt
-[core]
-	editor = vim
 [alias]
     lg = lg2
     lg1 = lg1-specific --all

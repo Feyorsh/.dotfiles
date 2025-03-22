@@ -18,6 +18,10 @@
       }
     ];
     ignores = lib.splitString "\n" (builtins.readFile ./ignore);
+    attributes = [
+      "*.pdf binary"
+      "*.svg binary"
+    ];
   };
 
   home.packages = with pkgs; [
