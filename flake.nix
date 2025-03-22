@@ -43,7 +43,12 @@
       inherit (darwin.lib) darwinSystem;
       pkgs = import nixpkgs {
         inherit system;
-        config = { allowUnfree = true; };
+        config = {
+          allowUnfree = true;
+          permittedInsecurePackages = [
+            "olm-3.2.16"
+          ];
+        };
         overlays = [
           fyshpkgs.overlay.${system}
           inputs.firefox-darwin.overlay

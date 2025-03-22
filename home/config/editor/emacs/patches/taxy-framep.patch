@@ -1,0 +1,32 @@
+From 0aac437a5eb5d50cbb5ed890d7117fabd9ec4d14 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Tue, 11 Mar 2025 13:46:59 -0500
+Subject: [PATCH] Fix: (taxy-magit-section-format-items) change graphical frame
+ logic
+
+(framep) can return a variety of values for differing windowing
+systems, but any frame that is visible and is not a text terminal
+should be a graphical frame.
+
+See also alphapapa/ement.el#304.
+---
+ taxy-magit-section.el | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/taxy-magit-section.el b/taxy-magit-section.el
+index f583b43..94eac4f 100644
+--- a/taxy-magit-section.el
++++ b/taxy-magit-section.el
+@@ -405,8 +405,7 @@ the items' values for each column."
+                                           (setf window-system-frame
+                                                 (cl-loop for frame in (frame-list)
+                                                          when (and (frame-visible-p frame)
+-                                                                   (memq (framep frame)
+-                                                                         '(x w32 ns pgtk)))
++                                                                   (not (eq (framep frame) t)))
+                                                          return frame))
+                                           (error "taxy-magit-section-format-items: No graphical frame to calculate image size"))))))
+                         (_
+-- 
+2.47.0
+

@@ -74,7 +74,25 @@ in
     extraPackages = epkgs: with pkgs; (with epkgs; [
       erc erc-hl-nicks
       insert-kaomoji
-      ement
+      (ement.override {
+        taxy-magit-section = taxy-magit-section.overrideAttrs(prev: {
+          patches = (prev.patches or []) ++ [ ./patches/taxy-framep.patch ];
+          patchPhase = ''
+            runHook prePatch
+            mkdir tmp-untar-dir
+            pushd tmp-untar-dir
+
+            tar --extract --verbose --file=$src
+            content_directory=${prev.pname}-${prev.version}
+            patch -d $content_directory < $patches
+            src=$PWD/$content_directory.tar
+            tar --create --verbose --file=$src $content_directory
+
+            popd
+            runHook postPatch
+          '';
+        });
+      })
       (elfeed.overrideAttrs(prev: rec {
         patches = (prev.patches or []) ++ [
           ./patches/elfeed-collide-links.patch
@@ -266,6 +284,7 @@ in
   home.packages = [ emacsWrapped ] ++ (with pkgs; [
     nixfmt-rfc-style
     shellcheck
+    # pantalaimon # ement.el
 
     nerd-fonts.symbols-only
 
@@ -284,6 +303,23 @@ in
     EDITOR = "emacsclient";
   };
 
+  # launchd.agents.pantalaimon = let
+  #   config = (pkgs.formats.ini {}).generate "pantalaimon.conf" {
+  #     "mozilla-matrix" = {
+  #       Homeserver = "https://mozilla.modular.im:443";
+  #       ListenAddress = "localhost";
+  #       ListenPort = 8009;
+  #     };
+  #   };
+  # in {
+  #   enable = true;
+  #   config = {
+  #     ProgramArguments = [
+  #       (lib.getExe' pkgs.pantalaimon-headless "pantalaimon") "-c" "${config}"
+  #     ];
+  #     RunAtLoad = true;
+  #   };
+  # };
 
   programs.fish = {
     interactiveShellInit = lib.mkAfter ''
