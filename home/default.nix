@@ -11,6 +11,8 @@ in {
     ./config/editor
     ./config/terminal
     ./config/finance
+
+    ./config/firefox.nix
   ];
 
   home = {
@@ -27,7 +29,6 @@ in {
       time-out-macos
       keycastr
 
-      firefox-bin
 
       (runCommandLocal "xcode" {} ''
          mkdir -p $out/Applications/Xcode.app
