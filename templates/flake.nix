@@ -15,6 +15,10 @@
         path = ./rust;
         description = "Rewrite it, but in Rust";
       };
+      elixir = {
+        path = ./elixir;
+        description = "BEAM me up Scotty";
+      };
     };
   };
 }
