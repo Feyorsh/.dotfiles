@@ -244,30 +244,10 @@ in
         };
       })
 
-      all-the-icons
-      (all-the-icons-completion.overrideAttrs (prev: {
-        packageRequires = (prev.packageRequires or []) ++ [
-          epkgs.compat
-        ];
-        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
-          name = "marginalia.patch";
-          url = "https://patch-diff.githubusercontent.com/raw/iyefrat/all-the-icons-completion/pull/33.patch";
-          sha256 = "B0rG0Wxacns1iUEFzyIK2fjDxFqnj1k+OgqKTqtQXOI=";
-        }) ];
-      }))
+      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion
 
-      kind-icon
       marginalia
-      doom-themes solaire-mode
-      (doom-modeline.overrideAttrs (prev: rec {
-        version = "3.4.0";
-        src = fetchFromGitHub {
-          owner = "seagle0128";
-          repo = prev.pname;
-          rev = "refs/tags/v${version}";
-          sha256 = "sha256-cTaMtLzolZckTsCzYT1Ij/ESvw+f+QI0jFKfPYbFrPw=";
-        };
-      }))
+      doom-themes solaire-mode doom-modeline
       rainbow-mode
 
       (trivialBuild rec {
@@ -286,6 +266,8 @@ in
   home.packages = [ emacsWrapped ] ++ (with pkgs; [
     nixfmt-rfc-style
     shellcheck
+
+    nerd-fonts.symbols-only
 
     # LSP
     emacs-lsp-booster

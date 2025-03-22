@@ -42,7 +42,6 @@ in
 
       jetbrains-mono
       julia-mono
-      cascadia-code
 
       twemoji-color-font
       emacs-all-the-icons-fonts
