@@ -25,6 +25,7 @@ in
     vim
     wget
     curl
+    socat
     ripgrep
     fd
     jq
