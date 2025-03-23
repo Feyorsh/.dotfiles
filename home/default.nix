@@ -42,6 +42,8 @@ in {
   };
   programs.home-manager.enable = true;
 
+  xdg.enable = true;
+
   fonts.fontconfig.enable = true;
 
   programs.spicetify = let
