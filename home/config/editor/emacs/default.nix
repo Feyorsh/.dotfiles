@@ -316,7 +316,7 @@ in
     emacs-lsp-booster
     clang-tools # c/c++
     rust-analyzer # rust
-    basedpyright # python
+    ruff basedpyright # python
     sourcekit-lsp # swift
     zls # zig
     gopls # go
