@@ -362,6 +362,7 @@ in
     '';
     shellAliases = {
       ff = "vterm_find_file";
+      ee = "open -a ${emacsWrapped}/Applications/Emacs.app";
     };
     functions = {
       vterm_printf = ''
