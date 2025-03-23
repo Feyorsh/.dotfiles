@@ -1705,7 +1705,11 @@ And now to make it *pretty*
         '(("WAIT" :background "orange red" :foreground "white")
           ("PROG" :background "deep pink" :foreground "white")
           ("LATE" :background "dark red" :foreground "white")
-          ("CANCELED" :background "dark red" :foreground "white"))))
+          ("CANCELED" :background "dark red" :foreground "white")))
+  (setq org-priority-faces '((?A . org-level-1)
+                             (?B . org-level-2)
+                             (?C . org-level-3)
+                             (?D . org-level-4))))
 
 ;; tecosaur the goat for this one
 (defvar +org-mode-left-margin-width 1
@@ -1830,7 +1834,7 @@ Org capture setup.
 			,`("r" "Reading list" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Reading list")
 				   "- %(with-temp-buffer (org-insert-link) (buffer-substring-no-properties (point-min) (point-max)))")
             ,`("e" "Email" entry ,`(file ,(expand-file-name "inbox.org" org-directory))
-                   "* TODO %:fromname: %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t))")
+                   "* TODO %? %:fromname: %a\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t))")
 			,`("v" "Vocab" item ,`(file+headline ,(expand-file-name "agenda.org" org-directory) "Vocab List")
 				   "- %?")))
   )
@@ -1839,40 +1843,71 @@ Agenda stuff
 #+begin_src elisp
 (use-package org
     :general
-  (leader-def "a" (lambda () (interactive) (org-agenda nil "i")))
+  (leader-def "a" (lambda () (interactive) (org-agenda nil "d")))
   :config
+  (add-to-list 'org-modules 'org-habit)
   (setq org-log-into-drawer t
         org-archive-location "archive.org::* %s"
         org-archive-file-header-format nil
 
         org-extend-today-until 3
         org-use-effective-time t
+        org-deadline-warning-days 7
 
+        org-priority-default ?0
+        org-priority-highest ?A
+        org-priority-lowest ?D
+        org-priority-start-cycle-with-default t
+
+        org-agenda-skip-deadline-prewarning-if-scheduled t
 		org-agenda-skip-scheduled-if-done t
         org-agenda-skip-deadline-if-done t
         org-agenda-skip-timestamp-if-done t
+
+        org-agenda-sticky t
+        org-agenda-breadcrumbs-separator " ❱ "
+
+        org-agenda-time-leading-zero t
+
+        org-deadline-warning-days 3
+        org-scheduled-past-days 100
+        org-deadline-past-days 100
+        org-agenda-skip-scheduled-if-deadline-is-shown t
+        org-agenda-skip-timestamp-if-deadline-is-shown t
+
         org-agenda-inhibit-startup t
 		org-agenda-window-setup 'current-window
-		org-agenda-prefix-format '((agenda . " %i %-8:c %11s %8(let ((class (car (last (org-get-outline-path))))) (if (ignore-errors (string-match \"[0-9]+$\" class)) class \"\")) ") (todo . "%i %-12:c") (tags . " %i %-12:c") (search . " %i %-12:c"))
-		org-agenda-tags-column 0
+
+        org-agenda-tags-column 0
+        org-agenda-hide-tags-regexp "project"
 		org-agenda-block-separator ?─
-		org-agenda-time-grid
-		'((daily today require-timed)
-		  (800 1000 1200 1400 1600 1800 2000)
-		  " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+        org-agenda-time-grid (quote ((today require-timed remove-match) () "" "┈┈┈┈┈┈┈┈┈┈┈┈┈"))
+        org-agenda-remove-tags-when-in-prefix 'prefix
+        org-agenda-prefix-format " %7(concat (cond ((not (string-empty-p extra)) extra) ((not (string-empty-p time)) (string-trim time)) nil)) %9(concat (org-element-lineage-map (org-element-at-point) (lambda (node) (when (member \"project\" (org-export-get-node-property :tags node)) (org-export-get-node-property :title node))) '(headline) nil t)) "
+        org-agenda-scheduled-leaders '("" "%dd ago")
+        org-agenda-deadline-leaders '("" "T-%d" "%dd ago")
 		org-agenda-current-time-string
 		"⭠ now ─────────────────────────────────────────────────")
+
+  (setq org-agenda-sorting-strategy '((agenda habit-down scheduled-down urgency-down ts-up time-up priority-down category-keep)
+                                      (todo priority-down category-keep)
+                                      (tags priority-down category-keep)
+                                      (search category-keep)))
   (setq org-agenda-custom-commands
-        '(("i" "Agenda/Inbox"
-           ((agenda "")
-            (tags-todo "INBOX"))
-           ((org-agenda-tag-filter-preset '("-STASIS"))
-            (org-agenda-show-inherited-tags nil)))))
+        '(("d" "Daily agenda and TODOs"
+           ((todo "TODO" ((org-agenda-overriding-header "Reminders")
+                          (org-agenda-remove-tags t)
+                          (org-agenda-files '("reminders-beorg.org"))))
+            (todo "TODO" ((org-agenda-overriding-header "Inbox")
+                          (org-agenda-files '("inbox.org"))))
+            (agenda "" ((org-agenda-span 3)
+                        (org-agenda-start-day "0d")
+                        (org-agenda-dim-blocked-tasks nil)))))))
   (setq org-refile-use-outline-path 'file)
   (setq org-outline-path-complete-in-steps nil)
   :custom
   (org-directory "~/Personal/org")
-  (org-agenda-files `(,org-directory))
+  (org-agenda-files (list (expand-file-name "agenda.org" org-directory)))
   (org-refile-targets `((nil :maxlevel . 5)
                         ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
                         ;; this is an unorthodox usecase, but I only want top level refiling
