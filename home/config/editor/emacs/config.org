@@ -888,6 +888,13 @@ This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01
       (setq midnight-hook '(fysh/agenda-reminder))))
 #+end_src
 
+**** Comint
+#+begin_src elisp
+(use-package comint
+   :config (setq display-comint-buffer-action '(display-buffer))
+   :general-config ('(normal insert motion emacs) 'comint-mode-map "C-d" #'comint-send-eof))
+#+end_src
+
 *** TODO Mail
 This is surprisingly quite nice; Outlook sets an abysmally low bar, but still.
 
@@ -1275,12 +1282,11 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
-*** TODO Matrix
 #+begin_src elisp
-(use-package ement)
 #+end_src
 
-*** TODO IRC
+*** Chat
+**** IRC
 #+begin_src elisp
 (use-package erc
 	:commands (erc erc-tls erc-join-server)
@@ -1450,8 +1456,8 @@ DEFAULT is the immediate return value of the function when called."
                   (depth . -99)))))
 #+end_src
 
-**** Kaomoji
-This isn't strictly IRC related, but...
+***** Kaomoji
+This isn't /strictly/ IRC related, but...
 #+begin_src elisp
 (use-package insert-kaomoji
     :general
@@ -1474,6 +1480,14 @@ This isn't strictly IRC related, but...
   (ring-insert insert-kaomoji--last-used "(ಠ_ಠ)")
   (ring-insert insert-kaomoji--last-used "( ͡° ͜ʖ ͡°)")
   (ring-insert insert-kaomoji--last-used "¯\\_(ツ)_/¯"))
+#+end_src
+
+**** Matrix
+#+begin_src elisp
+(use-package ement
+    :config
+    (setq ement-save-sessions t
+          ement-room-use-variable-pitch t))
 #+end_src
 
 ** Language
