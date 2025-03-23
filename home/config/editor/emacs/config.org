@@ -1359,6 +1359,22 @@ A shame the author passed away.
 (use-package gnugo)
 #+end_src
 
+**** TODO NetHack
+Ah yes, Nethack as God intended: in ~lisp~ mode.
+#+begin_src elisp
+(use-package nethack
+    :custom-face
+  (nethack-message-highlight-face ((t (:inherit bold))))
+  :general-config
+  ('insert 'nh-map-mode-map "C-w" nil)
+  :config
+  (add-to-list 'evil-insert-state-modes 'nh-map-mode)
+  (define-advice nethack-installed-p (:override () disable-check) t)
+  (define-advice nhapi-create-menu-window (:override (menuid) nethack-buffer-name)
+    (with-current-buffer (nhapi-create-menu (intern "nethack menu") menuid)
+      (setq buffer-read-only t)))
+  )
+#+end_src
 
 **** Zone
 Use Zone as a true screen saver that prevents sleep.
