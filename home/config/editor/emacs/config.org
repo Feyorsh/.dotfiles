@@ -1643,13 +1643,6 @@ Now for Babel:
         (apply fn args)))
     :config
     (setq org-babel-default-header-args:elisp '((:lexical . "yes")))
-    ;; (org-babel-do-load-languages
-    ;;  'org-babel-load-languages
-    ;;  '((emacs-lisp . t)
-    ;;    (shell . t)
-    ;;    (python . t)
-    ;;    (mathematica . t)
-	;;    (sagemath . t)))
     )
 #+end_src
 
