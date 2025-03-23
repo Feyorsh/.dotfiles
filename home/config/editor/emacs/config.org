@@ -1580,6 +1580,8 @@ And now to make it *pretty*
 	:hook
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
+  :custom-face
+  (org-table ((t (:foreground ,(doom-color 'cyan)))))
   :config
   (setq org-modern-star 'replace)
   ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
@@ -2291,6 +2293,8 @@ Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 (use-package sage-shell-mode
     :mode ("\\.sage\\'" . sage-shell:sage-mode)
     :interpreter "sage"
+    :hook ((sage-shell-mode . eldoc-mode)
+           (sage-shell:sage-shell-mode . eldoc-mode))
 	:init
     (sage-shell:define-alias)
     (setq sage-shell:use-prompt-toolkit nil)
