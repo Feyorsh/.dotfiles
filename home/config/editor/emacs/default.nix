@@ -247,7 +247,7 @@ in
           };
           meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
         };
-      }))))
+      })))) treesit-fold
       (trivialBuild rec {
         pname = "typst-ts-mode";
         version = "42094eb2508f30ca2aba26786768e969476d98fa";
