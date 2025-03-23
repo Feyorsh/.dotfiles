@@ -1961,11 +1961,11 @@ Taken from Doom Emacs."
   (copy-face 'fixed-pitch 'fysh/org-mode-latex-face)
   (advice-add 'org-src-font-lock-fontify-block
               :after
-              (defun no-latex-background-face (lang start end)
+              (defun my/no-latex-background-face (lang start end)
                 (when (equal lang "latex")
                   (alter-text-property
                    start end 'face
-                   (lambda (l) (-replace 'org-block 'fysh/org-mode-latex-face l))))))
+                   (lambda (l) (remove 'org-block l))))))
 
   (defvar lit-mode--cookies nil)
   (defface lit-mode-variable-face '((t :family "Libertinus Serif" :weight medium :height 2.0)) nil)
