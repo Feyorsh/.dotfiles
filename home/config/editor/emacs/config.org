@@ -1804,8 +1804,8 @@ Taken from Doom Emacs."
 **** LaTeX
 #+begin_src elisp
 (use-package org
-    :init
-  (define-advice org-mode (:before (&rest _) direnv-update) (direnv-update-environment))
+  :init
+  (define-advice org-mode (:before (&rest _) direnv-update) (when (buffer-file-name (current-buffer)) (direnv-update-environment)))
   :config
   (setq org-highlight-latex-and-related '(native)
         org-image-align 'center
