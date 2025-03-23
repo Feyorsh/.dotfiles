@@ -1283,6 +1283,27 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
 #+begin_src elisp
+*** Games
+**** GNU Go
+A really well written piece of software (the Emacs package, at least).
+A shame the author passed away.
+#+begin_src elisp
+(use-package gnugo)
+#+end_src
+
+
+**** Zone
+Use Zone as a true screen saver that prevents sleep.
+#+begin_src elisp
+(use-package zone
+    :if (eq system-type 'darwin)
+    :init
+    (define-advice zone (:around (fn &rest args) fysh/covfefe)
+      (let* ((covfefe-buf (get-buffer-create " *caffeinate*"))
+             (covfefe-proc (start-process "caffeinate" covfefe-buf "caffeinate" "-d")))
+        (set-process-query-on-exit-flag covfefe-proc nil)
+        (apply fn args)
+        (when covfefe-buf (kill-buffer covfefe-buf)))))
 #+end_src
 
 *** Chat
@@ -2844,20 +2865,6 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 (use-package flymake
     :hook (flymake-mode . eldoc-mode)
     )
-#+end_src
-
-*** Zone
-Use Zone as a true screen saver that prevents sleep.
-#+begin_src elisp
-(use-package zone
-    :if (eq system-type 'darwin)
-    :init
-    (define-advice zone (:around (fn &rest args) fysh/covfefe)
-      (let* ((covfefe-buf (get-buffer-create " *caffeinate*"))
-             (covfefe-proc (start-process "caffeinate" covfefe-buf "caffeinate" "-d")))
-        (set-process-query-on-exit-flag covfefe-proc nil)
-        (apply fn args)
-        (when covfefe-buf (kill-buffer covfefe-buf)))))
 #+end_src
 
 *** Browser
