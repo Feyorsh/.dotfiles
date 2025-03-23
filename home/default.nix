@@ -34,6 +34,8 @@ in {
          mkdir -p $out/Applications/Xcode.app
          ln -s ${pkgs.darwin.xcode_16_1}/* $out/Applications/Xcode.app/
        '')
+
+      texlive.combined.scheme-medium
     ];
 
     stateVersion = "23.05";
