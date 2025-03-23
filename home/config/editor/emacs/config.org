@@ -2016,7 +2016,15 @@ parent."
 #+begin_src elisp
 (use-package python
     :mode ("\\.py\\'" . python-ts-mode)
-    :interpreter ("python" . python-ts-mode))
+    :interpreter ("python" . python-ts-mode)
+    :hook (python-ts-mode . flymake-mode)
+    :config
+    (setq python-indent-guess-indent-offset-verbose nil)
+    (setq python-flymake-command '("ruff" "--quiet" "--stdin-filename=stdin" "-")))
+
+(use-package python-mls
+    :hook (inferior-python-mode . python-mls-mode)
+    :config (setq python-mls-kill-buffer-process-quit t))
 #+end_src
 
 *** Julia
