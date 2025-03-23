@@ -2032,17 +2032,17 @@ Taken from Doom Emacs."
     :hook (org-mode . org-latex-preview-auto-mode)
     :config
     (setq org-latex-preview-appearance-options (progn (plist-put org-format-latex-options :background "Transparent")
-                                                              ;; (plist-put org-latex-preview-appearance-options :foreground 'default)
-                                                              (plist-put org-latex-preview-appearance-options :foreground 'auto)
-                                                              (plist-put org-latex-preview-appearance-options :page-width 0.5)
-                                                              (plist-put org-latex-preview-appearance-options :zoom 1.1))
+                                                      ;; (plist-put org-latex-preview-appearance-options :foreground 'default)
+                                                      (plist-put org-latex-preview-appearance-options :foreground 'auto)
+                                                      (plist-put org-latex-preview-appearance-options :page-width 0.5)
+                                                      (plist-put org-latex-preview-appearance-options :zoom 1.1))
 
-                  org-startup-with-latex-preview t
-                  org-latex-preview-numbered nil
-                  org-latex-preview-live-debounce 1.0
-                  org-latex-preview-auto-track-inserts t
-                  org-latex-preview-live t
-                  org-latex-preview-process-active-indicator nil)
+          org-startup-with-latex-preview t
+          org-latex-preview-numbered nil
+          org-latex-preview-live-debounce 1.0
+          org-latex-preview-auto-track-inserts t
+          org-latex-preview-live t
+          org-latex-preview-process-active-indicator nil)
 
     (setq org-latex-preview-process-default 'dvisvgm)
     (setq org-latex-preview--dvisvgm3-minor-version 2)
@@ -2082,7 +2082,20 @@ Taken from Doom Emacs."
     :hook (LaTeX-mode . turn-on-cdlatex)
     :config
     (setq cdlatex-simplify-sub-super-scripts t)
-    ;; (add-to-list 'cdlatex-math-symbol-alist-default '(?d)
+    (setq cdlatex-insert-auto-labels-in-env-templates nil)
+    ;; (setq cdlatex-math-symbol-alist '((?c ("\\chi" "" "\\cos"))
+    ;;                                   (?o ("\\omega" "\\mho" "\\mathcal{O}"))
+    ;;                                   (?. ("\\cdot" "\\circ"))
+    ;;                                   (?6 ("\\partial"))
+    ;;                                   (?x ("\\xi" "\\Xi"))
+    ;;                                   (?= ("\\equiv" "\\cong"))
+    ;;                                   (?+ ("\\cup" "\\sum"))
+    ;;                                   (?* ("\\times" "\\prod"))
+    ;;                                   (?^ ("\\uparrow" "\\Updownarrow" "\\updownarrow"))))
+    ;; (setq cdlatex-math-modify-alist '((?k "\\mathfrak" "\\textfrak" t nil nil)
+    ;;                                   (?b "\\mathbf" "\\textbf" t nil nil)
+    ;;                                   (?B "\\mathbb" "\\textbf" t nil nil)
+    ;;                                   (?t "\\text" nil t nil nil)))
     :general-config
 	('org-cdlatex-mode-map "<tab>" #'cdlatex-tab))
 #+end_src
