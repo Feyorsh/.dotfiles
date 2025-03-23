@@ -2539,9 +2539,9 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     :general
   (leader-def
       "g b" #'magit-blame
-    "g d" #'magit-diff
+    "g d" (lambda () (interactive) (require 'magit) (if (magit-file-relative-name) (magit-diff-buffer-file) (magit-diff)))
     "g f" #'magit-find-file
-    "g l" #'magit-log
+    "g l" (lambda () (interactive) (require 'magit) (if (magit-file-relative-name) (magit-log-buffer-file) (magit-log)))
     "g g" #'magit-status
     "g c" #'magit-clone
     "g ." #'magit-file-dispatch
@@ -2557,6 +2557,8 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
    "J" nil
    )
   :config
+  (setq magit-diff-refine-hunk t)
+  (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-delete-by-moving-to-trash nil)
   (setq magit-status-show-hashes-in-headers 't)
   (setq magit-save-repository-buffers nil)
