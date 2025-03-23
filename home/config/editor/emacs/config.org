@@ -2831,6 +2831,10 @@ The OG.
         gdb-restore-window-configuration-after-quit 'if-gdb-many-windows
         gdb-show-main t))
 #+end_src
+**** TODO Dape
+#+begin_src elisp
+(use-package dape)
+#+end_src
 
 *** LSP
 Eglot!

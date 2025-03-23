@@ -124,6 +124,7 @@ in
           sha256 = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
         };
       }))
+      dape
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
