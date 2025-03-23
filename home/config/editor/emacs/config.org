@@ -2179,6 +2179,8 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
 #+begin_src elisp
 (use-package markdown-mode
     :mode "\\.md\\'"
+    :custom-face
+    (markdown-code-face ((t (:background ,(doom-color 'base1)))))
     :config
     (setq markdown-fontify-code-blocks-natively t)
     (defun markdown-display-inline-images ()
@@ -2933,12 +2935,12 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 *** Theme
 #+begin_src elisp
 (use-package doom-themes
+    :autoload (doom-color)
     :demand t
     :config
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
     (load-theme 'doom-palenight t)
-    (with-eval-after-load 'markdown-mode (set-face-background 'markdown-code-face (doom-color 'base1)))
     (doom-themes-visual-bell-config)
     (doom-themes-org-config))
 #+end_src
