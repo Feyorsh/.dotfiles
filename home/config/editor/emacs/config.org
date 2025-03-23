@@ -108,6 +108,9 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     (setq warning-minimum-level :error)
 
+    ;; bug#73773
+    (defvar subword-mode nil)
+
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
 
