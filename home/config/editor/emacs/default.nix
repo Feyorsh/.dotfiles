@@ -217,7 +217,7 @@ in
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
           sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
-      }))
+      })) nix-ts-mode
       (verilog-ts-mode.overrideAttrs (prev: rec {
         version = "0.2.1";
         src = fetchFromGitHub {
