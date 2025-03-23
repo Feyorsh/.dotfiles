@@ -47,6 +47,9 @@ OPTIONS=paranoid_confirmation:quit attack pray Remove
 
 OPTIONS=sortloot:full
 
+OPTIONS=time
+OPTIONS=showexp
+
 #OPTIONS=!bones
 
 AUTOCOMPLETE=!quit
@@ -85,6 +88,7 @@ OPTIONS=suppress_alert:3.6.7
 
 # See http://nethackwiki.com/wiki/Curses_interface
 OPTIONS=windowtype:curses
+OPTIONS=statuslines:3
 OPTIONS=perm_invent
 OPTIONS=symset:DECgraphics
 #SYMBOLS=S_litcorr:\x2592 # gotta wait for 3.7
