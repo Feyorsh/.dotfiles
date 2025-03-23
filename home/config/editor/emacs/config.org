@@ -193,13 +193,6 @@ Forgot where I sourced all this, but basically take a rather conservative approa
          "/[ \11]*DEFVAR_[A-Z_ \11(]+\"\\([^\"]+\\)\"/\\1/" "/[ \11]*DEFVAR_[A-Z_ \11(]+\"[^\"]+\",[ \11]\\([A-Za-z0-9_]+\\)/\\1/")))))
 #+end_src
 
-** Server/Client
-Man, I spent /waaaay/ too long on this.
-#+begin_src elisp
-(use-package server
-    :hook (after-init . server-start))
-#+end_src
-
 ** macOS Interaction
 #+begin_src elisp
 (use-package ultra-scroll
@@ -2308,6 +2301,29 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
 	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
+
+*** Server/Client
+Man, I spent /waaaay/ too long on this.
+#+begin_src elisp
+(use-package server
+    :hook
+    (after-init . server-start)
+    ((server-switch server-after-make-frame) . (lambda () (setq-local is-client-buffer t)))
+    :init
+    (setq-default is-client-buffer nil)
+    (setenv "EDITOR" "emacsclient")
+    :config
+    (setq server-client-instructions nil)
+    :general-config
+    ('normal 'server-mode-map :predicate '(bound-and-true-p is-client-buffer)
+     "ZZ" #'server-edit
+     "ZK" #'server-edit
+     "ZQ" #'server-edit-abort)
+    ('server-mode-map :predicate '(bound-and-true-p is-client-buffer)
+     "C-c C-c" #'server-edit
+     "C-c C-k" #'server-edit-abort))
+#+end_src
+
 **** TODO hl-warn-mode
 hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my own version.
 #+begin_src elisp
