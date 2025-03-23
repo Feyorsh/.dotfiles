@@ -2418,6 +2418,11 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
     :mode "\\.ya?ml\\'")
 #+end_src
 
+*** TODO Docker
+#+begin_src elisp
+(use-package docker)
+#+end_src
+
 *** Nix
 ~nix-ts-mode~ is better for just highlighting files and whatnot, but ~nix-mode~ provides a bunch of other niceties like shebang detection, ~nix-build/repl~ comint support, store path and log introspection, and interactive flake commands.
 #+begin_src elisp

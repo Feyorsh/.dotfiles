@@ -125,6 +125,7 @@ in
         };
       }))
       dape
+      docker
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
