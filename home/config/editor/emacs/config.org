@@ -2903,17 +2903,28 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     (doom-themes-visual-bell-config)
     (doom-themes-org-config))
 #+end_src
-~doom-modeline~ is pinned to 3.4.0, the last version that supports all-the-icons, in [[file:~/.dotfiles/home.nix][home.nix]].
 #+begin_src elisp
 (use-package doom-modeline
     :hook (after-init . doom-modeline-mode)
+    :hook (doom-modeline-mode . (lambda () (doom-modeline-set-modeline 'main 'default)))
     :config
-    (remove-hook 'after-save-hook #'doom-modeline-update-vcs-icon)
-    ;; just moved the workspace to the right
+    (setq doom-modeline-buffer-modification-icon nil
+          doom-modeline-modal-modern-icon nil
+          doom-modeline-lsp nil
+          doom-modeline-buffer-encoding nil
+          doom-modeline-enable-word-count t
+          doom-modeline-continuous-word-count-modes nil
+          doom-modeline-env-version nil
+
+          doom-modeline-position-line-format '("%l")
+          doom-modeline-height 40)
+    (setq nerd-icons-scale-factor 0.9)
+    (setq mode-line-right-align-edge 'right-margin)
+    ;; moved workspace/window numbering to the right, debug-on-error all the way over
     (doom-modeline-def-modeline 'main
-        '(bar window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-      '(compilation objed-state misc-info workspace-name persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
-    (setq doom-modeline-modal-icon t))
+        '(eldoc bar modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+      '(compilation objed-state misc-info project-name workspace-name persp-name battery grip irc mu4e gnus github repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time debug))
+    )
 #+end_src
 #+begin_src elisp
 (use-package solaire-mode
