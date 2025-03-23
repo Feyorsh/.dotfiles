@@ -109,6 +109,7 @@ in
           ./patches/elfeed-shr.patch
         ];
       })) elfeed-org
+      emms org-emms emms-player-spotify emms-player-simple-mpv # pkgs.spotifyd pkgs.mpv
 
       vterm
       pdf-tools
@@ -307,6 +308,7 @@ in
     zig # for disaster
 
     # pantalaimon # ement.el
+    mpv spotifyd imagemagick
 
     nerd-fonts.symbols-only
 

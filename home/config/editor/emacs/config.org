@@ -1282,7 +1282,75 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
+*** TODO Music
+[[https://web.archive.org/web/20240607010151/https://tech.toryanderson.com/2023/11/29/transient-for-convenience-with-emms/][EMMS transient]]
+[[https://web.archive.org/web/20240725194231/https://blog.binchen.org/posts/how-to-use-emms-effectively/][Using EMMS metadata]]
+[[https://ag91.github.io/blog/2022/05/02/emms-+-org-roam-youtube-playlists-with-titles/][EXTM3U in EMMS]]
+[[https://lucidmanager.org/productivity/configure-emms/][Misc EMMS config]]
 #+begin_src elisp
+(use-package emms
+    :config
+  (emms-all)
+  (emms-lyrics -1)
+  (require 'emms-player-spotify)
+
+  (setq emms-player-list '(emms-player-mpv emms-player-spotify))
+  (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-video" "--no-audio-display" "--force-window=no" "--vo=null" "--script-opts=ytdl_hook-thumbnails=best"))
+  (setq emms-player-mpv-update-metadata t)
+
+  (setq emms-browser-covers #'emms-browser-cache-thumbnail-async)
+  (setq emms-source-file-default-directory "~/Music")
+
+  (setq emms-mode-line-format " [%s] ")
+  (setq emms-mode-line-icon-enabled-p t)
+  (setq emms-mode-line-icon-color "white")
+
+  (defalias 'emms-resume 'emms-start)
+  (defalias 'emms-play 'emms-start)
+  ;; (defvar emms-player-mpv-volume 100)
+
+  ;; (setq emms-volume-change-function ...)
+  ;; idea: one volume parameter shared between spotify and mpv (system volume controlled separately)
+  ;; (defvar emms-player-volume 100)
+  ;; (defun emms-player-mpv-get-volume ()
+  ;;   "Sets `emms-player-mpv-volume' to the current volume value
+  ;;   and sends a message of the current volume status."
+  ;;   (emms-player-mpv-cmd '(get_property volume)
+  ;;                        #'(lambda (vol err)
+  ;;                            (unless err
+  ;;                              (let ((vol (truncate vol)))
+  ;;                                (setq emms-player-mpv-volume vol)
+  ;;                                (message "Music volume: %s%%"
+  ;;                                         vol))))))
+
+  ;; (defun emms-player-mpv-raise-volume (&optional amount)
+  ;;   (interactive)
+  ;;   (let* ((amount (or amount 10))
+  ;;          (new-volume (+ emms-player-mpv-volume amount)))
+  ;;     (if (> new-volume 100)
+  ;;         (emms-player-mpv-cmd '(set_property volume 100))
+  ;;       (emms-player-mpv-cmd `(add volume ,amount))))
+  ;;   (emms-player-mpv-get-volume))
+
+  ;; (defun emms-player-mpv-lower-volume (&optional amount)
+  ;;   (interactive)
+  ;;   (emms-player-mpv-cmd `(add volume ,(- (or amount '10))))
+  ;;   (emms-player-mpv-get-volume))
+
+  ;;https://emacs.stackexchange.com/questions/21747/emms-how-can-i-have-a-progress-bar/21766#21766
+  ;; (defun chunyang-emms-indicate-seek (_sec)
+  ;;   (let* ((total-playing-time (emms-track-get
+  ;;                               (emms-playlist-current-selected-track)
+  ;;                               'info-playing-time))
+  ;;          (elapsed-total (round(/ (* 100 emms-playing-time) total-playing-time))))
+  ;;     (with-temp-message (format "[%-100s] %2d%%"
+  ;;                                (make-string elapsed-total ?=)
+  ;;                                elapsed-total)
+  ;;       (sit-for 5))))
+  ;; (add-hook 'emms-player-seeked-functions #'chunyang-emms-indicate-seek 'append)
+  )
+#+end_src
+
 *** Games
 **** GNU Go
 A really well written piece of software (the Emacs package, at least).
