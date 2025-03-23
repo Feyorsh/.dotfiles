@@ -2742,6 +2742,8 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode
     :mode "\\.ledger\\'"
+    :config
+    (setq ledger-copy-transaction-insert-blank-line-after t)
     :custom
     (ledger-reports
      '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
