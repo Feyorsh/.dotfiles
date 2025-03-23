@@ -234,6 +234,7 @@ in
       ledger-mode
       wolfram-mode
       sage-shell-mode ob-sagemath
+      elixir-ts-mode ob-elixir
       # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
       (treesit-grammars.with-grammars (grammars: [
       ] ++ (builtins.attrValues (pkgs.tree-sitter.builtGrammars // {

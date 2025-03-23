@@ -2166,6 +2166,11 @@ Slime? Improve scratch?
     :mode "\\.hs\\'")
 #+end_src
 
+*** TODO Elixir
+#+begin_src elisp
+(use-package elixir-ts-mode)
+#+end_src
+
 *** TODO C/C++
 I realized I don't actually use an "official" style; I think functions should be formatted like statements.
 #+begin_src elisp
