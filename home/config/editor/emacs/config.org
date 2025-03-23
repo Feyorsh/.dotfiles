@@ -1224,6 +1224,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+begin_src elisp
 (use-package elfeed
     :commands (elfeed)
+    :hook (elfeed-search-mode . (lambda () (text-scale-increase 2)))
     :config
     (use-package elfeed-org
 	    :after org
