@@ -3092,10 +3092,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 :END:
 ~menu-bar-mode~ must be enabled for [[https://bitbucket.org/mituharu/emacs-mac/src/892fa7b2501a403b4f0aea8152df9d60d63f391a/doc/emacs/macport.texi?at=master#macport.texi-529][emacs-mac]]: frames without menu bars DO NOT have fullscreen enabled by default
 #+begin_src elisp
-;; (define-key global-map [menu-bar] nil)
-;; (add-hook 'after-change-major-mode-hook (lambda () (local-set-key [menu-bar] nil)))
-;; (add-hook 'minibuffer-setup-hook (lambda () (local-set-key [menu-bar] nil)))
-
+(push '(menu-bar-lines . 0)   default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
 (push '(undecorated-round . t) default-frame-alist)
@@ -3103,6 +3100,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 ;; big savings, supposedly
 (setq frame-inhibit-implied-resize t)
 
+;;  these do nothing on mituharu's emacs port
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
