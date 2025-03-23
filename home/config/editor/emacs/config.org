@@ -2219,9 +2219,10 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
 #+end_src
 
 *** TODO Lisp
-Slime? Improve scratch?
 #+begin_src elisp
 (setq-default lisp-indent-function 'common-lisp-indent-function)
+
+(use-package sly)
 #+end_src
 
 *** Haskell

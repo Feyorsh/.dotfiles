@@ -211,6 +211,7 @@ in
       python-mls
       haskell-mode
       markdown-mode
+      sly
       (nix-mode.overrideAttrs (prev: {
         patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
           name = "flake-shebangs.patch";
