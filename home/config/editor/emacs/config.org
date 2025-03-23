@@ -1617,6 +1617,9 @@ Need to stop loading my Org files on startup...
       (unwind-protect
            (funcall-interactively fn args)
         (when clipboard-url (setq org-stored-links (delq (assoc clipboard-url org-stored-links) org-stored-links))))))
+
+  (add-to-list 'safe-local-variable-values '(org-latex-image-default-width . "2cm"))
+  (add-to-list 'safe-local-variable-values '(org-latex-images-centered . nil))
   :general
   ("C-c l" #'org-store-link)
   :hook ((org-mode . (lambda () (jinx-mode -1)))
@@ -1628,6 +1631,7 @@ Need to stop loading my Org files on startup...
         org-indirect-buffer-display 'current-window
 		org-export-with-smart-quotes t
 		org-latex-prefer-user-labels t
+        org-latex-tables-booktabs t
 		org-list-allow-alphabetical t
 		org-confirm-babel-evaluate nil
 		org-return-follows-link t
@@ -1643,7 +1647,7 @@ Need to stop loading my Org files on startup...
 		org-tags-column 0
 		org-catch-invisible-edits 'show-and-error
 		org-special-ctrl-a/e t
-		org-insert-heading-respect-content nil
+		org-insert-heading-respect-content t
 		org-pretty-entities t
         org-ellipsis " ▾"
         org-use-fast-todo-selection 'expert)
