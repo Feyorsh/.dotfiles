@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 let
   emacs' = pkgs.emacs29-macport.overrideAttrs (prev: {
+    src = pkgs.fetchFromBitbucket {
+      owner = "mituharu";
+      repo = "emacs-mac";
+      rev = "7cc5e67629363d9e98f65e4e652f83bb4e0ee674";
+      hash = "sha256-Uv0AX0d5JLgxHlBD70OIDOO/ImMA6hH1fs5hCuMxw7c=";
+    };
+    version = "29.4";
+
     patches = (prev.patches or []) ++ [
       (pkgs.fetchpatch {
         name = "no-titlebar.patch";
@@ -17,6 +25,7 @@ let
 
     configureFlags = (prev.configureFlags or []) ++ [
       "--with-xwidgets"
+      "--with-librsvg"
     ];
     preConfigure = ''
       configureFlagsArray+=(
@@ -27,6 +36,7 @@ let
 
     buildInputs = (prev.buildInputs or []) ++ [
       pkgs.darwin.apple_sdk_11_0.frameworks.WebKit
+      pkgs.librsvg
     ];
   });
 
