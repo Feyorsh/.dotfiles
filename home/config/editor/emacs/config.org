@@ -114,6 +114,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
 
+    (defalias 'rename-this-file 'rename-visited-file)
+
     (defun fysh/native-find-file (filename)
       (interactive (list (read-file-name "Find file natively: " nil default-directory t)))
       (org-open-file filename '(16)))
@@ -366,6 +368,9 @@ Rebind builtin bindings
       (progn
         (window-configuration-to-register '_)
         (delete-other-windows))))
+  (defun fysh/disabled-keybind ()
+    (interactive)
+    (message "Ah ah ah, you didn't say the magic word!"))
   :general-config
   (leader-def "`" #'toggle-maximize-buffer)
   (leader-def "#" #'comment-dwim)
@@ -374,7 +379,8 @@ Rebind builtin bindings
   ;; global-text-scale-adjust sets a transient map, which itself returns a function that can be called to exit the transient.
   ("C-M-=" (lambda () (interactive) (funcall (global-text-scale-adjust 1))))
   ("C-M--" (lambda () (interactive) (funcall (global-text-scale-adjust -1))))
-  ("C-x C-c" (lambda () (interactive) (message "Ah ah ah, you didn't say the magic word!")))
+  ("C-x C-c" #'fysh/disabled-keybind)
+  ("C-x C-z" #'fysh/disabled-keybind)
   ("C-h C-c" nil)
   ("C-h C-w" nil))
 #+end_src
@@ -408,6 +414,7 @@ Rebind builtin bindings
       (kill-buffer (current-buffer)))
     :hook (minibuffer-setup . evil-refresh-cursor) ;; HACK: I don't know why, but the cursor doesn't always change to insert mode in the minibuffer.
 	:general-config
+	('motion "RET" nil)
 	('motion 'override "J" #'evil-scroll-down)
 	('normal "J" nil)
 	('motion 'override "K" #'evil-scroll-up)
@@ -756,8 +763,6 @@ Oldest trick in the book! (Not really.)
 **** TODO Other stuff
 At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
 #+begin_src elisp
-(use-package prescient)
-
 (use-package consult
 	:general
   (:keymaps 'global
