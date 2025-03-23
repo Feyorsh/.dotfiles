@@ -571,7 +571,7 @@ Oldest trick in the book! (Not really.)
     (add-hook 'completion-at-point-functions #'cape-dabbrev)
     (add-hook 'completion-at-point-functions #'cape-file)
     (add-hook 'completion-at-point-functions #'cape-elisp-block)
-    :hook (minibuffer-setup . (lambda () (setq-local completion-at-point-functions nil)))
+    :hook (minibuffer-setup . (lambda () (when (sequencep completion-at-point-functions) (setq-local completion-at-point-functions (seq-difference completion-at-point-functions '(cape-file cape-dabbrev))))))
   )
 #+end_src
 
