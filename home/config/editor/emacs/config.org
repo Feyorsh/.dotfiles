@@ -3047,11 +3047,13 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     :commands (browse-url)
     :general
     (leader-def "S" #'fysh/search)
-    :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (window-pixel-height) 2))))))
+    :hook (evil-collection-setup . (lambda (&rest _)
+                                     (general-def 'normal 'xwidget-webkit-mode-map
+                                       "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (window-pixel-height) 2)))
+                                       "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (window-pixel-height) 2)))
+                                       "L" (lambda () (interactive) (xwidget-webkit-scroll-forward (/ (window-pixel-width) 2)))
+                                       "H" (lambda () (interactive) (xwidget-webkit-scroll-backward (/ (window-pixel-width) 2))))))
     :general-config
-    ;; ('normal 'xwidget-webkit-mode-map "J" #'xwidget-webkit-scroll-up)
-    ;; ('normal 'xwidget-webkit-mode-map "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (frame-pixel-height) 2))))
-    ('normal 'xwidget-webkit-mode-map "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (window-pixel-height) 2))))
     ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
