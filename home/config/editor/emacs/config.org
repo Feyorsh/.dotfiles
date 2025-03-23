@@ -2817,8 +2817,21 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     :hook (magit-mode . magit-delta-mode))
 #+end_src
 
-*** TODO Debugger
-~gud-mode~
+*** Debugger
+**** TODO GUD
+The OG.
+#+begin_src elisp
+(use-package gud
+    :hook (gdb-mode . (lambda () (unless (= 6 (count-windows))  (gdb-setup-windows))))
+    :config
+    ;; (setq evil-emacs-state-modes (seq-difference evil-emacs-state-modes (mapcar (lambda (e) (nth 2 e)) gdb-buffer-rules)))
+  (setq gdb-many-windows t
+        gud-tooltip-mode t
+        gdb-discard-unordered-replies nil ;; IMPORTANT
+        gdb-use-colon-colon-notation t
+        gdb-restore-window-configuration-after-quit 'if-gdb-many-windows
+        gdb-show-main t))
+#+end_src
 
 *** LSP
 Eglot!
