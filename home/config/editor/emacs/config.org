@@ -2082,29 +2082,60 @@ I realized I don't actually use an "official" style; I think functions should be
 I used GAS for class, and otherwise rarely /write/ assembly (unopnionanted on at&t vs intel for gdb)
 ~gas-mode~ was pretty bad last time I tried it
 #+begin_src elisp
-(setq asm-comment-char ?\#)
+(use-package nasm-mode
+    :mode ("\\.[n]*\\(asm\\|s\\)\\'")
+    :config
+    (setq asm-comment-char ?\#))
 
 (use-package disaster
     :config
-  (setq disaster-cflags (setq disaster-cxxflags "-Wno-everything"))
-    :init
+  (setq disaster-cflags (setq disaster-cxxflags "-Wno-everything -g"))
+  (setq disaster-assembly-mode 'nasm-mode)
+  :init
   (define-advice disaster (:around (fn &rest args) cross-compile)
     (interactive)
+    (setq arg (or args
+                    (list (if-let* ((buf (current-buffer))
+                                    (buf-name (buffer-name buf))
+                                    (file (buffer-file-name (current-buffer))))
+                              file
+                            (make-temp-file
+                             (file-name-base buf-name) nil
+                             (cond ((eq major-mode 'fundamental-mode) (c-or-c++-ts-mode))
+                                   ((member major-mode '(c-mode c-ts-mode)) ".c")
+                                   ((member major-mode '(c++-mode c++-ts-mode)) ".cpp")
+                                   ((eq major-mode 'fortran-mode) ".f")
+                                   (t (file-name-extension buf-name)))
+                             (buffer-string)))))
+          doit (lambda () (if args (apply fn arg)
+                            (with-temp-buffer (apply fn arg)))))
     (if (and current-prefix-arg (mapc (lambda (exe)
                                         (or (executable-find exe) (user-error "disaster: %s not found" exe)))
                                       '("zig" "jq")))
         (let* ((monch (lambda (prompt collection default)
                         (completing-read prompt (split-string collection " ") nil nil nil nil default)))
+               (file-exists-wrapped (symbol-function #'file-exists-p))
                (targets (split-string (shell-command-to-string "zig targets | jq -r '.arch,.os,.abi | join(\" \")'") "\n" t))
                (host-target (mapcar (lambda (s) (car (split-string s "[ \.\t\n\r]+"))) (split-string (shell-command-to-string "zig env | jq -r '.target'") "-")))
-               (target-arg (apply #'format " -target %s-%s-%s" (cl-mapcar #'monch '("Arch: " "OS: " "ABI: ") targets host-target)))
+               (target-arg (apply #'format " -target %s-%s-%s" (cl-mapcar monch '("Arch: " "OS: " "ABI: ") targets host-target)))
                (disaster-cc "zig cc")
                (disaster-cxx "zig c++")
                (disaster-cflags (concat disaster-cflags target-arg))
                (disaster-cxxflags (concat disaster-cxxflags target-arg)))
-          (apply fn args))
-      (apply fn args))))
-#+end_src
+          (with-environment-variables (("CC" disaster-cc)
+                                       ("CXX" disaster-cxx)
+                                       ("CFLAGS" disaster-cflags)
+                                       ("CXXFLAGS" disaster-cxxflags))
+            (cl-letf (((symbol-function #'file-exists-p)
+                       (lambda (file)
+                         (unless (string= "compile_commands.json"
+                                          (file-name-nondirectory file))
+                           (funcall file-exists-wrapped file)))))
+              (funcall doit))
+            ))
+      (funcall doit))
+    (switch-to-buffer-other-window disaster-buffer-assembly)))
+    #+end_src
 
 *** (System)Verilog
 The default verilog-mode just gets in my way tbh... slow, too opinionated, etc.

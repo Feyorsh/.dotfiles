@@ -114,7 +114,15 @@ in
       pdf-tools
       direnv
       restclient
-      disaster
+      (disaster.overrideAttrs(prev: rec {
+        version = "1.2";
+        src = fetchFromGitHub {
+          owner = "jart";
+          repo = "disaster";
+          rev = "refs/tags/${version}";
+          sha256 = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
+        };
+      }))
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
@@ -260,6 +268,7 @@ in
         };
       }))
       julia-mode julia-vterm ob-julia-vterm
+      nasm-mode
 
       (trivialBuild rec {
         pname = "eglot-booster";
@@ -294,6 +303,9 @@ in
   home.packages = [ emacsWrapped ] ++ (with pkgs; [
     nixfmt-rfc-style
     shellcheck
+    nasm
+    zig # for disaster
+
     # pantalaimon # ement.el
 
     nerd-fonts.symbols-only
