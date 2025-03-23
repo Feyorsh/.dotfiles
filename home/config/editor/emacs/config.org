@@ -2309,9 +2309,10 @@ Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" terminal and does not offer the conveniences of an emulator
 #+begin_src elisp
 (use-package vterm
+    :hook (vterm-mode . (lambda () (setq hscroll-margin 0)))
     :commands (vterm-at-file)
 	:general
-	(leader-def "t" #'vterm)
+	(leader-def "t" (lambda () (interactive) (vterm t)))
 	:general-config
 	('vterm-mode-map "M-=" #'text-scale-increase)
 	('vterm-mode-map "M--" #'text-scale-decrease)
@@ -2325,6 +2326,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
           (error "%s does not exist" FILENAME)
         (let ((default-directory (file-name-directory FILENAME)))
           (vterm '(4)))))
+    (setq vterm-max-scrollback 5000)
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
 	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
