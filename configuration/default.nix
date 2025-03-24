@@ -21,6 +21,7 @@ in
     gzip
     unixtools.wall
     unixtools.watch
+    iproute2mac
 
     vim
     wget
