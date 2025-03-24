@@ -52,17 +52,33 @@ in
   services.nix-daemon.enable = true;
   nix = {
     package = pkgs.nixVersions.latest;
-    # https://github.com/NixOS/nix/issues/7273
-    # settings.auto-optimise-store = true;
+
+    gc = {
+      automatic = true;
+      options = "--delete-older-than 14d";
+    };
+
+    optimise.automatic = true;
+
     settings = {
-      auto-optimise-store = false;
       keep-outputs = true;
+      keep-derivations = true;
+
       experimental-features = "nix-command flakes";
+
       # more like pwn-me-mommy
       accept-flake-config = true;
       trusted-users = [ "root" "@admin" ];
+
       sandbox = true;
+      # TODO system flake can be built in sandbox once https://github.com/NixOS/nix/pull/12570 lands
+      # https://github.com/NixOS/nix/issues/4119
+      # extra-sandbox-paths = [ "/nix/store" ];
+
+      fallback = true;
+      warn-dirty = false;
     };
+
     linux-builder = {
       enable = true;
       config = {
