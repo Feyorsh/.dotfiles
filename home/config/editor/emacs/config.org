@@ -743,8 +743,10 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
             "C-x b" #'consult-buffer)
   (leader-def "." #'consult-ripgrep)
   (leader-def "," #'consult-fd)
+  (leader-def ";" #'consult-line-multi)
   :config
   (setq consult-buffer-sources '(consult--source-hidden-buffer consult--source-modified-buffer consult--source-buffer consult--source-bookmark consult--source-recent-file consult--source-file-register consult--source-project-buffer-hidden consult--source-project-recent-file-hidden))
+  (setq consult-fontify-max-size 250000)
   (setq consult-preview-excluded-buffers
         (lambda (buf)
           (if-let ((fp (buffer-file-name buf)))
