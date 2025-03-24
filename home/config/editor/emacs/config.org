@@ -1965,7 +1965,8 @@ Taken from Doom Emacs."
 #+begin_src elisp
 (use-package org
   :init
-  (define-advice org-mode (:before (&rest _) direnv-update) (when (buffer-file-name (current-buffer)) (direnv-update-environment)))
+  ;; might have to use (envrc-reload) which is really slow; check back if problems
+  (define-advice org-mode (:before (&rest _) envrc-update) (when (buffer-file-name (current-buffer)) (envrc--update)))
   :config
   (setq org-highlight-latex-and-related '(native)
         org-image-align 'center
@@ -2740,19 +2741,17 @@ https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
 #+end_src
 
 *** Direnv
-For usage with nix-direnv (and maybe lorri in the future?)
 #+begin_src elisp
-(use-package direnv
+(use-package envrc
+    :hook (after-init . envrc-global-mode)
     :config
-  ;; ignore summary because it's useless on nix
-  (define-advice direnv--show-summary (:override (summary old-directory new-directory) short-summary)
-    (let ((paths
-           (when direnv-show-paths-in-summary
-             (direnv--format-paths old-directory new-directory))))
-      (if paths
-          (message "direnv: %s" paths)
-        (message "direnv: changed"))))
-  (direnv-mode))
+    (setq envrc-show-summary-in-minibuffer nil)
+    (setq envrc-remote t))
+#+end_src
+direnv and envrc both clobber ~exec-path~ when leaving an environment and they get rid of the =...emacs-deps/bin= entry, which means that non-elisp packages in ~emacsWithPackages~ are useless.
+This clobbering is caused by a slight mismatch in ~PATH~ and ~exec-path~; the latter is set in the nixpkgs emacs wrapper, but not the former.
+#+begin_src elisp :tangle "~/.config/emacs/early-init.el"
+(setenv-internal process-environment "PATH" (string-join exec-path ":") t)
 #+end_src
 
 *** TODO Ledger
@@ -2802,7 +2801,10 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   (setq magit-delete-by-moving-to-trash nil)
   (setq magit-status-show-hashes-in-headers 't)
   (setq magit-save-repository-buffers nil)
+  (setq magit-refresh-status-buffer nil)
+  (setq magit-refs-show-commit-count 'all)
   :init
+  (setq evil-collection-magit-want-horizontal-movement t)
   (setq vc-follow-symlinks t)
   (add-to-list 'safe-local-variable-values '(vc-default-patch-addressee . "bug-gnu-emacs@gnu.org"))
   (add-to-list 'safe-local-variable-values '(magit-revision-insert-related-refs))
@@ -2810,7 +2812,8 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   (dir-locals-set-class-variables
    'huge-git-repository
    '((nil
-	  . ((magit-refresh-buffers . nil)
+	  . ((eglot-enabled . nil)
+         (magit-refresh-buffers . nil)
 		 (magit-revision-insert-related-refs . nil)))
 	 (magit-status-mode
 	  . ((eval . (magit-disable-section-inserter 'magit-insert-tags-header))
@@ -2822,6 +2825,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 		 ))
 	 ))
   (dir-locals-set-directory-class (expand-file-name "~/Personal/nixpkgs") 'huge-git-repository)
+  :hook (magit-find-file . (lambda () (setq-local eglot-enabled nil)))
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
   (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))

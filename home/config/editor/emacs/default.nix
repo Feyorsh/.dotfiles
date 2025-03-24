@@ -113,7 +113,7 @@ in
 
       vterm
       pdf-tools
-      direnv
+      envrc
       restclient
       (disaster.overrideAttrs(prev: rec {
         version = "1.2";
