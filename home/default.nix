@@ -12,7 +12,7 @@ in {
     ./config/terminal
     ./config/finance
 
-    ./config/firefox.nix
+    ./config/browser
   ];
 
   home = {
