@@ -1285,11 +1285,14 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
         (elfeed-search-update-entry entry)
         (unless elfeed-search-remain-on-entry (forward-line))
         (pcase arg
-          ('(4) (funcall browse-url-browser-function (elfeed-entry-link entry)))
-          ('(16) (funcall browse-url-secondary-browser-function (elfeed-entry-link entry)))
+          ('(4)  (browse-url (elfeed-entry-link entry)))
+          ('(16) (eww-browse-url (elfeed-entry-link entry)))
+          ('(64) (browse-url-default-browser (elfeed-entry-link entry)))
           (_ (elfeed-show-entry entry)))))
-    :hook ((evil-collection-setup . (lambda (&rest _) (general-def 'normal 'elfeed-search-mode-map "S" #'elfeed-search-live-filter)))
-           (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)))))
+    :hook ((evil-collection-setup . (lambda (&rest _)
+                                      (general-def 'normal 'elfeed-search-mode-map "S" #'elfeed-search-live-filter)
+                                      (general-def 'normal 'elfeed-search-mode-map "s" #'fysh/elfeed-pick-filter)
+                                      (general-def 'normal 'elfeed-search-mode-map "gR" #'elfeed-update)))))
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
@@ -3073,6 +3076,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
+    ('shr-map "v" nil)
     :config
     (setq browse-url-browser-function 'xwidget-webkit-browse-url)
     (setq browse-url-secondary-browser-function 'browse-url-default-browser)
