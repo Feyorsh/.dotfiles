@@ -906,6 +906,15 @@ This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01
    :general-config ('(normal insert motion emacs) 'comint-mode-map "C-d" #'comint-send-eof))
 #+end_src
 
+*** TODO Calc
+#+begin_src elisp
+(use-package calc
+    :config
+  (setq calc-display-trail nil)
+  ;; do something with quick-calc... so useful!
+    )
+#+end_src
+
 *** TODO Mail
 This is surprisingly quite nice; Outlook sets an abysmally low bar, but still.
 
@@ -2825,7 +2834,6 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 		 ))
 	 ))
   (dir-locals-set-directory-class (expand-file-name "~/Personal/nixpkgs") 'huge-git-repository)
-  :hook (magit-find-file . (lambda () (setq-local eglot-enabled nil)))
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
   (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))
