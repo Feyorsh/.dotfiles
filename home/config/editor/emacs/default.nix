@@ -342,7 +342,7 @@ in
     sourcekit-lsp # swift
     zls # zig
     gopls # go
-    nil # nix
+    nixd # nix
   ]);
 
   home.sessionVariables = {

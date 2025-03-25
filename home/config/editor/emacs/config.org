@@ -2904,11 +2904,14 @@ Eglot!
                                  (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
          ((sage-shell-mode
            python-mode python-ts-mode
-           ;; nix-mode nix-ts-mode
+           nix-mode nix-ts-mode
            rust-ts-mode
            zig-mode
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
-          . (lambda () (when (and eglot-enabled (not (file-remote-p default-directory))) (eglot-ensure)))))
+          . (lambda () (unless (or (not eglot-enabled)
+                                   buffer-read-only
+                                   (file-remote-p default-directory))
+                         (eglot-ensure)))))
   :init
   (setq-default eglot-enabled t) ;; opt-in to use eglot
   :config
@@ -2917,7 +2920,7 @@ Eglot!
       :config (eglot-booster-mode))
   (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
   (add-to-list 'eglot-server-programs '((swift-mode) . ("sourcekit-lsp")))
-  (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nil" "--stdio")))
+  (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0
