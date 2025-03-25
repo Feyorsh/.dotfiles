@@ -81,7 +81,7 @@ in
   programs.emacs = {
     enable = false; # intentional
     package = emacs';
-    extraPackages = epkgs: with pkgs; (with epkgs; [
+    extraPackages = epkgs: (with epkgs; [
       erc erc-hl-nicks
       insert-kaomoji
       (ement.override {
@@ -102,14 +102,20 @@ in
             runHook postPatch
           '';
         });
-      })
-      (elfeed.overrideAttrs(prev: rec {
+      }) # pkgs.pantalaimon
+      (elfeed.overrideAttrs(prev: {
         patches = (prev.patches or []) ++ [
           ./patches/elfeed-collide-links.patch
           ./patches/elfeed-shr.patch
         ];
       })) elfeed-org
-      emms org-emms emms-player-spotify emms-player-simple-mpv # pkgs.spotifyd pkgs.mpv
+      emms org-emms emms-player-spotify emms-player-simple-mpv
+      (pkgs.mpv.overrideAttrs (prev: {
+        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
+          url = "https://patch-diff.githubusercontent.com/raw/mpv-player/mpv/pull/15115.patch";
+          hash = "sha256-3iaD2t/bzzlo6FFcPac/bPuVg5adbBFPI3HUeXysRrc=";
+        }) ];
+      })) pkgs.spotifyd pkgs.imagemagick
 
       dirvish
       vterm
@@ -118,28 +124,28 @@ in
       restclient
       (disaster.overrideAttrs(prev: rec {
         version = "1.2";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "jart";
           repo = "disaster";
           rev = "refs/tags/${version}";
           sha256 = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
         };
-      }))
-      poke
+      })) pkgs.zig
+      poke pkgs.poke
       dape
-      docker
+      docker pkgs.colima pkgs.docker pkgs.docker-compose
       deadgrep
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
-        patches = [(fetchpatch {
+        patches = [ (pkgs.fetchpatch {
           url = "https://github.com/emacs-evil/evil-collection/commit/05731c551be8cdda40ae6479adfb30b7e9c7fe39.patch";
           hash = "sha256-QAYIVyj5bmBNItiLn7ObeAY+aup13xX6ahv9TZ5+7sg=";
           revert = true;
-        })];
+        }) ];
       })
-      (evil-org.overrideAttrs(prev: rec {
-        src = fetchFromGitHub {
+      (evil-org.overrideAttrs(prev: {
+        src = pkgs.fetchFromGitHub {
           owner = "doomelpa";
           repo = "evil-org-mode";
           rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
@@ -185,8 +191,8 @@ in
         '';
         preInstall = "cd lisp";
       })
-      org-contrib org-modern org-pdftools engrave-faces
-      (ox-hugo.overrideAttrs(prev: rec {
+      org-contrib ox-clip org-modern org-pdftools engrave-faces
+      (ox-hugo.overrideAttrs(prev: {
         patchPhase = ''
           for f in ./*.el; do
               echo ";; Local Variables:" >> $f
@@ -195,15 +201,15 @@ in
               echo ";; End:" >> $f
           done
         '';
-      })) ox-clip
+      }))
       (trivialBuild rec {
         pname = "ob-mathematica";
         version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "tririver";
           repo = pname;
           rev = version;
-          sha256 = "NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
+          hash = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
         };
         patches = [ ./patches/ob-mathematica.diff ];
       })
@@ -213,7 +219,7 @@ in
       yasnippet yasnippet-capf
 
       # prog-modes
-      python-mls
+      python-mls pkgs.ruff pkgs.basedpyright
       haskell-mode
       markdown-mode
       sly
@@ -223,12 +229,12 @@ in
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
           sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
-      }))
+      })) pkgs.nixfmt-rfc-style pkgs.nixd
       nix-ts-mode
-      (trivialBuild rec {
+      (trivialBuild {
         pname = "nix3";
         version = "0.1-git";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "emacs-twist";
           repo = "nix3.el";
           rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
@@ -241,21 +247,44 @@ in
       })
       (verilog-ts-mode.overrideAttrs (prev: rec {
         version = "0.2.1";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "gmlarumbe";
           repo = prev.pname;
           rev = "refs/tags/v${version}";
           sha256 = "Vrk8MYiqsyln3xIdQiAKKcYMkzc4HO5mQRT1zpQPF+k=";
         };
       }))
-      swift-mode
+      swift-mode pkgs.sourcekit-lsp
       terraform-mode
-      zig-mode
+      zig-mode pkgs.zls
       yaml-mode
-      ledger-mode
       wolfram-mode
       sage-shell-mode ob-sagemath
       elixir-ts-mode ob-elixir
+      (trivialBuild rec {
+        pname = "typst-ts-mode";
+        version = "42094eb2508f30ca2aba26786768e969476d98fa";
+        src = pkgs.fetchFromGitea {
+          domain = "codeberg.org";
+          owner = "meow_king";
+          repo = pname;
+          rev = version;
+          sha256 = "KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
+        };
+      })
+      (julia-ts-mode.overrideAttrs (prev: {
+        src = pkgs.fetchFromGitHub {
+          owner = "JuliaEditorSupport";
+          repo = "julia-ts-mode";
+          rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
+          sha256 = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
+        };
+      }))
+      julia-mode julia-vterm ob-julia-vterm
+      nasm-mode
+      # other LSPs
+      pkgs.clang-tools pkgs.rust-analyzer pkgs.gopls pkgs.shellcheck
+
       # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
       (treesit-grammars.with-grammars (grammars: [
       ] ++ (builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
@@ -271,40 +300,19 @@ in
           meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
         };
       })))) treesit-fold
-      (trivialBuild rec {
-        pname = "typst-ts-mode";
-        version = "42094eb2508f30ca2aba26786768e969476d98fa";
-        src = fetchFromGitea {
-          domain = "codeberg.org";
-          owner = "meow_king";
-          repo = pname;
-          rev = version;
-          sha256 = "KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
-        };
-      })
-      (julia-ts-mode.overrideAttrs (prev: {
-        src = fetchFromGitHub {
-          owner = "JuliaEditorSupport";
-          repo = "julia-ts-mode";
-          rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
-          sha256 = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
-        };
-      }))
-      julia-mode julia-vterm ob-julia-vterm
-      nasm-mode
 
       (trivialBuild rec {
         pname = "eglot-booster";
         version = "0.1.0";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "jdtsmith";
           repo = pname;
           rev = "e6daa6bcaf4aceee29c8a5a949b43eb1b89900ed";
           hash = "sha256-PLfaXELkdX5NZcSmR1s/kgmU16ODF8bn56nfTh9g6bs=";
         };
-      })
+      }) pkgs.emacs-lsp-booster
 
-      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion
+      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion pkgs.nerd-fonts.symbols-only
 
       marginalia
       doom-themes solaire-mode doom-modeline
@@ -313,7 +321,7 @@ in
       (trivialBuild rec {
         pname = "ultra-scroll";
         version = "0.3.2";
-        src = fetchFromGitHub {
+        src = pkgs.fetchFromGitHub {
           owner = "jdtsmith";
           repo = pname;
           rev = "2c517bf9b61bf432f706ff8a585ba453c7476be2";
@@ -323,28 +331,7 @@ in
     ]);
   };
 
-  home.packages = [ emacsWrapped ] ++ (with pkgs; [
-    nixfmt-rfc-style
-    shellcheck
-    nasm
-    zig # for disaster
-    poke
-
-    # pantalaimon # ement.el
-    mpv spotifyd imagemagick
-
-    nerd-fonts.symbols-only
-
-    # LSP
-    emacs-lsp-booster
-    clang-tools # c/c++
-    rust-analyzer # rust
-    ruff basedpyright # python
-    sourcekit-lsp # swift
-    zls # zig
-    gopls # go
-    nixd # nix
-  ]);
+  home.packages = [ emacsWrapped ];
 
   home.sessionVariables = {
     EDITOR = "emacsclient";

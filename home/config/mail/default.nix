@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }: with pkgs;
+{ pkgs, ... }: with pkgs;
 let
   mutt_oauth2 = stdenv.mkDerivation rec {
       pname = "mutt_oauth2";
