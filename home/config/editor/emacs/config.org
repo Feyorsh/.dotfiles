@@ -2458,6 +2458,15 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 
 ;; (use-package nix-ts-mode
 ;;     :mode ("\\.nix\\'" . nix-ts-mode))
+
+(use-package nix3
+    :config
+  (setq nix3-terminal-function #'nix3-vterm-shell-command)
+  (setq nix3-browse-url-for-repository #'browse-url-default-browser)
+  ;; (use-package magit-nix3
+  ;;     :config
+  ;;   (magit-nix3-flake-mode t))
+  )
 #+end_src
 
 *** Mathematica

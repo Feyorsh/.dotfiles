@@ -222,7 +222,22 @@ in
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
           sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
-      })) nix-ts-mode
+      }))
+      nix-ts-mode
+      (trivialBuild rec {
+        pname = "nix3";
+        version = "0.1-git";
+        src = fetchFromGitHub {
+          owner = "emacs-twist";
+          repo = "nix3.el";
+          rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
+          hash = "sha256-2rg5S/ElHfXFgomnkjkoPjd37jH6c52TsBhNCFvIE+4=";
+        };
+        packageRequires = [ promise compat magit-section s ];
+        preBuild = ''
+          mv ./extra/magit-nix3.el .
+        '';
+      })
       (verilog-ts-mode.overrideAttrs (prev: rec {
         version = "0.2.1";
         src = fetchFromGitHub {
