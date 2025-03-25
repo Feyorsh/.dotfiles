@@ -2674,7 +2674,25 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+end_src
 
 #+begin_src elisp
-(use-package dirvish)
+(use-package dirvish
+    :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("m" "/Volumes/"                       "Drives")
+     ("s" "/ssh:Vermillion")      "Vermillion"
+     ("e" "/sudo:root@localhost:/etc")  "Modify program settings"
+     ("t" "~/.Trash/" "Trash")))
+  :config
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  (setq dirvish-attributes
+        '(vc-state subtree-state nerd-icons collapse git-msg file-time file-size)
+        dirvish-side-attributes
+        '(vc-state nerd-icons collapse file-size))
+  )
 #+end_src
 
 *** Ibuffer
