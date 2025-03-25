@@ -128,6 +128,7 @@ in
       poke
       dape
       docker
+      deadgrep
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
