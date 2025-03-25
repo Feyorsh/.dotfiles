@@ -2659,7 +2659,13 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
         dired-create-destination-dirs 'ask
         dired-dwim-target t
         dired-vc-rename-file t)
+  (setq dired-listing-switches "-lAh --group-directories-first")
   (put 'dired-find-alternate-file 'disabled nil))
+
+#+end_src
+
+#+begin_src elisp
+(use-package dirvish)
 #+end_src
 
 *** Ibuffer

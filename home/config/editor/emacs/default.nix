@@ -111,6 +111,7 @@ in
       })) elfeed-org
       emms org-emms emms-player-spotify emms-player-simple-mpv # pkgs.spotifyd pkgs.mpv
 
+      dirvish
       vterm
       pdf-tools
       envrc
