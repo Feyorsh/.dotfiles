@@ -13,12 +13,12 @@ let
       (pkgs.fetchpatch {
         name = "no-titlebar.patch";
         url = "https://raw.githubusercontent.com/railwaycat/homebrew-emacsmacport/b825bfdd1a25883715034e4abef4f7ad871e604f/patches/emacs-26.2-rc1-mac-7.5-no-title-bar.patch";
-        sha256 = "f2DRcUZq8Y18n6MJ6vtChN5hLGERduMB8B1mrrds6Ns=";
+        hash = "sha256-f2DRcUZq8Y18n6MJ6vtChN5hLGERduMB8B1mrrds6Ns=";
       })
       (pkgs.fetchpatch {
         name = "fix-yabai-tiling.patch";
         url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/61d588ce80fb4282e107f5ab97914e32451c3da1/patches/emacs-28/fix-window-role.patch";
-        sha256 = "+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
+        hash = "sha256-+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
       })
       ./patches/xwidget.patch # fixes issue with org-modern and vertical scrolling; upstreamed
     ];
@@ -128,7 +128,7 @@ in
           owner = "jart";
           repo = "disaster";
           rev = "refs/tags/${version}";
-          sha256 = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
+          hash = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
         };
       })) pkgs.zig
       poke pkgs.poke
@@ -149,7 +149,7 @@ in
           owner = "doomelpa";
           repo = "evil-org-mode";
           rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
-          sha256 = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
+          hash = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
         };
         patchPhase = ''
           echo ";; Local Variables:" >> evil-org.el
@@ -227,7 +227,7 @@ in
         patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
           name = "flake-shebangs.patch";
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
-          sha256 = "7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
+          hash = "sha256-7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
       })) pkgs.nixfmt-rfc-style pkgs.nixd
       nix-ts-mode
@@ -251,7 +251,7 @@ in
           owner = "gmlarumbe";
           repo = prev.pname;
           rev = "refs/tags/v${version}";
-          sha256 = "Vrk8MYiqsyln3xIdQiAKKcYMkzc4HO5mQRT1zpQPF+k=";
+          hash = "sha256-Vrk8MYiqsyln3xIdQiAKKcYMkzc4HO5mQRT1zpQPF+k=";
         };
       }))
       swift-mode pkgs.sourcekit-lsp
@@ -269,7 +269,7 @@ in
           owner = "meow_king";
           repo = pname;
           rev = version;
-          sha256 = "KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
+          hash = "sha256-KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
         };
       })
       (julia-ts-mode.overrideAttrs (prev: {
@@ -277,7 +277,7 @@ in
           owner = "JuliaEditorSupport";
           repo = "julia-ts-mode";
           rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
-          sha256 = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
+          hash = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
         };
       }))
       julia-mode julia-vterm ob-julia-vterm
@@ -295,7 +295,7 @@ in
             owner = "gmlarumbe";
             repo = "tree-sitter-systemverilog";
             rev = "0dacb911daa9614a7c7e79a594d4cb9f478e6554";
-            sha256 = "WATrVeP3c//tWLG8VibXZrYrChBs7d4V6LCcEGcofdg=";
+            hash = "sha256-WATrVeP3c//tWLG8VibXZrYrChBs7d4V6LCcEGcofdg=";
           };
           meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
         };

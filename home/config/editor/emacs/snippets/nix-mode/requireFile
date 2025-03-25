@@ -11,7 +11,7 @@ requireFile rec {
       nix-prefetch-url file://\\\$PWD/\${name\}
       rm -rf \${name\}}
     '';
-    sha256 = "${8:sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=}";
+    hash = "${8:sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=}";
   };
 
   $0

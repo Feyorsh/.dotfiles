@@ -6,7 +6,7 @@ let
 
       src = fetchurl {
         url = "https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py?inline=false";
-        sha256 = "sha256-R+sLNQ+NMZ70KQOX4RzWVMcOW/yJuUX6G9i3rG7lCe0=";
+        hash = "sha256-R+sLNQ+NMZ70KQOX4RzWVMcOW/yJuUX6G9i3rG7lCe0=";
       };
       dontUnpack = true;
 

@@ -4,7 +4,7 @@ let
     owner = "errata-ai";
     repo = "vale-boilerplate";
     rev = "7282f0551b59e418ad12aeb10a14398b33b560b7";
-    sha256 = "sha256-oItgeu8Y6aIVF1CkN7fBPYDc0RQkS6XWEMgT2THPhaI=";
+    hash = "sha256-oItgeu8Y6aIVF1CkN7fBPYDc0RQkS6XWEMgT2THPhaI=";
   };
 
   aspell' = with pkgs; (aspellWithDicts (dicts: with dicts; [ en en-computers en-science ]));
@@ -39,7 +39,7 @@ in
         owner = "tpeacock19";
         repo = "flymake-vale";
         rev = "32691d788a378915b98dba81e3af63227a630af3";
-        sha256 = "sha256-Nk89xlogdKJetKyPzFc8nnrXh2o5VPZ756Ng2vIxqsY=";
+        hash = "sha256-Nk89xlogdKJetKyPzFc8nnrXh2o5VPZ756Ng2vIxqsY=";
       };
       packageRequires = [ compat ];
     }) pkgs.vale
