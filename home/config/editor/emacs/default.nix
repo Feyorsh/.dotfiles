@@ -1,7 +1,8 @@
 { config, lib, pkgs, ... }:
 let
+  inherit (pkgs) fetchFromBitbucket fetchFromGitHub fetchFromGitea fetchpatch;
   emacs' = pkgs.emacs29-macport.overrideAttrs (prev: {
-    src = pkgs.fetchFromBitbucket {
+    src = fetchFromBitbucket {
       owner = "mituharu";
       repo = "emacs-mac";
       rev = "7cc5e67629363d9e98f65e4e652f83bb4e0ee674";
@@ -10,12 +11,12 @@ let
     version = "29.4";
 
     patches = (prev.patches or []) ++ [
-      (pkgs.fetchpatch {
+      (fetchpatch {
         name = "no-titlebar.patch";
         url = "https://raw.githubusercontent.com/railwaycat/homebrew-emacsmacport/b825bfdd1a25883715034e4abef4f7ad871e604f/patches/emacs-26.2-rc1-mac-7.5-no-title-bar.patch";
         hash = "sha256-f2DRcUZq8Y18n6MJ6vtChN5hLGERduMB8B1mrrds6Ns=";
       })
-      (pkgs.fetchpatch {
+      (fetchpatch {
         name = "fix-yabai-tiling.patch";
         url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/61d588ce80fb4282e107f5ab97914e32451c3da1/patches/emacs-28/fix-window-role.patch";
         hash = "sha256-+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
@@ -26,6 +27,7 @@ let
     configureFlags = (prev.configureFlags or []) ++ [
       "--with-xwidgets"
       "--with-librsvg"
+      "--with-dbus"
     ];
     preConfigure = ''
       configureFlagsArray+=(
@@ -37,6 +39,7 @@ let
     buildInputs = (prev.buildInputs or []) ++ [
       pkgs.darwin.apple_sdk_11_0.frameworks.WebKit
       pkgs.librsvg
+      pkgs.dbus
     ];
   });
 
@@ -111,20 +114,43 @@ in
       })) elfeed-org
       emms org-emms emms-player-spotify emms-player-simple-mpv
       (pkgs.mpv.overrideAttrs (prev: {
-        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
+        patches = (prev.patches or []) ++ [ (fetchpatch {
           url = "https://patch-diff.githubusercontent.com/raw/mpv-player/mpv/pull/15115.patch";
           hash = "sha256-3iaD2t/bzzlo6FFcPac/bPuVg5adbBFPI3HUeXysRrc=";
         }) ];
-      })) pkgs.spotifyd pkgs.imagemagick
+      })) pkgs.spotifyd pkgs.imagemagick pkgs.python312Packages.tinytag
+      (trivialBuild rec {
+        pname = "tracker-mode";
+        version = "0.8";
+        src = fetchFromGitHub {
+          owner = "defaultxr";
+          repo = pname;
+          rev = "efd517f0f22ee335b4c9eeebb29c3695a432da0b";
+          hash = "sha256-nA7kK+NmyIMvMD9mI56DaZ5wMpuDuAC5nXbBpiKEFCM=";
+        };
+        packageRequires = [ osc ];
+      }) # pkgs.supercollider
+      alda-mode pkgs.alda
 
       dirvish
       vterm
-      pdf-tools
+      shx
+      (trivialBuild rec {
+        pname = "comint-fold";
+        version = "0.1.0";
+        src = fetchFromGitHub {
+          owner = "jdtsmith";
+          repo = pname;
+          rev = "9b9f2bbc762c846bf328e698413391db149cc759";
+          hash = "sha256-PCI5pLbIConHaOehMmfgZAnEXM1jLS+Rjs8TPKe5wuw=";
+        };
+      })
+      pdf-tools nov
       envrc
       restclient
       (disaster.overrideAttrs(prev: rec {
         version = "1.2";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "jart";
           repo = "disaster";
           rev = "refs/tags/${version}";
@@ -138,14 +164,14 @@ in
 
       evil evil-snipe evil-visualstar evil-numbers
       (evil-collection.overrideAttrs {
-        patches = [ (pkgs.fetchpatch {
+        patches = [ (fetchpatch {
           url = "https://github.com/emacs-evil/evil-collection/commit/05731c551be8cdda40ae6479adfb30b7e9c7fe39.patch";
           hash = "sha256-QAYIVyj5bmBNItiLn7ObeAY+aup13xX6ahv9TZ5+7sg=";
           revert = true;
         }) ];
       })
       (evil-org.overrideAttrs(prev: {
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "doomelpa";
           repo = "evil-org-mode";
           rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
@@ -205,7 +231,7 @@ in
       (trivialBuild rec {
         pname = "ob-mathematica";
         version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "tririver";
           repo = pname;
           rev = version;
@@ -224,7 +250,7 @@ in
       markdown-mode
       sly
       (nix-mode.overrideAttrs (prev: {
-        patches = (prev.patches or []) ++ [ (pkgs.fetchpatch {
+        patches = (prev.patches or []) ++ [ (fetchpatch {
           name = "flake-shebangs.patch";
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
           hash = "sha256-7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
@@ -234,7 +260,7 @@ in
       (trivialBuild {
         pname = "nix3";
         version = "0.1-git";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "emacs-twist";
           repo = "nix3.el";
           rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
@@ -245,9 +271,10 @@ in
           mv ./extra/magit-nix3.el .
         '';
       })
+      nix-update pkgs.nix-prefetch-git
       (verilog-ts-mode.overrideAttrs (prev: rec {
         version = "0.2.1";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "gmlarumbe";
           repo = prev.pname;
           rev = "refs/tags/v${version}";
@@ -264,7 +291,7 @@ in
       (trivialBuild rec {
         pname = "typst-ts-mode";
         version = "42094eb2508f30ca2aba26786768e969476d98fa";
-        src = pkgs.fetchFromGitea {
+        src = fetchFromGitea {
           domain = "codeberg.org";
           owner = "meow_king";
           repo = pname;
@@ -273,7 +300,7 @@ in
         };
       })
       (julia-ts-mode.overrideAttrs (prev: {
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "JuliaEditorSupport";
           repo = "julia-ts-mode";
           rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
@@ -291,7 +318,7 @@ in
         tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
           language = "tree-sitter-verilog";
           version = "0.0.0+rev=0dacb91";
-          src = pkgs.fetchFromGitHub {
+          src = fetchFromGitHub {
             owner = "gmlarumbe";
             repo = "tree-sitter-systemverilog";
             rev = "0dacb911daa9614a7c7e79a594d4cb9f478e6554";
@@ -304,7 +331,7 @@ in
       (trivialBuild rec {
         pname = "eglot-booster";
         version = "0.1.0";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "jdtsmith";
           repo = pname;
           rev = "e6daa6bcaf4aceee29c8a5a949b43eb1b89900ed";
@@ -312,7 +339,7 @@ in
         };
       }) pkgs.emacs-lsp-booster
 
-      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion pkgs.nerd-fonts.symbols-only
+      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion
 
       marginalia
       doom-themes solaire-mode doom-modeline
@@ -321,7 +348,7 @@ in
       (trivialBuild rec {
         pname = "ultra-scroll";
         version = "0.3.2";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "jdtsmith";
           repo = pname;
           rev = "2c517bf9b61bf432f706ff8a585ba453c7476be2";
@@ -331,7 +358,10 @@ in
     ]);
   };
 
-  home.packages = [ emacsWrapped ];
+  home.packages = [
+    emacsWrapped
+    pkgs.nerd-fonts.symbols-only
+  ];
 
   home.sessionVariables = {
     EDITOR = "emacsclient";
