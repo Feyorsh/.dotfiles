@@ -3,6 +3,7 @@
   imports = [
     ./emacs
     ./spell.nix
+    ./documentation.nix
   ];
 
   programs.vim = {

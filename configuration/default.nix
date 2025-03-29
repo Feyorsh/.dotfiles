@@ -90,7 +90,22 @@ in
       };
     };
 
+    channel.enable = false;
+    nixPath = [
+      "nixpkgs=flake:nixpkgs"
+      "darwin=flake:darwin"
+      "home-manager=flake:home-manager"
+    ];
+
     registry = {
+      darwin.to = {
+        type = "path";
+        path = inputs.darwin.outPath;
+      };
+      home-manager.to = {
+        type = "path";
+        path = inputs.home-manager.outPath;
+      };
       templates = {
         from = {
           id = "templates";
