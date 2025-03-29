@@ -2666,17 +2666,12 @@ I'd like to change the cursor blink behaviour.
 #+begin_src elisp
 (use-package pdf-tools
     :magic ("%PDF" . pdf-view-mode)
-    :hook
-	((pdf-view-mode . pdf-view-midnight-minor-mode)
-     ;; isearch is kinda useless in PDFs imo
-     (evil-collection-setup . (lambda (&rest _)
-                                (general-def '(emacs normal) 'pdf-view-mode-map "gr" #'revert-buffer-quick)
-                                (general-def 'normal 'pdf-view-mode-map "/" #'pdf-occur))))
+    :hook (evil-collection-setup . (lambda (&rest _) ;; isearch is kinda useless in PDFs imo
+                                     (general-def '(emacs normal) 'pdf-view-mode-map "gr" #'revert-buffer-quick)
+                                     (general-def 'normal 'pdf-view-mode-map "/" #'pdf-occur)))
 	:general-config
     ('normal 'pdf-view-mode-map "K" #'pdf-view-scroll-down-or-previous-page)
     ('normal 'pdf-view-mode-map "J" #'pdf-view-scroll-up-or-next-page)
-    ;; :custom
-    ;; (pdf-annot-latex-header (concat org-latex-preview-preamble "\n\\setlength{\\textwidth}{12cm}"))
     :config
     (add-to-list 'debug-ignored-errors "\\`No such page:")
     (setq pdf-view-use-scaling t)
