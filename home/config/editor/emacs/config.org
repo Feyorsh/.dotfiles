@@ -1648,6 +1648,7 @@ Need to stop loading my Org files on startup...
   :hook ((org-mode . (lambda () (jinx-mode -1)))
          (org-after-refile-insert . save-buffer))
   :config
+  (setq org-modules nil)
   (setq org-src-preserve-indentation t
 		org-src-fontify-natively t
         org-src-window-setup 'current-window
@@ -1674,11 +1675,16 @@ Need to stop loading my Org files on startup...
 		org-pretty-entities t
         org-ellipsis " ▾"
         org-use-fast-todo-selection 'expert)
+
+  (setf (alist-get 'file org-link-frame-setup) #'find-file)
+
   (setq org-show-notification-timeout nil
         org-show-notification-handler (lambda (message) (fysh/notif-alert "Org-mode" message nil nil nil nil org-show-notification-timeout "/System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/Resources/Ringtones/Radial-EncoreInfinitum.m4r")))
   (add-to-list 'org-latex-packages-alist '("" "listings"))
   (add-to-list 'display-buffer-alist '("\\*Org Links\\*" display-buffer-no-window (allow-no-window . t))))
 #+end_src
+
+
 #+begin_src elisp
 (use-package org
     :hook (org-mode . org-setup-<>-syntax-fix)
