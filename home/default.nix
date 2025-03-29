@@ -22,7 +22,7 @@ in {
     packages = with pkgs; [
       gimp
 
-      (python312.withPackages(ps: with ps; [ requests numpy ]))
+      (python312.withPackages(ps: with ps; [ ipython requests numpy ]))
 
       alt-tab-macos
       monitorcontrol
