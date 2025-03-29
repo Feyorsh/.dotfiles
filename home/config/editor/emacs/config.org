@@ -2908,9 +2908,14 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))
 
 (use-package forge
-    :after magit
+    :init
+    (define-advice forge-fork (:before (&rest _) rename-upstream)
+      (magit-call-git "remote" "rename" (magit-get-remote) "upstream"))
     :general
-    ('magit-status-mode-map "@" #'forge-dispatch))
+    ('magit-status-mode-map "@" #'forge-dispatch)
+    :config
+    (setq forge-owned-accounts '(("Feyorsh" remote-name "origin")))
+    (setq forge--show-topic-legend nil))
 
 (use-package magit-delta
     :hook (magit-mode . magit-delta-mode))
