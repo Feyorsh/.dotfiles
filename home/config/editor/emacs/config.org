@@ -2661,20 +2661,6 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
   (add-hook 'find-file-hook 'my-vc-off-if-remote))
 #+end_src
 
-*** Man
-It's 2024; man is significantly better than woman. /s
-(Oh, and the man-db doesn't generate automatically on macOS, you have to run ~sudo mandb -c~.)
-#+begin_src elisp
-(use-package emacs
-    :general
-  (leader-def "m" #'consult-man)
-  (leader-def "i" #'consult-info) ;; not man, I know!
-  ('normal 'Info-mode-map "J" nil)
-  :config
-  (setq Man-notify-method 'pushy)
-  (setq Man-switches "-a"))
-#+end_src
-
 *** PDF Viewer
 I'd like to change the cursor blink behaviour.
 #+begin_src elisp
@@ -3073,9 +3059,51 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 				(pop-to-buffer buffer action norecord))))))
 #+end_src
 
+**** Man
+It's 2024; man is significantly better than woman. /s
+(Oh, and the man-db doesn't generate automatically on macOS, you have to run ~sudo mandb -c~.)
+#+begin_src elisp
+(use-package emacs
+    :general
+  (leader-def "m" #'consult-man)
+  :config
+  (setq Man-notify-method 'pushy)
+  (setq Man-switches "-a"))
+#+end_src
+
+**** DevDocs
 #+begin_src elisp
 (use-package devdocs
 	:general ('global "C-h d" #'devdocs-lookup))
+#+end_src
+
+**** Info
+#+begin_src elisp
+(use-package info
+    :init
+  (define-advice consult-info (:around (fn &rest args) switch-manual)
+    (interactive
+     (if (and (not current-prefix-arg) Info-current-file)
+         (list (file-name-base Info-current-file))
+       (info-initialize)
+       (completing-read-multiple
+        "Info Manuals: "
+        (info--manual-names nil)
+        nil t)))
+    (apply fn args))
+  :general
+  (leader-def "i" #'consult-info)
+  :general-config
+  ('normal 'Info-mode-map
+           "<" #'Info-history-back
+           ">" #'Info-history-forward
+           "S-C-j" #'Info-next
+           "S-C-k" #'Info-prev
+           "C-j" #'Info-forward-node
+           "C-k" #'Info-backward-node)
+  :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'Info-mode-map "J" nil)))
+  :config
+  (mapc (lambda (e) (add-to-list 'Info-directory-list e)) (prune-directory-list (mapcar (lambda (path) (concat (file-name-as-directory path) "share/info/")) (nix--profile-paths)))))
 #+end_src
 
 *** Diff
