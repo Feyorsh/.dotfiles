@@ -2,4 +2,4 @@
 # key: ddx
 # condition: (and (texmathp) 'auto)
 # --
-\\frac{\\mathrm{d} $1}{\\mathrm{d} ${2:x}}$0
+\\frac{\\mathrm{d}$1}{\\mathrm{d} ${2:x}}$0

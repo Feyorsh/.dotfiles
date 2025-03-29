@@ -2,4 +2,4 @@
 # key: ppx
 # condition: (and (texmathp) 'auto)
 # --
-\\frac{\\partial $1}{\\partial ${2:x}}$0
+\\frac{\\partial$1}{\\partial ${2:x}}$0

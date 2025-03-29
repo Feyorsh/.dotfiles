@@ -1,0 +1,5 @@
+# name: p-by-pt
+# key: ppt
+# condition: (and (texmathp) 'auto)
+# --
+\\frac{\\partial$1}{\\partial ${2:t}}$0
