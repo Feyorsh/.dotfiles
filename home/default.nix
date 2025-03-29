@@ -29,6 +29,7 @@ in {
       time-out-macos
       keycastr
 
+      nix-output-monitor
 
       (runCommandLocal "xcode" {} ''
          mkdir -p $out/Applications/Xcode.app
