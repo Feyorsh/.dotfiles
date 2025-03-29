@@ -627,6 +627,7 @@ Oldest trick in the book! (Not really.)
     (with-eval-after-load 'corfu (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)))
 
 (use-package nerd-icons-dired
+    :disabled
     :hook (dired-mode . nerd-icons-dired-mode))
 
 (use-package nerd-icons-completion
@@ -2707,10 +2708,11 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
         dired-recursive-deletes 'top
         dired-create-destination-dirs 'ask
         dired-dwim-target t
+        dired-mouse-drag-files t
+        mouse-drag-and-drop-region-cross-program t
         dired-vc-rename-file t)
   (setq dired-listing-switches "-lAh --group-directories-first")
   (put 'dired-find-alternate-file 'disabled nil))
-
 #+end_src
 
 #+begin_src elisp
@@ -2726,6 +2728,7 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
      ("e" "/sudo:root@localhost:/etc")  "Modify program settings"
      ("t" "~/.Trash/" "Trash")))
   :config
+  (setq dired-kill-when-opening-new-dired-buffer t)
   (setq dirvish-mode-line-format
         '(:left (sort symlink) :right (omit yank index)))
   (setq dirvish-attributes
