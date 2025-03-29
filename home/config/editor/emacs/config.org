@@ -3031,6 +3031,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
     :general
     (leader-def "r" #'recentf-open-most-recent-file)
     :config
+    (setq history-length 1000)
     (setq recentf-max-saved-items 25)
     (setq recentf-exclude '("/tmp/")))
 #+end_src
