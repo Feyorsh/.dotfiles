@@ -2,8 +2,10 @@ sanitize tridactyllocal tridactylsync
 
 set newtab about:blank
 
-set editorcmd emacsclient
+set editorcmd $SHELL -ic "emacsclient %f"
 
+" redirect to old reddit
+autocmd DocStart ^http(s?)://www.reddit.com js tri.excmds.urlmodify("-t", "www", "old")
 " hint for social media comments
 bind ;c hint -Jc [class*="expand"],[class*="togg"],[class="comment_folder"]
 " copy git clone command from github repo
@@ -18,21 +20,23 @@ bind n findnext 1
 bind N findnext -1
 set findcase sensitive
 
-set smoothscroll true
+set smoothscroll false
 
 bind j scrollline 2
 bind J scrollline 10
 bind k scrollline -2
 bind K scrollline -10
 bind h scrollpx -2
-bind H scrollpx -50
+" bind H scrollpx -50
 bind l scrollpx 2
-bind L scrollline 50
+" bind L scrollline 50
 bind --mode=ex <C-j> ex.next_completion
 bind --mode=ex <C-k> ex.prev_completion
 bind < back
 bind > forward
 
+bind H tabprev
+bind L tabnext
 bind gh tabprev
 bind gl tabnext
 bind x tabclose
