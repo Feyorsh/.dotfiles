@@ -2678,6 +2678,13 @@ I'd like to change the cursor blink behaviour.
     (setq-default pdf-view-display-size 'fit-page))
 #+end_src
 
+**** EPUBs
+#+begin_src elisp
+(use-package nov
+    :mode ("\\.epub\\'" . nov-mode)
+    :hook (nov-mode . (lambda () (face-remap-add-relative 'variable-pitch :family "ETBembo" :height 1.0))))
+#+end_src
+
 *** TODO Dired
 I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
