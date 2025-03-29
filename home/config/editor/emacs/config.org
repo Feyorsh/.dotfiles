@@ -96,7 +96,14 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (define-advice display-startup-echo-area-message (:override () hush) nil)
     (setq initial-scratch-message ";; Happy hacking.\n\n")
 
-    (setq echo-keystrokes 0.5)
+    (setq idle-update-delay 1)
+
+    (setq save-interprogram-paste-before-kill t)
+    (setq executable-prefix-env t)
+
+    (setq delete-by-moving-to-trash t)
+
+    (setq echo-keystrokes 0.3)
     (setq enable-recursive-minibuffers t)
     (setq x-stretch-cursor t)
     (setq confirm-kill-processes nil)
@@ -170,6 +177,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
                                             (active-minibuffer-window))
                                    (abort-recursive-edit))))
            (kill-emacs . (lambda () (append-to-file (concat (emacs-uptime) "\n") nil (expand-file-name "uptime" user-emacs-directory))))
+           (after-save . executable-make-buffer-file-executable-if-script-p)
            ((text-mode prog-mode) . (lambda () (setq show-trailing-whitespace t))))
 
     :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
@@ -395,6 +403,7 @@ Rebind builtin bindings
 	(setq evil-flash-delay most-positive-fixnum)
     (setq evil-ex-search-persistent-highlight nil)
     (setq evil-kill-on-visual-paste nil)
+    (setq evil-vsplit-window-right t)
 	;; disable state change echo
 	(setq evil-normal-state-message nil)
 	(setq evil-insert-state-message nil)
