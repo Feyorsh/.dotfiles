@@ -1979,9 +1979,6 @@ Taken from Doom Emacs."
 **** LaTeX
 #+begin_src elisp
 (use-package org
-  :init
-  ;; might have to use (envrc-reload) which is really slow; check back if problems
-  (define-advice org-mode (:before (&rest _) envrc-update) (when (buffer-file-name (current-buffer)) (envrc--update)))
   :config
   (setq org-highlight-latex-and-related '(native)
         org-image-align 'center
@@ -2059,6 +2056,10 @@ Taken from Doom Emacs."
 
   )
 (use-package org-latex-preview
+    :init (define-advice org-mode (:around (fn &rest args) envrc-update)
+            (cl-letf (((symbol-function #'org-latex-preview) #'identity))
+              (apply fn args))
+            (when (and (not org-inhibit-startup) org-startup-with-latex-preview) (org-latex-preview 'buffer)))
     :hook (org-mode . org-latex-preview-auto-mode)
     :config
     (setq org-latex-preview-appearance-options (progn (plist-put org-format-latex-options :background "Transparent")
@@ -2800,15 +2801,19 @@ https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
 #+begin_src elisp
 (use-package envrc
     :hook (after-init . envrc-global-mode)
+    :init
+    (setenv-internal process-environment "PATH" (string-join exec-path ":") t)
     :config
+    (add-to-list 'global-mode-string envrc-lighter)
     (setq envrc-show-summary-in-minibuffer nil)
+    (setq envrc-error-lighter '(" envrc[" (:propertize "blocked" face envrc-mode-line-error-face) "]"))
     (setq envrc-remote t))
 #+end_src
 direnv and envrc both clobber ~exec-path~ when leaving an environment and they get rid of the =...emacs-deps/bin= entry, which means that non-elisp packages in ~emacsWithPackages~ are useless.
 This clobbering is caused by a slight mismatch in ~PATH~ and ~exec-path~; the latter is set in the nixpkgs emacs wrapper, but not the former.
-#+begin_src elisp :tangle "~/.config/emacs/early-init.el"
-(setenv-internal process-environment "PATH" (string-join exec-path ":") t)
-#+end_src
+# #+begin_src elisp :tangle "~/.config/emacs/early-init.el"
+# (setenv-internal process-environment "PATH" (string-join exec-path ":") t)
+# #+end_src
 
 *** TODO Ledger
 So I can commit tax fraud productively.
