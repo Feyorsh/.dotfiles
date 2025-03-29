@@ -41,6 +41,7 @@
         git update-index --no-skip-worktree "$@"
       '';
     })
+    git-branchless
   ];
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
