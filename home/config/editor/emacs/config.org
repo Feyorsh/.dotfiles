@@ -710,6 +710,15 @@ Oldest trick in the book! (Not really.)
                                     DeepSeek-R1)))
     (setq gptel-model 'gpt-4o)
     (setq gptel-expert-commands t)
+    (setq gptel-display-buffer-action
+		  `(,(lambda (buffer &optional action norecord)
+			(let ((window (get-window-with-predicate
+						   (lambda (window) (buffer-local-value 'gptel-mode (window-buffer window))))))
+			  (if window
+				  (progn
+					(select-window window norecord)
+					(switch-to-buffer buffer nil))
+				(pop-to-buffer-same-window buffer norecord))))))
 
     (define-advice gptel (:around (fn &rest args) buffer-name)
       (interactive)
