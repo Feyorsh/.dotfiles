@@ -255,7 +255,7 @@ in
           url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
           hash = "sha256-7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
         }) ];
-      })) pkgs.nixfmt-rfc-style pkgs.nixd
+      })) pkgs.nixd
       nix-ts-mode
       (trivialBuild {
         pname = "nix3";
@@ -361,6 +361,7 @@ in
   home.packages = [
     emacsWrapped
     pkgs.nerd-fonts.symbols-only
+    pkgs.poke.info
   ];
 
   home.sessionVariables = {

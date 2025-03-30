@@ -1,6 +1,5 @@
-{ inputs, config, lib, pkgs, user, ... }: let
-  aspell = with pkgs; (aspellWithDicts (dicts: with dicts; [ en en-computers en-science ]));
-in {
+{ inputs, config, lib, pkgs, user, ... }:
+{
   imports = with inputs; [
     spicetify-nix.homeManagerModules.default
     mac-app-util.homeManagerModules.default
@@ -11,8 +10,8 @@ in {
     ./config/editor
     ./config/terminal
     ./config/finance
-
     ./config/browser
+    ./config/nix.nix
   ];
 
   home = {
@@ -30,6 +29,8 @@ in {
       keycastr
 
       nix-output-monitor
+
+      # bitwarden-desktop
 
       (runCommandLocal "xcode" {} ''
          mkdir -p $out/Applications/Xcode.app

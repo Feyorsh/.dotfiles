@@ -24,6 +24,8 @@
     ];
   };
 
+  programs.gh.enable = true;
+
   home.packages = with pkgs; [
     git-crypt
     (writeShellApplication {
