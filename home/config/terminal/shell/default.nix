@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   imports = [ ./fish.nix ];
 
@@ -23,9 +23,10 @@
       K back-scroll
     '';
   };
-  home.sessionVariables = {
-    PAGER = "less -FR";
-  };
+  home.sessionVariables.PAGER = "less -FR";
+
+  programs.zoxide.enable = true;
+  home.sessionVariables._ZO_DATA_DIR = config.xdg.dataHome;
 
   home.packages = with pkgs; [
     (writeShellApplication {
@@ -33,5 +34,6 @@
       runtimeInputs = [ restic pass ];
       text = builtins.readFile ./hydrate;
     })
+    cheat
   ];
 }

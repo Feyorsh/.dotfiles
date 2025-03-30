@@ -16,6 +16,13 @@
       dugb = "du -h -d 1 $argv | grep -P 'G\t'";
       rinse = "cd ~/.dotfiles; darwin-rebuild switch --flake .#Aqua --option sandbox false; cd -";
       alert = "command $argv; afplay (random choice ~/Profile/Sounds/*) &";
+      which = "readlink -f $(command which $argv)";
+      cheat = "command cheat -c $argv | $PAGER";
+      mkcd = "mkdir -p $argv && cd $argv";
+      mkown = "sudo chown -R $USER:$(id -gn) $argv";
+    };
+    shellAbbrs = {
+      dd = "dd status=progress";
     };
     functions = {
       nix_shell_packages = ''
