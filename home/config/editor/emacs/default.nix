@@ -309,6 +309,8 @@ in
       }))
       julia-mode julia-vterm ob-julia-vterm
       nasm-mode
+      vimrc-mode
+      meson-mode
       # other LSPs
       pkgs.clang-tools pkgs.rust-analyzer pkgs.gopls pkgs.shellcheck
 

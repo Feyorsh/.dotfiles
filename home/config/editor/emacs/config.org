@@ -2363,6 +2363,18 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
     )
 #+end_src
 
+*** Vimscript
+For when I'm feeling /particularly/ evil...
+#+begin_src elisp
+(use-package vimrc-mode
+    :mode "\\tridactylrc\\'")
+#+end_src
+
+*** Meson
+#+begin_src elisp
+(use-package meson-mode)
+#+end_src
+
 *** Shell
 #+begin_src elisp
 (use-package sh-script
