@@ -1439,7 +1439,7 @@ Use Zone as a true screen saver that prevents sleep.
 		  ,`("OFTC" :server "irc.oftc.net"
 					:port 6697
 					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
-    (defun erc-join-server (server)
+    (defun fysh/erc-join-server (server)
       "Join a server from 'erc-server-list'."
       (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
       (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
@@ -1449,35 +1449,7 @@ Use Zone as a true screen saver that prevents sleep.
           (progn
             (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
               (plist-put server-args :client-certificate (list certs certs)))
-            ;;(apply #'erc-tls (append server-args '(&interactive-env ((erc--display-context (erc-interactive-display . erc)) (erc-join-buffer . buffer)))))))))
             (apply #'erc-tls server-args)))))
-
-    ;; bookmarks
-    ;; (defun fysh/bookmark-autojoin (channel)
-    ;;   (erc-join-channel channel)
-    ;;   (remove-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))
-    ;; (defun fysh/erc-bookmark-handler (bookmark)
-    ;;   (let ((alias (bookmark-prop-get bookmark 'alias))
-    ;;         (channel (bookmark-prop-get bookmark 'channel)))
-    ;;     (erc-join-server alias)
-    ;;     (if-let ((erc-buffer (get-buffer alias)))
-    ;;         (erc-join-channel channel)
-    ;;       (add-hook 'erc-nickserv-identified-hook #'fysh/bookmark-autojoin))))
-    ;; (defun fysh/erc-bookmark-make-record ()
-    ;;   (when (and erc-session-server (erc-server-buffer-p))
-    ;;     (let* ((buf (buffer-name))
-    ;;            (server erc-session-server)
-    ;;            (alias (car (mapcar (lambda (s) (car (member server s))) erc-server-list)))
-    ;;            (channel (if (string= buf alias) buf ""))
-    ;;            (defaults (delq nil (alias server channel)))
-    ;;            `(nil
-    ;;              (alias . ,alias)
-    ;;               (server . ,server)
-    ;;               (channel . ,channel)
-    ;;               (handler . fysh/erc-bookmark-handler)
-    ;;               (defaults . '(nil)))))))
-    ;; (add-hook 'erc-mode-hook (lambda () (setq-local bookmark-make-record-function #'fysh/erc-bookmark-make-record)))
-
     :general-config
     ('erc-mode-map "<up>" #'erc-previous-command)
     ('erc-mode-map "<down>" #'erc-next-command)
@@ -1491,7 +1463,8 @@ Use Zone as a true screen saver that prevents sleep.
     ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
     (setq erc-autojoin-timing 'ident)
     (setq erc-autojoin-delay 1)
-    (setq erc-join-buffer 'bury)
+    (setq erc-join-buffer 'window)
+    (setq erc-auto-reconnect-display 'bury)
     (setq erc-kill-buffer-on-part t)
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
@@ -1500,33 +1473,45 @@ Use Zone as a true screen saver that prevents sleep.
     (setq erc-interpret-mirc-color t)
     (setq erc-header-line-format nil)
     (setq erc-hide-list '("JOIN" "PART" "QUIT" "353"))
-    ;; I don't care who's in a channel, just how many people are there.
-    ;; hook this into modes.
-    ;; we do this because NAMES is several messages, which looks really silly.
-    ;; (defun fysh/erc-show-n-users (n-users)
-    ;;   (erc-display-message parsed 'notice 'active 's353 ?c channel ?u users))
-    ;; (timeout-debounce! fysh/erc-show-n-users 3)
-    ;; (push (lambda (proc parsed)
-    ;;         "NAMES notice."
-    ;;         (let ((channel (nth 2 (erc-response.command-args parsed)))
-    ;;               (users (erc-response.contents parsed)))
-    ;;           ;; (erc-display-message parsed 'notice (or (erc-get-buffer channel proc)
-    ;;           ;;                                         'active)
-    ;;           ;;                      's353 ?c channel ?u users)
-    ;;           (erc-with-buffer (channel proc)
-    ;;             (erc-channel-receive-names users))) t)
-    ;;       erc-server-353-functions)
+
     (setq erc-nickserv-identify-mode nil)
     (setq erc-prompt-for-nickserv-password nil)
     (setq erc-use-auth-source-for-nickserv-password nil)
     (setq erc-auth-source-server-function nil)
     (setq erc-prompt-for-password nil)
 
+    (setq erc-show-speaker-membership-status t)
+
+    (add-to-list 'erc-modules 'notifications)
+    ;; used in erc-notifications, not just erc-track-mode
+    (setq erc-track-exclude `(,erc-nick ,(concat erc-nick erc-nick-uniquifier) "NickServ" "ChanServ"))
+    (define-advice erc-notifications-notify (:override (nick msg &optional privp) applescript-notify)
+      (setq erc-notifications-last-notification
+            (let* ((channel (if privp (erc-get-buffer nick) (current-buffer)))
+                   (title (format "%s in %s" (xml-escape-string nick t) channel))
+                   (body (xml-escape-string (erc-controls-strip msg) t)))
+              (fysh/notif-notification body title "ERC" "Blow"))))
+
+    (setq fysh/erc-part-reasons '("Gone fishing"
+                                  "\C-]See you space cowboy...\C-]"
+                                  "\C-bSIGTERM\C-b"
+                                  "That's all for today, folks!"
+                                  "Touching grass"))
+    (defun fysh/erc-part-reason-random (&optional s)
+      "Pick a random reason from `fysh/erc-part-reasons', or S if it's non-nil."
+      (or s (concat
+             (nth (random (length fysh/erc-part-reasons)) fysh/erc-part-reasons)
+             " (" (erc-quit/part-reason-default) ")")))
+    (setq erc-part-reason #'fysh/erc-part-reason-random)
+
+    (delete 'track erc-modules)
+
     (use-package erc-hl-nicks :demand t)
     (use-package erc-sasl
         :demand t
         :config
-        (setq erc-sasl-mechanism 'external)))
+        (setq erc-sasl-mechanism 'external))
+    (erc-update-modules))
 #+end_src
 Instead of gnarsty password-based auth, we can use a certificate to authenticate. For some reason, OFTC has to use SHA-1 instead of SHA-256.
 #+begin_src shell :dir (expand-file-name "erc" user-emacs-directory) :mkdirp yes :results none :eval no
