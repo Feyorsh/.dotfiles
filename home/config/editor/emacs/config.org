@@ -2941,6 +2941,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     :init
     (define-advice forge-fork (:before (&rest _) rename-upstream)
       (magit-call-git "remote" "rename" (magit-get-remote) "upstream"))
+    (setq forge-add-default-bindings nil)
     :general
     ('magit-status-mode-map "@" #'forge-dispatch)
     :config
