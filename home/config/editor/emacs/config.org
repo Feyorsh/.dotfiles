@@ -1377,20 +1377,30 @@ A shame the author passed away.
 #+end_src
 
 **** TODO NetHack
-Ah yes, Nethack as God intended: in ~lisp~ mode.
+Nethack as God intended: in ~lisp~ mode.
 #+begin_src elisp
 (use-package nethack
-    :custom-face
-  (nethack-message-highlight-face ((t (:inherit bold))))
+  :commands (nethack)
+  :custom-face
+  (nethack-message-highlight-face ((t (:inherit bold :foreground "DarkSeaGreen" :background unspecified))))
   :general-config
   ('insert 'nh-map-mode-map "C-w" nil)
-  :config
-  (add-to-list 'evil-insert-state-modes 'nh-map-mode)
+  ('normal 'nh-menu-mode-map "RET" nil) ;; necessary?
+  :init
   (define-advice nethack-installed-p (:override () disable-check) t)
-  (define-advice nhapi-create-menu-window (:override (menuid) nethack-buffer-name)
-    (with-current-buffer (nhapi-create-menu (intern "nethack menu") menuid)
-      (setq buffer-read-only t)))
-  )
+  (define-advice nhapi-restore-window-configuration (:after (&rest _) evil-fix-cursor)
+    (setq-local evil-insert-state-cursor 'hbar))
+  (define-advice nh-read-char (:around (fn &rest args) unwiden-cursor)
+    (let ((x-stretch-cursor nil)) (apply fn args)))
+  (defun nethack-x-warn-low-hp (attr new old percent)
+    "Print a message in `nh-message-buffer' when hitpoints get low."
+    (when (and (string-equal attr "HP")
+               (< new old)
+               (< percent 20))
+      (nhapi-message 'atr-blink "Hitpoints below 20%")))
+  :config
+  (add-hook 'nethack-status-attribute-change-functions 'nethack-x-warn-low-hp)
+  (add-to-list 'evil-insert-state-modes 'nh-map-mode))
 #+end_src
 
 **** Zone

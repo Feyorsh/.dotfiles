@@ -32,7 +32,10 @@ OPTIONS=hilite_status:gold/always/yellow
 OPTIONS=hilite_status:condition/major_troubles/red&bold/minor_troubles/yellow&bold/movement/green
 OPTIONS=hilite_status:carrying-capacity/burdened/yellow/stressed/orange
 OPTIONS=hilite_status:hunger/hungry/yellow/weak/orange/fainting/orange/weak/orange
-OPTIONS=hilite_status:hitpoints/100%/green/<100%/green/<60%/yellow/<40%/red
+## nethack-el is a little too dumb for it's own good, but I'm not gonna refactor it lol.
+# OPTIONS=hilite_status:hitpoints/100%/green/<100%/green/<60%/yellow/<40%/red
+OPTIONS=hilite_status:hitpoints/<40%/red/<60%/yellow
+OPTIONS=hilite_status:hitpoints/<100%/green/100%/green
 OPTIONS=hitpointbar
 OPTIONS=hilite_pet
 
@@ -46,9 +49,6 @@ MENUCOLOR=" cursed .* (being worn)"=red&underline
 OPTIONS=paranoid_confirmation:quit attack pray Remove
 
 OPTIONS=sortloot:full
-
-OPTIONS=time
-OPTIONS=showexp
 
 #OPTIONS=!bones
 
