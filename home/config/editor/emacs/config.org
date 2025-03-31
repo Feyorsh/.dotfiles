@@ -3337,6 +3337,8 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
           doom-modeline-enable-word-count t
           doom-modeline-continuous-word-count-modes nil
           doom-modeline-env-version nil
+          doom-modeline-irc nil ;; super slow
+          doom-modeline-enable-word-count nil ;; also slow
 
           doom-modeline-position-line-format '("%l")
           doom-modeline-height 40)
@@ -3345,7 +3347,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     ;; moved workspace/window numbering to the right, debug-on-error all the way over
     (doom-modeline-def-modeline 'main
         '(eldoc bar modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-      '(compilation objed-state misc-info project-name workspace-name persp-name battery grip irc mu4e gnus github repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time debug))
+      '(compilation objed-state misc-info project-name persp-name battery grip irc mu4e gnus github repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time debug))
     )
 #+end_src
 #+begin_src elisp
