@@ -16,6 +16,14 @@
     set pagination off
   '';
 
+  xdg.configFile."poke/pokerc.conf".text = ''
+    .set endian little
+    .set omode tree
+    .set oacutoff 5
+    .set pretty-print yes
+    .set pager yes
+  '';
+
   programs.bat = {
     enable = true;
     config = {
