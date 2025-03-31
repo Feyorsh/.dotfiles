@@ -2916,6 +2916,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   (add-to-list 'safe-local-variable-values '(vc-default-patch-addressee . "bug-gnu-emacs@gnu.org"))
   (add-to-list 'safe-local-variable-values '(magit-revision-insert-related-refs))
   (add-to-list 'safe-local-variable-values '(magit-refresh-buffers))
+  (add-to-list 'safe-local-variable-values '(eglot-enabled))
   (dir-locals-set-class-variables
    'huge-git-repository
    '((nil
