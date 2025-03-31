@@ -79,6 +79,21 @@ in
       warn-dirty = false;
     };
 
+    buildMachines = [{
+      hostName = "Vermillion";
+      protocol = "ssh-ng";
+      speedFactor = 3;
+      sshUser = "nixremote";
+      sshKey = "/var/root/.ssh/nixremote";
+      supportedFeatures = [
+        "kvm"
+        "big-parallel"
+      ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+    }];
     linux-builder = {
       enable = true;
       config = {
