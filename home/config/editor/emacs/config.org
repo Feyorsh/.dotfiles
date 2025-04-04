@@ -2744,7 +2744,7 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
   (setq dired-kill-when-opening-new-dired-buffer t
         dired-auto-revert-buffer t
         dired-recursive-copies 'always
-        dired-recursive-deletes 'top
+        dired-recursive-deletes 'always
         dired-create-destination-dirs 'ask
         dired-dwim-target t
         dired-mouse-drag-files t
