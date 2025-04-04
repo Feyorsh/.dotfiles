@@ -182,7 +182,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
     (safe-local-variable-values
-     '((eval add-hook 'after-save-hook
+     '((eval setq-local lexical-binding t)
+       (eval add-hook 'after-save-hook
         (lambda nil
           (if
               (y-or-n-p "Tangle?")
@@ -3395,6 +3396,7 @@ More likely is that my init.el is just really scuffed.
 
 
 ;; Local Variables:
+;; eval: (setq-local lexical-binding t)
 ;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t)
 ;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
 ;; End:
