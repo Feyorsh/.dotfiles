@@ -13,18 +13,21 @@
       fish_vi_key_bindings
     '';
     shellAliases = {
-      dugb = "du -h -d 1 $argv | grep -P 'G\t'";
       rinse = "cd ~/.dotfiles; darwin-rebuild switch --flake .#Aqua --option sandbox false; cd -";
-      alert = "command $argv; afplay (random choice ~/Profile/Sounds/*) &";
-      which = "readlink -f $(command which $argv)";
-      cheat = "command cheat -c $argv | $PAGER";
-      mkcd = "mkdir -p $argv && cd $argv";
-      mkown = "sudo chown -R $USER:$(id -gn) $argv";
+      mkown = "sudo chown -R $USER:(id -gn)";
     };
     shellAbbrs = {
-      dd = "dd status=progress";
+      dd = {
+       position = "anywhere";
+       expansion = "dd status=progress";
+      };
     };
     functions = {
+      which = "readlink -f (command which $argv)";
+      cheat = "command cheat -c $argv | $PAGER";
+      mkcd = "mkdir -p $argv && cd $argv";
+      alert = "command $argv; afplay (random choice ~/Profile/Sounds/*) &";
+      dugb = "du -h -d 1 $argv | grep -P 'G\t'";
     };
     plugins = [
       { name = "pure"; src = pkgs.fishPlugins.pure.src; }
