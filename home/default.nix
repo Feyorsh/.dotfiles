@@ -28,8 +28,6 @@
       time-out-macos
       keycastr
 
-      nix-output-monitor
-
       # bitwarden-desktop
 
       (runCommandLocal "xcode" {} ''

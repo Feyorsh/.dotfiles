@@ -2470,19 +2470,36 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
     :mode ("/flake\\.lock\\'" . json-ts-mode)
     :interpreter (("nix-shell" . nix-shebang-mode)
                   ("nix" . nix-shebang-mode))
-    :hook (nix-mode . (lambda () (indent-tabs-mode -1))))
+    :hook ((nix-mode . (lambda () (indent-tabs-mode -1)))
+           (after-init . nix-prettify-global-mode))
+    :general
+	(leader-def "n" #'nix-edit)
+    :init
+    (define-advice nix-edit (:around (fn &rest args) local-nixpkgs)
+      (interactive (list (nix-read-file) nil))
+      (apply fn (if current-prefix-arg
+                    `(,(expand-file-name "~/Personal/nixpkgs") ,@(when (= 2 (length args)) (nth 1 args)))
+                  args))))
 
 ;; (use-package nix-ts-mode
 ;;     :mode ("\\.nix\\'" . nix-ts-mode))
 
 (use-package nix3
-    :config
+  :commands (nix3-transient)
+  :config
   (setq nix3-terminal-function #'nix3-vterm-shell-command)
   (setq nix3-browse-url-for-repository #'browse-url-default-browser)
   ;; (use-package magit-nix3
   ;;     :config
   ;;   (magit-nix3-flake-mode t))
   )
+
+(use-package nix-update
+    :config
+    (define-advice nix-update-fetch (:after (&optional arg) remove-date)
+      (interactive "P")
+      (save-excursion (re-search-forward "};" nil t))
+      (delete-matching-lines "# date" (point) (match-end 0))))
 #+end_src
 
 *** Mathematica
@@ -3262,6 +3279,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
                                                          ((string-match-p "/abs/" url) (eww-browse-url (string-replace "/abs/" "/pdf/" url) args))
                                                          (t (browse-url-default-browser url args)))))
 							    ("pdf$" . eww-browse-url)
+							    ("/nix/store/.*" . (lambda (url &rest _) (nix-store-show-path (string-remove-prefix "http://" url))))
 							    ("." . xwidget-webkit-browse-url)))
     (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
 #+end_src

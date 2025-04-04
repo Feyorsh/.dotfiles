@@ -25,16 +25,6 @@
       dd = "dd status=progress";
     };
     functions = {
-      nix_shell_packages = ''
-        if [ $SHLVL -ge 3 ]
-            for p in $PATH
-                if not string match -qgr "/nix/store/.*?-(?<pname>.*)-\d*\.\d*\.\d*/" $p; or [ $pname = "kitty" ]
-                    break
-                end
-                echo $pname
-            end
-        end
-      '';
     };
     plugins = [
       { name = "pure"; src = pkgs.fishPlugins.pure.src; }

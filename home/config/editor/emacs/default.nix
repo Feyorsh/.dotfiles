@@ -259,7 +259,18 @@ in
           mv ./extra/magit-nix3.el .
         '';
       })
-      nix-update pkgs.nix-prefetch-git
+      (nix-update.overrideAttrs {
+        patches = [
+          (fetchpatch {
+            url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/14.patch";
+            hash = "sha256-zSfKQ3R8l1W+0eo4x4s9g65IIVQ2k+S0MGDfivRVW7g=";
+          })
+          (fetchpatch {
+            url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/15.patch";
+            hash = "sha256-znF2o7FxfT0/Am87S/Dgi+VbAkLUkqJ3O3gTUevQyn0=";
+          })
+        ];
+      }) pkgs.nix-prefetch-git
       (verilog-ts-mode.overrideAttrs (prev: rec {
         version = "0.2.1";
         src = fetchFromGitHub {

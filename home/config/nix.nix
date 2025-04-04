@@ -19,8 +19,19 @@
     enableFishIntegration = true;
   };
 
-  programs.fish.shellAliases = {
-    nix-hashit = "echo sha256-$(nix hash convert --hash-algo sha256 --to base64 $argv)";
+  programs.fish.functions = {
+    nix-hashit = "echo sha256-(nix hash convert --hash-algo sha256 --to base64 $argv)";
+    nix_shell_packages = ''
+        if [ $SHLVL -ge 2 ]
+            for p in $PATH
+                if not string match -qgr "/nix/store/.*?-(?<pname>.*)-\d*\.\d*\.\d*/" $p; or [ $pname = "kitty" ]
+                    continue
+                end
+                echo $pname
+            end
+        end
+      '';
+    ",," = "string match -r '/nix/store/.*/' $PATH[1]";
   };
 
   # (runCommand "nix-manuals" { nativeBuildInputs = [ docbook2x ]; } ''
