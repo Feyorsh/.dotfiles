@@ -2796,7 +2796,7 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
 *** TODO Deadgrep
 #+begin_src elisp
 (use-package deadgrep
-    :general (leader-def "/" #'deadgrep)
+    :general (leader-def ">" #'deadgrep)
 )
 #+end_src
 
