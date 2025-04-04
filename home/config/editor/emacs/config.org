@@ -2474,9 +2474,27 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
     :mode "\\.ya?ml\\'")
 #+end_src
 
-*** TODO Docker
+*** Docker
 #+begin_src elisp
-(use-package docker)
+(use-package docker
+  :init
+  (defvar fysh/docker-daemon-command
+    '("colima" "start"))
+  (define-advice docker (:before-until (&rest _) check-daemon)
+    (when (string-match-p "Cannot connect to the Docker daemon"
+                          (shell-command-to-string (string-join `(,docker-command "info") " ")))
+      (if (yes-or-no-p "Docker daemon is not running, would you like to start it?")
+        (let* ((progress-reporter (make-progress-reporter "Starting Docker daemon..."))
+               (progress-updater (run-with-timer t 1 (lambda () (progress-reporter-force-update progress-reporter)))))
+          (apply #'async-start-process "dockerd"
+                 (car fysh/docker-daemon-command)
+                 (lambda (&rest _)
+                   (cancel-timer progress-updater)
+                   (progress-reporter-done progress-reporter)
+                   (docker))
+                 (cdr fysh/docker-daemon-command))
+          t)
+        (user-error "Docker daemon isn't running")))))
 #+end_src
 
 *** Nix
