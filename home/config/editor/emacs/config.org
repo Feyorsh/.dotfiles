@@ -515,6 +515,22 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
       "#" #'evil-visualstar/begin-search-backward))
 #+end_src
 
+**** Multilinugual
+#+begin_src elisp
+(use-package sis
+  :general
+  (:keymaps 'global "C-\\" #'sis-switch)
+  :config
+  (sis-ism-lazyman-config
+   "com.apple.keylayout.US"
+   "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese")
+  (sis-global-cursor-color-mode t)
+  (setq sis-other-cursor-color "deep pink")
+  (sis-global-respect-mode t)
+  (sis-global-context-mode t)
+  (sis-global-inline-mode t))
+#+end_src
+
 ** Performance
 Oldest trick in the book! (Not really.)
 #+begin_src elisp

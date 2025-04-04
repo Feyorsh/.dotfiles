@@ -231,6 +231,7 @@ in
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
       auctex cdlatex
       yasnippet yasnippet-capf
+      sis
 
       # prog-modes
       python-mls pkgs.ruff pkgs.basedpyright
