@@ -28,7 +28,7 @@
       time-out-macos
       keycastr
 
-      # bitwarden-desktop
+      bitwarden-desktop
 
       (runCommandLocal "xcode" {} ''
          mkdir -p $out/Applications/Xcode.app
