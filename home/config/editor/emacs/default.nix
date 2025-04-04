@@ -307,7 +307,7 @@ in
           hash = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
         };
       }))
-      julia-mode julia-vterm ob-julia-vterm
+      julia-mode julia-vterm ob-julia-vterm eglot-jl
       nasm-mode
       vimrc-mode
       meson-mode
