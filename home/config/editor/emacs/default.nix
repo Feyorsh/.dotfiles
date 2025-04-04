@@ -112,25 +112,13 @@ in
           ./patches/elfeed-shr.patch
         ];
       })) elfeed-org
-      emms org-emms emms-player-spotify emms-player-simple-mpv
+      emms
       (pkgs.mpv.overrideAttrs (prev: {
         patches = (prev.patches or []) ++ [ (fetchpatch {
           url = "https://patch-diff.githubusercontent.com/raw/mpv-player/mpv/pull/15115.patch";
           hash = "sha256-3iaD2t/bzzlo6FFcPac/bPuVg5adbBFPI3HUeXysRrc=";
         }) ];
       })) pkgs.spotifyd pkgs.imagemagick pkgs.python312Packages.tinytag
-      (trivialBuild rec {
-        pname = "tracker-mode";
-        version = "0.8";
-        src = fetchFromGitHub {
-          owner = "defaultxr";
-          repo = pname;
-          rev = "efd517f0f22ee335b4c9eeebb29c3695a432da0b";
-          hash = "sha256-nA7kK+NmyIMvMD9mI56DaZ5wMpuDuAC5nXbBpiKEFCM=";
-        };
-        packageRequires = [ osc ];
-      }) # pkgs.supercollider
-      alda-mode pkgs.alda
 
       dirvish
       vterm

@@ -1306,67 +1306,59 @@ I use a patched version of elfeed which bases the hash of entries solely upon th
 [[https://lucidmanager.org/productivity/configure-emms/][Misc EMMS config]]
 #+begin_src elisp
 (use-package emms
+    :mode ("\\.emms\\'" . emacs-lisp-mode)
+    :custom (emms-player-mpv-update-metadata t)
+    :commands (fysh/emms-add-youtube)
     :config
-  (emms-all)
-  (emms-lyrics -1)
-  (require 'emms-player-spotify)
+    (emms-all)
+    (emms-lyrics -1)
 
-  (setq emms-player-list '(emms-player-mpv emms-player-spotify))
-  (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-video" "--no-audio-display" "--force-window=no" "--vo=null" "--script-opts=ytdl_hook-thumbnails=best"))
-  (setq emms-player-mpv-update-metadata t)
+    (setq emms-player-list '(emms-player-mpv))
+    (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-video" "--no-audio-display" "--force-window=no" "--vo=null" "--script-opts=ytdl_hook-thumbnails=best"))
 
-  (setq emms-browser-covers #'emms-browser-cache-thumbnail-async)
-  (setq emms-source-file-default-directory "~/Music")
+    (defun emms-player-mpv-volume-set (amount)
+      (setq emms-volume amount)
+      (emms-player-mpv-cmd `(set volume ,(int-to-string amount))))
+    (defun emms-player-mpv-volume-change (amount)
+      (setq emms-volume (+ emms-volume amount))
+      (emms-player-mpv-cmd `(add volume ,(int-to-string amount))))
 
-  (setq emms-mode-line-format " [%s] ")
-  (setq emms-mode-line-icon-enabled-p t)
-  (setq emms-mode-line-icon-color "white")
+    (defvar emms-volume 40 "Shared volume between EMMS players.")
+    (setq emms-volume-change-function #'emms-player-mpv-volume-change)
+    (setq emms-volume-select-get-function '(lambda () emms-volume))
 
-  (defalias 'emms-resume 'emms-start)
-  (defalias 'emms-play 'emms-start)
-  ;; (defvar emms-player-mpv-volume 100)
+    (setq emms-browser-covers #'emms-browser-cache-thumbnail-async)
+    (setq emms-source-file-default-directory "~/Music")
 
-  ;; (setq emms-volume-change-function ...)
-  ;; idea: one volume parameter shared between spotify and mpv (system volume controlled separately)
-  ;; (defvar emms-player-volume 100)
-  ;; (defun emms-player-mpv-get-volume ()
-  ;;   "Sets `emms-player-mpv-volume' to the current volume value
-  ;;   and sends a message of the current volume status."
-  ;;   (emms-player-mpv-cmd '(get_property volume)
-  ;;                        #'(lambda (vol err)
-  ;;                            (unless err
-  ;;                              (let ((vol (truncate vol)))
-  ;;                                (setq emms-player-mpv-volume vol)
-  ;;                                (message "Music volume: %s%%"
-  ;;                                         vol))))))
+    (setq emms-mode-line-format " [%s] ")
+    (setq emms-mode-line-icon-enabled-p nil)
+    (setq emms-mode-line-icon-color (doom-color 'modeline-fg-alt))
 
-  ;; (defun emms-player-mpv-raise-volume (&optional amount)
-  ;;   (interactive)
-  ;;   (let* ((amount (or amount 10))
-  ;;          (new-volume (+ emms-player-mpv-volume amount)))
-  ;;     (if (> new-volume 100)
-  ;;         (emms-player-mpv-cmd '(set_property volume 100))
-  ;;       (emms-player-mpv-cmd `(add volume ,amount))))
-  ;;   (emms-player-mpv-get-volume))
+    (defalias 'emms-resume 'emms-start)
+    (defalias 'emms-play 'emms-start)
 
-  ;; (defun emms-player-mpv-lower-volume (&optional amount)
-  ;;   (interactive)
-  ;;   (emms-player-mpv-cmd `(add volume ,(- (or amount '10))))
-  ;;   (emms-player-mpv-get-volume))
+    (defun fysh/emms-add-youtube (query)
+      "Add the first result for `QUERY' on YouTube to an EMMS playlist."
+      (interactive (list (read-string "Search YouTube: ")))
+      (emms-add-url (concat "ytdl://ytsearch:" query)))
 
-  ;;https://emacs.stackexchange.com/questions/21747/emms-how-can-i-have-a-progress-bar/21766#21766
-  ;; (defun chunyang-emms-indicate-seek (_sec)
-  ;;   (let* ((total-playing-time (emms-track-get
-  ;;                               (emms-playlist-current-selected-track)
-  ;;                               'info-playing-time))
-  ;;          (elapsed-total (round(/ (* 100 emms-playing-time) total-playing-time))))
-  ;;     (with-temp-message (format "[%-100s] %2d%%"
-  ;;                                (make-string elapsed-total ?=)
-  ;;                                elapsed-total)
-  ;;       (sit-for 5))))
-  ;; (add-hook 'emms-player-seeked-functions #'chunyang-emms-indicate-seek 'append)
-  )
+    (defun fysh/emms-info-track-description (track)
+      "Return a description of TRACK."
+      (let ((artist    (emms-track-get track 'info-artist))
+            (title     (emms-track-get track 'info-title)))
+        (cond
+          ((and title (string-match-p " - " title))
+           title)
+          ((and artist title)
+           (concat artist " - " title))
+          (title
+           title)
+          (t
+           (emms-track-simple-description track)))))
+    (setq emms-track-description-function #'fysh/emms-info-track-description))
 #+end_src
+Spotify support in EMMS isn't really worth it because offline playback can't be achieved---not with spotifyd, and not even with Applescript controlling the official macOS client (changing playback works but playing URIs doesn't).
+Check out [[https://github.com/danielfm/smudge][smudge]] if this ends up being a more important thing later
 
 *** Games
 **** GNU Go
