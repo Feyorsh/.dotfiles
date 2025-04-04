@@ -3034,7 +3034,8 @@ Eglot!
   (setq-default eglot-enabled t) ;; opt-in to use eglot
   :config
   (use-package eglot-jl
-      :init
+      :demand t
+      :config
     (eglot-jl-init))
   (use-package eglot-booster
       :demand t
