@@ -48,6 +48,14 @@
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     magit magit-delta
-    forge
+    (forge.overrideAttrs (prev: rec {
+      version = "0.5.0";
+      src = pkgs.fetchFromGitHub {
+        owner = "magit";
+        repo = prev.pname;
+        rev = "refs/tags/v${version}";
+        hash = "sha256-/BseEuiEbBbUtkulDct6nh+u+wWOxSuwwxhjO9hHego=";
+      };
+    }))
   ]);
 }

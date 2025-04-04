@@ -47,11 +47,20 @@
           allowUnfree = true;
           permittedInsecurePackages = [
             "olm-3.2.16"
+            "emacs-mac-macport-29.4"
+            "emacs-mac-macport-with-packages-29.4"
           ];
         };
         overlays = [
           fyshpkgs.overlay.${system}
           inputs.firefox-darwin.overlay
+          (final: prev: {
+            xorg = prev.xorg.overrideScope (self: super: {
+              libAppleWM = super.libAppleWM.overrideAttrs (prev': {
+                nativeBuildInputs = (prev'.nativeBuildInputs or []) ++ [ final.xorg-autoconf ];
+              });
+            });
+          })
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
               icon = ./assets/icons/spotify.icns;
@@ -68,7 +77,7 @@
                 cp $icon extra/osx/Alacritty.app/Contents/Resources/alacritty.icns
               '';
             });
-	        })
+          })
         ];
       };
     in
