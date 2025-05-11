@@ -1,11 +1,11 @@
 {
   description = "doing it to spite the haters (RMS)";
-  # $ darwin-rebuild build --flake .#Aqua
+  # $ darwin-rebuild build --flake .#Opal
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     fyshpkgs = {
-      url = "git+file:///Users/ghuebner/Personal/fyshpkgs?ref=main";
+      url = "github:Feyorsh/fyshpkgs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     pwnypus = {
@@ -82,7 +82,7 @@
       };
     in
       {
-        darwinConfigurations."Aqua" = let
+        darwinConfigurations."Opal" = let
           username = "ghuebner";
           specialArgs = { inherit inputs username; };
         in darwinSystem {
@@ -105,6 +105,6 @@
         };
 
         # Expose the package set, including overlays, for convenience.
-        darwinPackages = self.darwinConfigurations."Aqua".pkgs;
+        darwinPackages = self.darwinConfigurations."Opal".pkgs;
       };
 }

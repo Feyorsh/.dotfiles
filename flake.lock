@@ -189,16 +189,15 @@
       "locked": {
         "lastModified": 1737157164,
         "narHash": "sha256-MIq7pAbFL3ZKlxZClTDT0365tlV2NOkzxB3FgH2N/TQ=",
-        "ref": "main",
+        "owner": "Feyorsh",
+        "repo": "fyshpkgs",
         "rev": "224195370db90945121ce3937ff82361467139e5",
-        "revCount": 23,
-        "type": "git",
-        "url": "file:///Users/ghuebner/Personal/fyshpkgs"
+        "type": "github"
       },
       "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "file:///Users/ghuebner/Personal/fyshpkgs"
+        "owner": "Feyorsh",
+        "repo": "fyshpkgs",
+        "type": "github"
       }
     },
     "fyshpkgs_2": {
