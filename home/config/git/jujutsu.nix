@@ -18,7 +18,7 @@ in
         "format_timestamp(timestamp)" = "separate(' ', timestamp.format('%a %e %b %Y %T'), surround('(', ')', timestamp.ago()))";
       };
       signing = {
-        sign-all = true;
+        behaviour = "own";
         backend = "ssh";
         key = "~/.ssh/id_ed25519.pub";
       };
@@ -92,7 +92,7 @@ in
                          if(description.first_line().substr(0, 24).starts_with(description.first_line()),
                             description.first_line().substr(0, 24),
                             description.first_line().substr(0, 23) ++ "…"))))
-        '
+        ' 2>/dev/null
       '';
     };
     "_pure_prompt_git" = ''
