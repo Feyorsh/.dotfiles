@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   inherit (pkgs) fetchFromBitbucket fetchFromGitHub fetchFromGitea fetchpatch;
-  emacs' = pkgs.emacs29-macport.overrideAttrs (prev: {
+  emacs' = (pkgs.emacs29-macport.overrideAttrs (prev: {
     src = fetchFromBitbucket {
       owner = "mituharu";
       repo = "emacs-mac";
@@ -27,7 +27,6 @@ let
     configureFlags = (prev.configureFlags or []) ++ [
       "--with-xwidgets"
       "--with-librsvg"
-      "--with-dbus"
     ];
     preConfigure = ''
       configureFlagsArray+=(
@@ -37,11 +36,9 @@ let
 
 
     buildInputs = (prev.buildInputs or []) ++ [
-      pkgs.darwin.apple_sdk_11_0.frameworks.WebKit
       pkgs.librsvg
-      pkgs.dbus
     ];
-  });
+  })).override { withNativeCompilation = false; };
 
   emacsWrapped = let
     emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
@@ -51,21 +48,7 @@ let
     pkgs.symlinkJoin {
       name = "emacs";
       paths = [ final ];
-      nativeBuildInputs = [
-        # (pkgs.substitute {
-        #   src = (pkgs.makeDarwinBundle {
-        #     name = "emacsclient";
-        #     exec = "emacsclient";
-        #     icon = "Emacs.icns";
-        #   });
-        #   substitutions = [
-        #     "--replace-fail"
-        #     ''"emacsclient" "emacsclient"''
-        #     ''"emacsclient" "emacsclient" "Emacs" "${lib.boolToString true}"''
-        #   ];
-        # })
-        pkgs.makeWrapper
-      ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
       # incredibly cursed setup: this ensures emacsclient starts up the server if it isn't running (the path to emacs is important because of pathing) and that it doesn't create a new frame if run from within emacs.
       postBuild = ''
         # rm $out/Applications/Emacs.app/Contents/MacOS/Emacs

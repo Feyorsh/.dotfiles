@@ -24,11 +24,11 @@ Good .emacs.ds:
 
 * Emacs
 ** Lexical binding
-#+begin_src elisp :tangle "~/.config/emacs/early-init.el"
+#+begin_src elisp :tangle "~/.config/emacs/early-init.el" :mkdirp yes
 ;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
 #+end_src
 
-#+begin_src elisp :tangle "~/.config/emacs/init.el"
+#+begin_src elisp :tangle "~/.config/emacs/init.el" :mkdirp yes
 ;;; init.el --- Init File -*- lexical-binding: t; -*-
 #+end_src
 
@@ -117,6 +117,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     ;; bug#73773
     (defvar subword-mode nil)
+    ;; needed while libgccjit is broken in nixpkgs
+    (defvar warning-suppress-types nil)
 
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
