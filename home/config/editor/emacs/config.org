@@ -1565,6 +1565,22 @@ Use Zone as a true screen saver that prevents sleep.
             (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
               (plist-put server-args :client-certificate (list certs certs)))
             (apply #'erc-tls server-args)))))
+
+    (defun fysh/erc ()
+      "Chat on IRC"
+      (interactive)
+      (tab-switch "erc")
+      (fysh/erc-join-server "Libera.Chat")
+      (delete-other-windows)
+      (let ((w (split-window-horizontally))
+            wins)
+        (split-window-vertically)
+        (split-window-vertically nil w)
+        (setq wins (window-list))
+        (erc-buffer-do (lambda ()
+                         (when (and wins (string-prefix-p "#" (buffer-name)))
+                           (set-window-buffer (pop wins) (current-buffer)))))))
+    (defalias 'fysh/irc 'fysh/erc)
     :general-config
     ('erc-mode-map "<up>" #'erc-previous-command)
     ('erc-mode-map "<down>" #'erc-next-command)
@@ -1578,8 +1594,9 @@ Use Zone as a true screen saver that prevents sleep.
     ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
     (setq erc-autojoin-timing 'ident)
     (setq erc-autojoin-delay 1)
-    (setq erc-join-buffer 'window)
+    (setq erc-join-buffer 'bury)
     (setq erc-auto-reconnect-display 'bury)
+    (setq erc-interactive-display 'window)
     (setq erc-kill-buffer-on-part t)
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
@@ -1616,7 +1633,7 @@ Use Zone as a true screen saver that prevents sleep.
       "Pick a random reason from `fysh/erc-part-reasons', or S if it's non-nil."
       (or s (concat
              (nth (random (length fysh/erc-part-reasons)) fysh/erc-part-reasons)
-             " (" (erc-quit/part-reason-default) ")")))
+             " (\C-bERC\C-b " erc-version ")")))
     (setq erc-part-reason #'fysh/erc-part-reason-random)
 
     (delete 'track erc-modules)
