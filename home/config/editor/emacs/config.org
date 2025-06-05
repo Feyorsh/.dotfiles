@@ -3214,6 +3214,18 @@ It's 2024; man is significantly better than woman. /s
   (add-to-list 'display-buffer-alist '("\\*Diff\\*" (lambda (buffer alist) (select-window  (display-buffer-use-some-window buffer alist))))))
 #+end_src
 
+**** diff-hl
+#+begin_src elisp
+(use-package diff-hl
+    :init
+    (global-diff-hl-mode))
+#+end_src
+
+**** Difftastic
+#+begin_src elisp
+(use-package difftastic)
+#+end_src
+
 *** Line endings
 It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 #+begin_src elisp

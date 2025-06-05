@@ -34,6 +34,7 @@ in
         default-command = "status";
         movement.edit = true;
         merge-editor = "ediff";
+        diff.tool = ["difft" "--color=always" "$left" "$right"];
       };
       git = {
         fetch = ["upstream" "origin"];
@@ -43,7 +44,7 @@ in
       };
       merge-tools.ediff = {
         program = lib.getExe emacsDiffScript;
-        merge-args = [ "$left" "$right" "$base" "$output" ];
+        merge-args = ["$left" "$right" "$base" "$output"];
       };
       core = {
         fsmonitor = "watchman";

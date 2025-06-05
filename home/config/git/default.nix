@@ -3,7 +3,7 @@
   programs.git = {
     enable = true;
     lfs.enable = true;
-    delta.enable = true;
+    difftastic.enable = true;
     iniContent.delta.magit-delta = {
       line-numbers = false;
     };
@@ -28,6 +28,7 @@
 
   home.packages = with pkgs; [
     git-crypt
+    delta
     (writeShellApplication {
       name = "git-ignore";
       runtimeInputs = [ git ];

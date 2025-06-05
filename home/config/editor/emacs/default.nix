@@ -334,6 +334,7 @@ in
       marginalia
       doom-themes solaire-mode doom-modeline
       rainbow-mode
+      diff-hl difftastic
 
       (trivialBuild rec {
         pname = "ultra-scroll";
