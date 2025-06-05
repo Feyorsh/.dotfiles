@@ -58,6 +58,11 @@ let
 
         rm $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
         cp ${./emacs.icns} $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
+
+        rm $out/share/info
+        mkdir -p $out/share/info
+        ln -s ${final}/share/info/* $out/share/info/
+        find ${final.deps}/share -regex '.*\.\(info\|info\.gz\)' -exec ln -sf '{}' $out/share/info/ \;
       '';
     };
 in
