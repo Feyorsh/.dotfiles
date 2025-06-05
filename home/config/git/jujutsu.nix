@@ -47,7 +47,7 @@ in
       };
       core = {
         fsmonitor = "watchman";
-        watchman.register_snapshot_trigger = true;
+        watchman.register-snapshot-trigger = true;
       };
       colors = {
         "empty" = "bright black";
@@ -72,7 +72,7 @@ in
   };
 
   home.packages = with pkgs; [ watchman ];
-
+  programs.emacs.extraPackages = epkgs: (with epkgs; [ vc-jj ]);
 
   programs.fish.functions = {
     fish_jj_prompt = {
