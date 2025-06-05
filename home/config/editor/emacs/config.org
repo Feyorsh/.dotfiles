@@ -2323,6 +2323,24 @@ parent."
 (add-hook 'org-export-filter-parse-tree-functions #'org-export-ignore-headlines)
 #+end_src
 
+***** Overleaf
+#+begin_src elisp
+(use-package overleaf
+  :commands (overleaf-authenticate overleaf-connect overleaf-find-file)
+  :config
+  (setopt overleaf-use-nerdfont t)
+  (defconst fysh/overleaf--firefox-path (file-truename (executable-find "firefox")))
+  (define-advice overleaf--webdriver-make-session (:override () fysh/firefox-path)
+    (let ((caps (make-instance 'webdriver-capabilities-firefox)))
+      (webdriver-capabilities-add caps :binary fysh/overleaf--firefox-path t)
+      (make-instance 'webdriver-session :requested-capabilities caps)))
+  (let ((cookie-file (expand-file-name ".overleaf-cookies" user-emacs-directory)))
+    (setq overleaf-save-cookies
+          (overleaf-save-cookies-to-file cookie-file))
+    (setq overleaf-cookies
+          (overleaf-read-cookies-from-file cookie-file))))
+#+end_src
+
 **** Org-roam
 #+begin_src elisp
 (use-package org-roam

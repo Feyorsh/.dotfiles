@@ -220,6 +220,22 @@ in
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
 
       auctex cdlatex
+      (trivialBuild rec {
+        pname = "overleaf";
+        version = "1.1.0";
+        src = fetchFromGitHub {
+          owner = "vale981";
+          repo = "overleaf.el";
+          rev = "v${version}";
+          hash = "sha256-zDXUWSs8HqUdKYSbtzloXZe51jBmudWXsyhpdBE8lqc=";
+        };
+        patches = [ (fetchpatch {
+          name = "firefox-path.patch";
+          url = "https://patch-diff.githubusercontent.com/raw/vale981/overleaf.el/pull/5.patch";
+          hash = "sha256-su+enyUKys+d6p9bYL+Ue1G/u3K0EdBA5qNckmc/rA8=";
+        }) ];
+        packageRequires = [ plz websocket webdriver ];
+      }) pkgs.geckodriver
       yasnippet yasnippet-capf
       sis
 
