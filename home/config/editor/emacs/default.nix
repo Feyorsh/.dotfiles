@@ -421,6 +421,13 @@ in
         set -q argv[1]; or set argv[1] "."
         vterm_cmd find-file (realpath "$argv")
       '';
+      man = ''
+        if begin; [ -n "$INSIDE_EMACS" ]; end
+            vterm_cmd man "$argv"
+        else
+            command man "$argv"
+        end
+      '';
       vterm_prompt_end = ''
         vterm_printf '51;A'(whoami)'@'(hostname)':'(pwd)
       '';
