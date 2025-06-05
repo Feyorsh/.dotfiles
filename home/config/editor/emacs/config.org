@@ -2384,7 +2384,10 @@ For when I'm feeling /particularly/ evil...
 *** Shell
 #+begin_src elisp
 (use-package sh-script
-  :hook (sh-mode . flymake-mode))
+  :hook ((sh-mode . flymake-mode)
+         (after-save . executable-make-buffer-file-executable-if-script-p))
+  :config
+  (setq sh-shell-file (executable-find "bash")))
 #+end_src
 
 *** Markdown

@@ -10,6 +10,8 @@
       set fish_cursor_replace_one underscore blink
       set fish_cursor_visual      block
 
+      set PAGER (string split ' ' --no-empty -- $PAGER)
+
       fish_config theme choose "ayu Mirage"
 
       fish_vi_key_bindings
@@ -25,7 +27,7 @@
       };
     };
     functions = {
-      which = "readlink -f (command -v $argv)";
+      which = "readlink -f (command -v $argv) 2>/dev/null";
       cheat = "command cheat -c $argv | $PAGER";
       mkcd = "mkdir -p $argv && cd $argv";
       alert = "command $argv; afplay (random choice ~/Profile/Sounds/*) &";
