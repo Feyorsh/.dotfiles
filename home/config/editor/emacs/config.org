@@ -491,6 +491,13 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
     (leader-def "-" #'evil-numbers/dec-at-pt))
 #+end_src
 
+***** Evil Surround
+#+begin_src elisp
+(use-package evil-surround
+  :init
+  (global-evil-surround-mode 1))
+#+end_src
+
 ***** Evil Snipe
 #+begin_src elisp
 (use-package evil-snipe

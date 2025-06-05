@@ -130,7 +130,7 @@ in
       docker pkgs.colima pkgs.docker pkgs.docker-compose
       deadgrep
 
-      evil evil-snipe evil-visualstar evil-numbers
+      evil evil-snipe evil-visualstar evil-numbers evil-surround
       evil-collection
       (evil-org.overrideAttrs(prev: {
         src = fetchFromGitHub {
