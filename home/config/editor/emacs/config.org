@@ -3463,6 +3463,8 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 #+begin_src elisp
 (use-package emacs
 	:requires xwidget-internal
+    :custom-face
+    (shr-link ((t (:inherit link :weight normal))))
     :init
     ;; (defvaralias 'fysh/search-prefix 'eww-search-prefix)
     (setq fysh/search-prefix "https://duckduckgo.com/?q=")
@@ -3477,17 +3479,21 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     :general
     (leader-def "S" #'fysh/search)
     :hook ((evil-collection-setup . (lambda (&rest _)
-                                     (general-def 'normal 'xwidget-webkit-mode-map
-                                       "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (window-pixel-height) 2)))
-                                       "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (window-pixel-height) 2)))
-                                       "L" (lambda () (interactive) (xwidget-webkit-scroll-forward (/ (window-pixel-width) 2)))
-                                       "H" (lambda () (interactive) (xwidget-webkit-scroll-backward (/ (window-pixel-width) 2))))))
-           (eww-after-render-hook . (lambda () (kill-matching-buffers "eww-" nil t))))
+                                      (general-def 'normal 'xwidget-webkit-mode-map
+                                        "J" (lambda () (interactive) (xwidget-webkit-scroll-up (/ (window-pixel-height) 2)))
+                                        "K" (lambda () (interactive) (xwidget-webkit-scroll-down (/ (window-pixel-height) 2)))
+                                        "L" (lambda () (interactive) (xwidget-webkit-scroll-forward (/ (window-pixel-width) 2)))
+                                        "H" (lambda () (interactive) (xwidget-webkit-scroll-backward (/ (window-pixel-width) 2))))))
+           (eww-after-render . (lambda ()
+                                 (when (string-prefix-p "*eww pdf*" (buffer-name (car (buffer-list))))
+                                   (kill-buffer)))))
     :general-config
     ('normal 'xwidget-webkit-mode-map "&" (lambda () (interactive) (funcall browse-url-secondary-browser-function (xwidget-webkit-uri (xwidget-webkit-current-session)))))
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
     ('shr-map "v" nil)
+    ('normal 'eww-mode-map "<" #'eww-back-url)
+    ('normal 'eww-mode-map ">" #'eww-forward-url)
     :config
     (setq browse-url-browser-function 'xwidget-webkit-browse-url)
     (setq browse-url-secondary-browser-function 'browse-url-default-browser)
@@ -3497,7 +3503,13 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     (setq shr-ignore-cache t)
     (setq url-privacy-level 'high)
     (url-setup-privacy-info)
-    (setq eww-auto-rename-buffer 'title)
+    (setq eww-auto-rename-buffer
+          (lambda ()
+            (when (eq major-mode 'eww-mode)
+              (when-let ((string (or (plist-get eww-data :title)
+                                     (plist-get eww-data :url))))
+                (format "*%s*" string)))))
+    (setq xwidget-webkit-buffer-name-format "*%T*")
 
     (setq fysh/browse-url-proxy-prefix "https://proxy2.library.illinois.edu/login?url=")
     (setq browse-url-handlers '(
@@ -3509,7 +3521,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
                                                    (cond ((string-match-p "/pdf/" url) (eww-browse-url url args))
                                                          ((string-match-p "/abs/" url) (eww-browse-url (string-replace "/abs/" "/pdf/" url) args))
                                                          (t (browse-url-default-browser url args)))))
-							    ("pdf$" . eww-browse-url)
+							    ("\\.pdf" . eww-browse-url)
 							    ("/nix/store/.*" . (lambda (url &rest _) (nix-store-show-path (string-remove-prefix "http://" url))))
 							    ("." . xwidget-webkit-browse-url)))
     (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
