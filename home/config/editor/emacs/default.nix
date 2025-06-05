@@ -124,28 +124,14 @@ in
       pdf-tools nov
       envrc
       restclient
-      (disaster.overrideAttrs(prev: rec {
-        version = "1.2";
-        src = fetchFromGitHub {
-          owner = "jart";
-          repo = "disaster";
-          rev = "refs/tags/${version}";
-          hash = "sha256-peA5rSQO9oK7kc57d2SboVABRGVcqxigeSTU4ttmUXY=";
-        };
-      })) pkgs.zig
+      disaster pkgs.zig_0_13
       poke pkgs.poke
       dape
       docker pkgs.colima pkgs.docker pkgs.docker-compose
       deadgrep
 
       evil evil-snipe evil-visualstar evil-numbers
-      (evil-collection.overrideAttrs {
-        patches = [ (fetchpatch {
-          url = "https://github.com/emacs-evil/evil-collection/commit/05731c551be8cdda40ae6479adfb30b7e9c7fe39.patch";
-          hash = "sha256-QAYIVyj5bmBNItiLn7ObeAY+aup13xX6ahv9TZ5+7sg=";
-          revert = true;
-        }) ];
-      })
+      evil-collection
       (evil-org.overrideAttrs(prev: {
         src = fetchFromGitHub {
           owner = "doomelpa";
@@ -252,23 +238,15 @@ in
         patches = [
           (fetchpatch {
             url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/14.patch";
-            hash = "sha256-zSfKQ3R8l1W+0eo4x4s9g65IIVQ2k+S0MGDfivRVW7g=";
+            hash = "sha256-uxCdSKzW67c05s1V6NXJsJssncnunAWK7NFHDZatjao=";
           })
           (fetchpatch {
             url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/15.patch";
-            hash = "sha256-znF2o7FxfT0/Am87S/Dgi+VbAkLUkqJ3O3gTUevQyn0=";
+            hash = "sha256-lXs4V2fMaKvQn+iGvw1TZ90tIGG0pfYTNZn+M8n4fpY=";
           })
         ];
       }) pkgs.nix-prefetch-git
-      (verilog-ts-mode.overrideAttrs (prev: rec {
-        version = "0.2.1";
-        src = fetchFromGitHub {
-          owner = "gmlarumbe";
-          repo = prev.pname;
-          rev = "refs/tags/v${version}";
-          hash = "sha256-Vrk8MYiqsyln3xIdQiAKKcYMkzc4HO5mQRT1zpQPF+k=";
-        };
-      }))
+      verilog-ts-mode
       swift-mode pkgs.sourcekit-lsp
       terraform-mode
       zig-mode pkgs.zls
@@ -276,26 +254,8 @@ in
       wolfram-mode
       sage-shell-mode ob-sagemath
       elixir-ts-mode ob-elixir
-      (trivialBuild rec {
-        pname = "typst-ts-mode";
-        version = "42094eb2508f30ca2aba26786768e969476d98fa";
-        src = fetchFromGitea {
-          domain = "codeberg.org";
-          owner = "meow_king";
-          repo = pname;
-          rev = version;
-          hash = "sha256-KYIu7nOhfeNoypOleFXzKiUm9yF/6MFQXUZllSyDiKw=";
-        };
-      })
-      (julia-ts-mode.overrideAttrs (prev: {
-        src = fetchFromGitHub {
-          owner = "JuliaEditorSupport";
-          repo = "julia-ts-mode";
-          rev = "d693c6b35d3aed986b2700a3b5f910de12d6c53c";
-          hash = "sha256-bG2v3lWFkrDrGYF6RYJhE6/bS7oeOdHKFUtRgk1L5Uk=";
-        };
-      }))
-      julia-mode julia-vterm ob-julia-vterm eglot-jl
+      typst-ts-mode
+      julia-mode julia-ts-mode julia-vterm ob-julia-vterm eglot-jl
       nasm-mode
       vimrc-mode
       meson-mode
