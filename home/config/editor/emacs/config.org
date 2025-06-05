@@ -2926,17 +2926,17 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
   (put 'dired-find-alternate-file 'disabled nil))
 #+end_src
 
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package dirvish
     :init
   (dirvish-override-dired-mode)
   :custom
   (dirvish-quick-access-entries
-   '(("h" "~/"                          "Home")
-     ("d" "~/Downloads/"                "Downloads")
-     ("m" "/Volumes/"                       "Drives")
-     ("s" "/ssh:Vermillion")      "Vermillion"
-     ("e" "/sudo:root@localhost:/etc")  "Modify program settings"
+   '(("h" "~/" "Home")
+     ("d" "~/Downloads/" "Downloads")
+     ("m" "/Volumes/" "Drives")
+     ("s" "/ssh:Vermillion" "Vermillion")
+     ("e" "/sudo:root@localhost:/etc" "Modify program settings")
      ("t" "~/.Trash/" "Trash")))
   :config
   (setq dired-kill-when-opening-new-dired-buffer t)
