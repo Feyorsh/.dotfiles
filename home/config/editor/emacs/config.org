@@ -1409,13 +1409,10 @@ Use this to setup the dummy empty feed; only has to be done once per database. I
 (use-package emms
     :mode ("\\.emms\\'" . emacs-lisp-mode)
     :custom (emms-player-mpv-update-metadata t)
-    :commands (fysh/emms-add-youtube)
+    :commands (fysh/emms-add-youtube fysh/emms-status)
     :config
     (emms-all)
     (emms-lyrics -1)
-
-    (setq emms-player-list '(emms-player-mpv))
-    (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-video" "--no-audio-display" "--force-window=no" "--vo=null" "--script-opts=ytdl_hook-thumbnails=best"))
 
     (defun emms-player-mpv-volume-set (amount)
       (setq emms-volume amount)
@@ -1424,9 +1421,12 @@ Use this to setup the dummy empty feed; only has to be done once per database. I
       (setq emms-volume (+ emms-volume amount))
       (emms-player-mpv-cmd `(add volume ,(int-to-string amount))))
 
-    (defvar emms-volume 40 "Shared volume between EMMS players.")
+    (defvar emms-volume 50 "Shared volume between EMMS players.")
     (setq emms-volume-change-function #'emms-player-mpv-volume-change)
     (setq emms-volume-select-get-function '(lambda () emms-volume))
+
+    (setq emms-player-list '(emms-player-mpv))
+    (setq emms-player-mpv-parameters `("--quiet" "--really-quiet" ,(concat "--volume=" (int-to-string emms-volume)) "--no-video" "--no-audio-display" "--force-window=no" "--vo=null" "--script-opts=ytdl_hook-thumbnails=best"))
 
     (setq emms-browser-covers #'emms-browser-cache-thumbnail-async)
     (setq emms-source-file-default-directory "~/Music")
@@ -1435,12 +1435,43 @@ Use this to setup the dummy empty feed; only has to be done once per database. I
     (setq emms-mode-line-icon-enabled-p nil)
     (setq emms-mode-line-icon-color (doom-color 'modeline-fg-alt))
 
-    (defalias 'emms-resume 'emms-start)
-    (defalias 'emms-play 'emms-start)
+    (defalias 'emms-resume 'emms-pause)
+    (defalias 'emms-play 'emms-pause)
 
+    (defun fysh/emms-status-now-playing ()
+      (if-let* ((track (emms-playlist-current-selected-track))
+                (title (emms-track-get track 'info-title))
+                (artist (emms-track-get track 'info-artist))
+                (cover (when (eq (emms-track-type track) 'file) (emms-browser-make-cover (emms-browser-get-cover-from-path (file-name-directory (emms-track-name track)))))))
+        (string-join (list cover (emms-propertize title 'face 'bold) (emms-propertize artist 'face 'italic)) "\n")))
+    (transient-define-prefix fysh/emms-status ()
+      "Transient to control EMMS"
+      :transient-non-suffix 'transient--do-quit-one
+      ["Now Playing" :if (lambda () (eq (emms-track-type (emms-playlist-current-selected-track)) 'file))
+       (:info #'fysh/emms-status-now-playing)]
+      [["Playback"
+        ("SPC" "Play/Pause" emms-pause)
+        ("s" "Stop" emms-stop)
+        ("S" "Seek to" emms-seek-to)
+        ("n" "Next" emms-next)
+        ("p" "Previous" emms-previous)
+        ("b" "Rewind" emms-seek-backward :transient transient--do-stay)
+        ("f" "Fast-Forward" emms-seek-forward :transient transient--do-stay)]
+       ["Playlist"
+        ("N" "Cue Next" emms-cue-previous)
+        ("P" "Cue Previous" emms-cue-previous)
+        ("R" "Toggle shuffle" emms-toggle-random-playlist)
+        ("R" "Toggle repeat" emms-toggle-repeat-playlist)]
+       ["Global/External"
+        ("Y" "Add from YouTube" fysh/emms-add-youtube)
+        ("u" "Browse music" (lambda (&optional _) (interactive "P") (bookmark-jump "Music")))
+        ("m" "Toggle modeline" emms-mode-line-mode)
+        ("e" "Emms" emms)]])
+
+    (defvar fysh/emms-youtube-history nil)
     (defun fysh/emms-add-youtube (query)
       "Add the first result for `QUERY' on YouTube to an EMMS playlist."
-      (interactive (list (read-string "Search YouTube: ")))
+      (interactive (list (read-string "Search YouTube: " nil 'fysh/emms-youtube-history)))
       (emms-add-url (concat "ytdl://ytsearch:" query)))
 
     (defun fysh/emms-info-track-description (track)
