@@ -3284,6 +3284,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 #+end_src
 
 *** Help
+The default "Find all references" uses =elisps-refs.el= and is unfortunately really slow; doing a dumb grep loses information about the type in exchange for incredibly faster searches.
 #+begin_src elisp
 (use-package helpful
 	:general (:keymaps 'global
@@ -3293,6 +3294,15 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 					   "C-h k" #'helpful-key
 					   "C-h x" #'helpful-command)
 	:config
+    (when (locate-library "deadgrep")
+      (require 'deadgrep)
+      (fset 'deadgrep--arguments-orig (symbol-function #'deadgrep--arguments))
+      (define-advice helpful--all-references (:override (button) fysh/use-deadgrep)
+        (cl-letf* (((symbol-function 'deadgrep--arguments)
+                    (lambda (&rest args)
+                      `("--follow" "--type=elisp" ,@(butlast (apply #'deadgrep--arguments-orig args)) ,lisp-directory ,(-first (lambda (p) (string-suffix-p "/share/emacs/site-lisp" p)) load-path)))))
+          (deadgrep (symbol-name (button-get button 'symbol)) default-directory))))
+
 	(setq helpful-max-buffers 2)
 	(setq helpful-switch-buffer-function
 		  (lambda (buffer &optional action norecord)
