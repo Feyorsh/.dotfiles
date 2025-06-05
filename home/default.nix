@@ -35,7 +35,15 @@
          ln -s ${pkgs.darwin.xcode_16_1}/* $out/Applications/Xcode.app/
        '')
 
-      texlive.combined.scheme-medium
+      (texlive.combine {
+        inherit (texlive) scheme-medium
+          mylatexformat capt-of
+          cochineal xstring fontaxes
+          inconsolata upquote
+          cabin
+          newtx
+          mathalpha boondox;
+      })
     ];
 
     stateVersion = "23.05";
