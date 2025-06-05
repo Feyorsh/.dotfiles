@@ -1286,15 +1286,73 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 *** RSS
 #+begin_src elisp
 (use-package elfeed
-    :commands (elfeed)
+    :commands (elfeed fysh/elfeed fysh/elfeed-add-entry)
     :hook (elfeed-search-mode . (lambda () (text-scale-increase 2)))
+    :custom-face
+    (elfeed-search-trashed-title-face
+     ((t (:foreground "red" :weight extra-bold))))
+    (elfeed-search-prog-title-face
+     ((t (:foreground ,(doom-color 'green) :bold t :slant italic))))
+    (elfeed-search-good-title-face
+     ((t (:underline t))))
+    :init
+    (defun fysh/elfeed ()
+      "Browse RSS feeds"
+      (interactive)
+      (tab-switch "elfeed")
+      (delete-other-windows)
+      (elfeed))
+    (defalias 'fysh/rss 'fysh/elfeed)
+
+    (defun fysh/elfeed-add-entry (url &optional title feed-id date tags)
+      "Manually add an entry to the Elfeed database"
+      (interactive (list (read-string "URL: " (and (elfeed-looks-like-url-p (current-kill 0)) (current-kill 0)))))
+      (let* ((domain)
+             (dom (with-current-buffer
+                      (url-retrieve-synchronously url t t 5)
+                    (setq domain (url-domain url-http-target-url))
+                    (libxml-parse-html-region url-http-end-of-headers (point-max))))
+             (site-name (cl-some (lambda (node)
+                                   (and (equal (dom-tag node) 'meta)
+                                        (string= (dom-attr node 'property) "og:site_name")
+                                        (dom-attr node 'content)))
+                                 (dom-by-tag dom 'meta)))
+             (title (let* ((str (dom-text (dom-by-tag dom 'title)))
+                           (trimmed (substring str 0 (string-match " | \\(.*\\)" str))))
+                      (unless site-name (setq site-name (match-string 1 str)))
+                      trimmed))
+             (content (with-temp-buffer (mapcar (lambda (c)
+                                                  (when (not (stringp c))
+                                                    (dom-print c)))
+                                                (dom-children (dom-by-tag dom 'body)))
+                                        (buffer-string)))
+             (feed-alist (mapcar (lambda (feed) (cons (elfeed-meta (elfeed-db-get-feed feed) :title) feed)) (mapcar #'car elfeed-feeds)))
+             (feed-id (or feed-id
+                          (let ((completion-extra-properties (list :annotation-function
+                                                                   (lambda (c)
+                                                                     (format #("    %s" 4 6 (face font-lock-doc-face)) (cdr (assoc-string c feed-alist)))))))
+                            (cdr (rassoc (completing-read "Feed (optional): " feed-alist nil nil nil nil) feed-alist)))))
+             (date (or date (ffloor (float-time))))
+             (tags (or (and (listp tags) tags) (mapcar #'intern (completing-read-multiple "Tags: " (-uniq (flatten-list (mapcar #'cdr elfeed-feeds)))))))
+             (clean-url (elfeed-cleanup url))
+             (entry (elfeed-entry--create
+                     :title (elfeed-cleanup title)
+                     :feed-id (or feed-id "")
+                     :id (elfeed-cleanup (elfeed-generate-id clean-url))
+                     :link clean-url
+                     :tags (elfeed-normalize-tags tags elfeed-initial-tags)
+                     :date date
+                     :content content
+                     :enclosures nil
+                     :content-type 'html
+                     :meta `(,@(unless feed-id (list :feed-title (or site-name domain)))))))
+        (elfeed-db-add (list entry))))
     :config
     (use-package elfeed-org
-	    :after org
         :demand t
         :config
         (elfeed-org)
-        (setq rmh-elfeed-org-files `(,(expand-file-name "feeds.org" org-directory))))
+        (setq rmh-elfeed-org-files `(,(expand-file-name "~/Personal/org/feeds.org"))))
     (eval-when-compile (require 'elfeed)) ;; needed to cleaning trash? idk man
     (defun elfeed-clean-trash (&optional now)
       (interactive "P")
@@ -1305,12 +1363,6 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
           (elfeed-db-gc)
         (run-with-idle-timer 15 nil #'elfeed-db-gc)))
 
-    (defface elfeed-search-trashed-title-face
-        '((((class color)) (:foreground "red" :weight extra-bold)))
-      "Face used in search mode for trashed entries.")
-    (defface elfeed-search-prog-title-face
-        '((t :inherit org-todo :slant italic))
-      "Face used in search mode for in-progress entries.")
     (add-to-list 'elfeed-search-face-alist '(trash elfeed-search-trashed-title-face))
     (add-to-list 'elfeed-search-face-alist '(prog elfeed-search-prog-title-face))
 
@@ -1340,6 +1392,13 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
                                       (general-def 'normal 'elfeed-search-mode-map "gR" #'elfeed-update)))))
 #+end_src
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
+
+Use this to setup the dummy empty feed; only has to be done once per database. I could advice ~elfeed-db--empty~ to do this automatically, but I think that would mess up something.
+#+begin_src elisp :eval no
+(let ((feed (elfeed-db-get-feed ""))
+      (empty-feed '((url . "") (title . "N/A"))))
+  (mapc (lambda (c) (plist-put feed (car c) (cdr c))) empty-feed))
+#+end_src
 
 *** TODO Music
 [[https://web.archive.org/web/20240607010151/https://tech.toryanderson.com/2023/11/29/transient-for-convenience-with-emms/][EMMS transient]]
