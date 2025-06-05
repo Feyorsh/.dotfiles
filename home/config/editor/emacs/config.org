@@ -1294,7 +1294,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
     (elfeed-search-prog-title-face
      ((t (:foreground ,(doom-color 'green) :bold t :slant italic))))
     (elfeed-search-good-title-face
-     ((t (:underline t))))
+     ((t (:foreground ,(doom-color 'cyan) :family "JuliaMono"))))
     :init
     (defun fysh/elfeed ()
       "Browse RSS feeds"
@@ -1320,7 +1320,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
              (title (let* ((str (dom-text (dom-by-tag dom 'title)))
                            (trimmed (substring str 0 (string-match " | \\(.*\\)" str))))
                       (unless site-name (setq site-name (match-string 1 str)))
-                      trimmed))
+                      (read-string "Title: " trimmed)))
              (content (with-temp-buffer (mapcar (lambda (c)
                                                   (when (not (stringp c))
                                                     (dom-print c)))
@@ -1331,16 +1331,16 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
                           (let ((completion-extra-properties (list :annotation-function
                                                                    (lambda (c)
                                                                      (format #("    %s" 4 6 (face font-lock-doc-face)) (cdr (assoc-string c feed-alist)))))))
-                            (cdr (rassoc (completing-read "Feed (optional): " feed-alist nil nil nil nil) feed-alist)))))
+                            (cdr (assoc-string (completing-read "Feed (optional): " feed-alist nil nil nil nil) feed-alist)))))
              (date (or date (ffloor (float-time))))
              (tags (or (and (listp tags) tags) (mapcar #'intern (completing-read-multiple "Tags: " (-uniq (flatten-list (mapcar #'cdr elfeed-feeds)))))))
              (clean-url (elfeed-cleanup url))
              (entry (elfeed-entry--create
                      :title (elfeed-cleanup title)
                      :feed-id (or feed-id "")
-                     :id (elfeed-cleanup (elfeed-generate-id clean-url))
+                     :id (elfeed-cleanup clean-url)
                      :link clean-url
-                     :tags (elfeed-normalize-tags tags elfeed-initial-tags)
+                     :tags (elfeed-normalize-tags tags elfeed-initial-tags (elfeed-feed-autotags feed-id))
                      :date date
                      :content content
                      :enclosures nil
@@ -1365,6 +1365,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 
     (add-to-list 'elfeed-search-face-alist '(trash elfeed-search-trashed-title-face))
     (add-to-list 'elfeed-search-face-alist '(prog elfeed-search-prog-title-face))
+    (add-to-list 'elfeed-search-face-alist '(good elfeed-search-good-title-face))
 
     (setq-default elfeed-search-filter "-trash @6-months-ago +unread")
     (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("In progress" . "-trash +prog") ("News" . "-trash @1-week-ago +aggregator +unread")))
@@ -1394,10 +1395,10 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 I use a patched version of elfeed which bases the hash of entries solely upon the link they point to in order to treat entries from different news sources indiscriminately. This will almost certainly cause race conditions down the road, and I will hate myself when it happens. Let's hope for the best.
 
 Use this to setup the dummy empty feed; only has to be done once per database. I could advice ~elfeed-db--empty~ to do this automatically, but I think that would mess up something.
-#+begin_src elisp :eval no
-(let ((feed (elfeed-db-get-feed ""))
-      (empty-feed '((url . "") (title . "N/A"))))
-  (mapc (lambda (c) (plist-put feed (car c) (cdr c))) empty-feed))
+#+begin_src elisp :eval no-export
+(let ((feed (elfeed-db-get-feed "")))
+  (setf (elfeed-feed-url feed) "")
+  (setf (elfeed-feed-title feed) "N/A"))
 #+end_src
 
 *** TODO Music
