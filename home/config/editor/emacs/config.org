@@ -1779,10 +1779,14 @@ Need to stop loading my Org files on startup...
   ("C-c C-b" #'org-latex-export-to-pdf)
   :hook ((org-mode . (lambda () (jinx-mode -1)))
          (org-after-refile-insert . save-buffer))
+  :custom-face
+  (org-quote ((t (:family "ETBembo" :height 1.2 :slant normal))))
+  (org-verse ((t (:family "ETBembo" :slant normal))))
   :config
   (setq org-modules nil)
   (setq org-src-preserve-indentation t
 		org-src-fontify-natively t
+        org-fontify-quote-and-verse-blocks t
         org-src-window-setup 'current-window
         org-indirect-buffer-display 'current-window
 		org-export-with-smart-quotes t
@@ -1872,6 +1876,13 @@ And now to make it *pretty*
                              (?C . org-level-3)
                              (?D . org-level-4))))
 
+(use-package org-modern-indent
+    :hook (org-mode . org-modern-indent-mode)
+    :init
+    (setq org-startup-indented t)
+    :config
+    (setq org-indent-mode-turns-on-hiding-stars nil))
+
 ;; tecosaur the goat for this one
 (defvar +org-mode-left-margin-width 1
   "The `left-margin-width' to be used in `org-mode' buffers.")
@@ -1919,7 +1930,9 @@ Now for Babel:
         (apply fn args)))
     :config
     (setq org-babel-default-header-args:elisp '((:lexical . "yes")))
-    )
+    (add-to-list 'org-src-block-faces '("elisp" (:background "#3a135a" :extend t)))
+    (with-eval-after-load 'ob-shell
+      (mapc (lambda (s) (add-to-list 'org-src-block-faces '(s (:background "#000000" :extend t)))) (append org-babel-shell-names '("shell")))))
 #+end_src
 
 Website stuff:
@@ -2114,8 +2127,7 @@ Taken from Doom Emacs."
   :config
   (setq org-highlight-latex-and-related '(native)
         org-image-align 'center
-        org-hide-emphasis-markers t
-        org-fontify-quote-and-verse-blocks t)
+        org-hide-emphasis-markers t)
 
   (copy-face 'fixed-pitch 'fysh/org-mode-latex-face)
   (advice-add 'org-src-font-lock-fontify-block
@@ -2341,6 +2353,7 @@ parent."
     :interpreter ("python" . python-ts-mode)
     :hook (python-ts-mode . flymake-mode)
     :config
+    (add-to-list 'org-src-block-faces '("python" (:background "#18314c" :extend t)))
     (setq python-indent-guess-indent-offset-verbose nil)
     (setq python-flymake-command '("ruff" "--quiet" "--stdin-filename=stdin" "-")))
 
@@ -2362,7 +2375,9 @@ parent."
 	:init
     (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
     (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm)
-	(setq org-babel-default-header-args:julia-vterm '((:session . t))))
+	(setq org-babel-default-header-args:julia-vterm '((:session . t)))
+    :config
+    (add-to-list 'org-src-block-faces '("julia" (:background "#171b1b" :extend t))))
 #+end_src
 
 

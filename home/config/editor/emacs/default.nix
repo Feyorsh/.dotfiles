@@ -180,7 +180,21 @@ in
         '';
         preInstall = "cd lisp";
       })
-      org-contrib ox-clip org-modern org-pdftools engrave-faces
+      org-contrib ox-clip
+      org-modern
+      (trivialBuild rec {
+        pname = "org-modern-indent";
+        version = "0.5.1";
+        src = fetchFromGitHub {
+          owner = "jdtsmith";
+          repo = pname;
+          rev = "refs/tags/v${version}";
+          hash = "sha256-st3338Jk9kZ5BLEPRJZhjqdncMpLoWNwp60ZwKEObyU=";
+        };
+        packageRequires = [ org compat ];
+      })
+      org-pdftools
+      engrave-faces
       (ox-hugo.overrideAttrs(prev: {
         patchPhase = ''
           for f in ./*.el; do
@@ -204,6 +218,7 @@ in
       })
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
+
       auctex cdlatex
       yasnippet yasnippet-capf
       sis
