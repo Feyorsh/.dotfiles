@@ -249,6 +249,7 @@ in
     defaults.NSGlobalDomain.InitialKeyRepeat = 20;
     defaults.NSGlobalDomain.KeyRepeat = 2;
     defaults.NSGlobalDomain."com.apple.trackpad.forceClick" = true;
+    defaults.NSGlobalDomain."com.apple.AppleMultitouchTrackpad.TrackpadTwoFingerFromRightEdgeSwipeGesture" = 0;
     defaults.hitoolbox.AppleFnUsageType = "Change Input Source";
   };
 
