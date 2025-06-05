@@ -108,6 +108,7 @@ in
         }) ];
       })) pkgs.spotifyd pkgs.imagemagick pkgs.python312Packages.tinytag
 
+      persistent-scratch
       dirvish
       vterm
       shx

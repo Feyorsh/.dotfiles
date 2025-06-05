@@ -926,6 +926,12 @@ This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01
       (setq midnight-hook '(fysh/agenda-reminder))))
 #+end_src
 
+**** Persistent scratch
+#+begin_src elisp
+(use-package persistent-scratch
+    :hook (after-init . persistent-scratch-setup-default))
+#+end_src
+
 *** TODO Calc
 #+begin_src elisp
 (use-package calc
