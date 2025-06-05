@@ -1746,6 +1746,7 @@ This isn't /strictly/ IRC related, but...
 (use-package ement
     :config
     (setq ement-save-sessions t
+          ement-room-send-message-filter #'ement-room-send-org-filter
           ement-room-use-variable-pitch t))
 #+end_src
 
