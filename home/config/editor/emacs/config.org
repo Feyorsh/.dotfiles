@@ -1756,6 +1756,7 @@ Need to stop loading my Org files on startup...
 #+begin_src elisp
 (use-package org
 	:init
+  (setq org-directory "~/Personal/org")
   (setq pdf-annot-latex-header "\\documentclass{article}
 \[DEFAULT-PACKAGES]
 \[PACKAGES]
@@ -1996,8 +1997,8 @@ Adding links to PDFs with Org.
 Org capture setup.
 #+begin_src elisp
 (use-package org
-    :init (add-to-list 'debug-ignored-errors "\\`Capture abort:")
-    :general
+  :init (add-to-list 'debug-ignored-errors "\\`Capture abort:")
+  :general
   (leader-def "c" #'org-capture)
   :config
   (setq org-capture-bookmark nil)
@@ -2081,7 +2082,6 @@ Agenda stuff
   (setq org-refile-use-outline-path 'file)
   (setq org-outline-path-complete-in-steps nil)
   :custom
-  (org-directory "~/Personal/org")
   (org-agenda-files (list (expand-file-name "agenda.org" org-directory)))
   (org-refile-targets `((nil :maxlevel . 5)
                         ,`(,(expand-file-name "agenda.org" org-directory) :maxlevel . 5)
