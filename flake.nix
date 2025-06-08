@@ -34,6 +34,7 @@
       url = "github:bandithedoge/nixpkgs-firefox-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay/native-comp-ld64-patch";
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
@@ -45,15 +46,11 @@
         inherit system;
         config = {
           allowUnfree = true;
-          permittedInsecurePackages = [
-            "olm-3.2.16"
-            "emacs-mac-macport-29.4"
-            "emacs-mac-macport-with-packages-29.4"
-          ];
         };
         overlays = [
           fyshpkgs.overlay.${system}
           inputs.firefox-darwin.overlay
+          inputs.emacs30-macport.overlays.default
           (final: prev: {
             xorg = prev.xorg.overrideScope (self: super: {
               libAppleWM = super.libAppleWM.overrideAttrs (prev': {

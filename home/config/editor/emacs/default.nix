@@ -1,15 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   inherit (pkgs) fetchFromBitbucket fetchFromGitHub fetchFromGitea fetchpatch;
-  emacs' = (pkgs.emacs29-macport.overrideAttrs (prev: {
-    src = fetchFromBitbucket {
-      owner = "mituharu";
-      repo = "emacs-mac";
-      rev = "7cc5e67629363d9e98f65e4e652f83bb4e0ee674";
-      hash = "sha256-Uv0AX0d5JLgxHlBD70OIDOO/ImMA6hH1fs5hCuMxw7c=";
-    };
-    version = "29.4";
-
+  emacs' = pkgs.emacs30-macport.overrideAttrs (prev: {
     patches = (prev.patches or []) ++ [
       (fetchpatch {
         name = "no-titlebar.patch";
@@ -21,7 +13,6 @@ let
         url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/61d588ce80fb4282e107f5ab97914e32451c3da1/patches/emacs-28/fix-window-role.patch";
         hash = "sha256-+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
       })
-      ./patches/xwidget.patch # fixes issue with org-modern and vertical scrolling; upstreamed
     ];
 
     configureFlags = (prev.configureFlags or []) ++ [
@@ -34,11 +25,10 @@ let
       )
     '';
 
-
     buildInputs = (prev.buildInputs or []) ++ [
       pkgs.librsvg
     ];
-  })).override { withNativeCompilation = false; };
+  });
 
   emacsWrapped = let
     emacsWithPackages = let epkgs = pkgs.emacsPackagesFor config.programs.emacs.package;
@@ -154,7 +144,6 @@ in
       orderless
       consult
       embark embark-consult
-      which-key # added to emacs 30; just using for embark!
       prescient
 
       gptel
@@ -285,7 +274,7 @@ in
       yaml-mode
       wolfram-mode
       sage-shell-mode ob-sagemath
-      elixir-ts-mode ob-elixir
+      ob-elixir
       typst-ts-mode
       julia-mode julia-ts-mode julia-vterm ob-julia-vterm eglot-jl
       nasm-mode

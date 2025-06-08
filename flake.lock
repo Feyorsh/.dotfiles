@@ -35,6 +35,42 @@
         "type": "github"
       }
     },
+    "emacs30-macport": {
+      "inputs": {
+        "emacs30-macport-pkgs": "emacs30-macport-pkgs",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1748861719,
+        "narHash": "sha256-7KODj9YM8uTXAqvetScf5p+X11Un9W8+Jw1OeneJxNc=",
+        "owner": "what-the-functor",
+        "repo": "nix-emacs30-macport-overlay",
+        "rev": "73b420264b9072989ddfd9672d0cf236a34b3e47",
+        "type": "github"
+      },
+      "original": {
+        "owner": "what-the-functor",
+        "ref": "native-comp-ld64-patch",
+        "repo": "nix-emacs30-macport-overlay",
+        "type": "github"
+      }
+    },
+    "emacs30-macport-pkgs": {
+      "locked": {
+        "lastModified": 1743625445,
+        "narHash": "sha256-L11FaB4as3XP5yugivNw0PybBsA0Xo/4mVAUCwStxSA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e69459daa70f1c496dc5a0142449d894a02ab034",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e69459daa70f1c496dc5a0142449d894a02ab034",
+        "type": "github"
+      }
+    },
     "firefox-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -307,6 +343,22 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1747953325,
+        "narHash": "sha256-y2ZtlIlNTuVJUZCqzZAhIw5rrKP4DOSklev6c8PyCkQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "55d1f923c480dadce40f5231feb472e81b0bab48",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-25.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1746576598,
         "narHash": "sha256-FshoQvr6Aor5SnORVvh/ZdJ1Sa2U4ZrIMwKBX5k2wu0=",
         "owner": "NixOS",
@@ -348,11 +400,12 @@
     "root": {
       "inputs": {
         "darwin": "darwin",
+        "emacs30-macport": "emacs30-macport",
         "firefox-darwin": "firefox-darwin",
         "fyshpkgs": "fyshpkgs",
         "home-manager": "home-manager",
         "mac-app-util": "mac-app-util",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "pwnypus": "pwnypus",
         "spicetify-nix": "spicetify-nix"
       }
