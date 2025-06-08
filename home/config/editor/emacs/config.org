@@ -1292,9 +1292,9 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
     (elfeed-search-trashed-title-face
      ((t (:foreground "red" :weight extra-bold))))
     (elfeed-search-prog-title-face
-     ((t (:foreground ,(doom-color 'green) :bold t :slant italic))))
+     ((t (:foreground "chartreuse" :bold t :slant italic))))
     (elfeed-search-good-title-face
-     ((t (:foreground ,(doom-color 'cyan) :family "JuliaMono"))))
+     ((t (:foreground "turquoise2" :family "JuliaMono"))))
     :init
     (defun fysh/elfeed ()
       "Browse RSS feeds"
@@ -1857,7 +1857,7 @@ And now to make it *pretty*
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
   :custom-face
-  (org-table ((t (:foreground ,(doom-color 'cyan)))))
+  (org-table ((t (:inherit font-lock-function-name-face))))
   :config
   (setq org-modern-star 'replace)
   ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
@@ -2532,8 +2532,7 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
                   verilog-indent-level-behavioural verilog-ts-indent-level
                   verilog-indent-level-directive   verilog-ts-indent-level
                   verilog-indent-level-declaration verilog-ts-indent-level)
-    (set-face-foreground 'verilog-ts-font-lock-grouping-keywords-face (doom-color 'base8))
-    )
+    (set-face-foreground 'verilog-ts-font-lock-grouping-keywords-face (doom-color 'base8)))
 #+end_src
 
 *** Vimscript
@@ -2561,9 +2560,8 @@ For when I'm feeling /particularly/ evil...
 #+begin_src elisp
 (use-package markdown-mode
     :mode "\\.md\\'"
-    :custom-face
-    (markdown-code-face ((t (:background ,(doom-color 'base1)))))
     :config
+    (set-face-background 'markdown-code-face (doom-color 'base1))
     (setq markdown-fontify-code-blocks-natively t)
     (defun markdown-display-inline-images ()
       "Add inline image overlays to image links in the buffer.
@@ -3571,7 +3569,6 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 *** Theme
 #+begin_src elisp
 (use-package doom-themes
-    :autoload (doom-color)
     :demand t
     :config
     (setq doom-themes-enable-bold t
