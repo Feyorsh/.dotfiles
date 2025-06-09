@@ -3445,10 +3445,10 @@ It would be nice if ~save-excursion~ worked, but it's probably fine either way.
 #+begin_src elisp
 (use-package dictionary
 	:general
-	(leader-def "s" #'dictionary-lookup-definition)
+	(leader-def "s" #'dictionary-search)
 	:config
 	(setq dictionary-use-single-buffer t)
-	(setq dictionary-server "dict.org"))
+	(setq dictionary-server "localhost"))
 #+end_src
 
 *** Spellcheck

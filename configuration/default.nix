@@ -5,6 +5,7 @@ in
 {
   imports = [
     ./yabai
+    ./dictd.nix
   ];
 
   # essential packages; my perl-less swiss army chainsaw
@@ -174,6 +175,8 @@ in
       "llvm"
     ];
   };
+
+  services.dictd.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
