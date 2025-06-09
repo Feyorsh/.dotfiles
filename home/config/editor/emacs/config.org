@@ -1960,7 +1960,7 @@ Website stuff:
   (add-to-list 'safe-local-variable-values '(eval require 'ox-hugo))
   :config
   (setq org-html-with-latex 'html)
-  (setq org-latex-to-html-convert-command "latexmlmath \"%i\" --preload=physics 2>/dev/null")
+  (setq org-latex-to-html-convert-command "latexmlmath '%i' --preload=physics 2>/dev/null")
   (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
 	"Transcode a LATEX-ENVIRONMENT element from Org to HTML.
 CONTENTS is nil.  INFO is a plist holding contextual information."
@@ -2568,7 +2568,7 @@ For when I'm feeling /particularly/ evil...
 (use-package sh-script
   :hook ((sh-mode . flymake-mode)
          (after-save . executable-make-buffer-file-executable-if-script-p))
-  :config
+  :init
   (setq sh-shell-file (executable-find "bash")))
 #+end_src
 
@@ -2806,10 +2806,11 @@ Interesting, but I don't currently have a use-case.
     ;; :general-config
     ;; ('shell-mode-map 
     :config
-    (setq shell-command-switch "-ic")
+    (define-advice async-shell-command (:around (fn &rest args) interactive-shell)
+      (let ((shell-command-switch (if (interactive-p) "-ic" shell-command-switch)))
+        (apply fn args)))
     (setq kill-do-not-save-duplicates t)
-    (setq compilation-scroll-output t)
-    )
+    (setq compilation-scroll-output t))
 #+end_src
 
 *** Server/Client
@@ -3065,6 +3066,7 @@ https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
     :init
     (setenv-internal process-environment "PATH" (string-join exec-path ":") t)
     :config
+    (advice-add 'org-export-to-file :around #'envrc-propagate-environment)
     (add-to-list 'global-mode-string envrc-lighter)
     (setq envrc-show-summary-in-minibuffer nil)
     (setq envrc-error-lighter '(" envrc[" (:propertize "blocked" face envrc-mode-line-error-face) "]"))
@@ -3539,6 +3541,10 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 							    ("/nix/store/.*" . (lambda (url &rest _) (nix-store-show-path (string-remove-prefix "http://" url))))
 							    ("." . xwidget-webkit-browse-url)))
     (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
+#+end_src
+#+begin_src elisp
+(use-package mathjax
+    :hook (eww-mode . mathjax-shr-setup))
 #+end_src
 
 ** UI

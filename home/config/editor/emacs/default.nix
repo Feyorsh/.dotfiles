@@ -208,7 +208,7 @@ in
       # probably not keeping all of these...
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
 
-      auctex cdlatex
+      auctex cdlatex mathjax pkgs.nodejs
       (trivialBuild rec {
         pname = "overleaf";
         version = "1.1.0";
