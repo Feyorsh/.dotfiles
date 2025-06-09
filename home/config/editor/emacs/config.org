@@ -1561,7 +1561,9 @@ Use Zone as a true screen saver that prevents sleep.
       (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
              (certs (plist-get server-args :client-certificate)))
         (if-let ((erc-buffer (get-buffer server)))
-            (switch-to-buffer erc-buffer)
+            (with-current-buffer erc-buffer
+              (unless (erc-server-process-alive) (erc-server-reconnect)))
+          (switch-to-buffer erc-buffer)
           (progn
             (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
               (plist-put server-args :client-certificate (list certs certs)))
@@ -1570,17 +1572,29 @@ Use Zone as a true screen saver that prevents sleep.
     (defun fysh/erc ()
       "Chat on IRC"
       (interactive)
+      (require 'erc)
       (tab-switch "erc")
-      (fysh/erc-join-server "Libera.Chat")
-      (delete-other-windows)
-      (let ((w (split-window-horizontally))
-            wins)
-        (split-window-vertically)
-        (split-window-vertically nil w)
-        (setq wins (window-list))
-        (erc-buffer-do (lambda ()
-                         (when (and wins (string-prefix-p "#" (buffer-name)))
-                           (set-window-buffer (pop wins) (current-buffer)))))))
+      (let ((autojoin-server "Libera.Chat")
+            (erc-server-buffer (erc-buffer-do (lambda () (string= (buffer-name) autojoin-server)))))
+        (fysh/erc-join-server autojoin-server)
+        (if erc-server-buffer
+            (fysh/erc--window-setup)
+          (add-hook 'erc-join-hook #'fysh/erc--window-setup))))
+    (defun fysh/erc--window-setup ()
+      (unless (erc-buffer-do (lambda () (and
+                                         (local-variable-p 'erc-join--requested-channels)
+                                         erc-join--requested-channels)))
+        (remove-hook 'erc-join-hook #'fysh/erc--window-setup)
+        (tab-switch "erc")
+        (delete-other-windows)
+        (let ((w (split-window-horizontally))
+              wins)
+          (split-window-vertically)
+          (split-window-vertically nil w)
+          (setq wins (window-list))
+          (erc-buffer-do (lambda ()
+                           (when (and wins (string-prefix-p "#" (buffer-name)))
+                             (set-window-buffer (pop wins) (current-buffer))))))))
     (defalias 'fysh/irc 'fysh/erc)
     :general-config
     ('erc-mode-map "<up>" #'erc-previous-command)
@@ -1636,6 +1650,8 @@ Use Zone as a true screen saver that prevents sleep.
              (nth (random (length fysh/erc-part-reasons)) fysh/erc-part-reasons)
              " (\C-bERC\C-b " erc-version ")")))
     (setq erc-part-reason #'fysh/erc-part-reason-random)
+
+    (add-to-list 'debug-ignored-errors "irc\..*/6697 nodename nor servname provided, or not known")
 
     (delete 'track erc-modules)
 
