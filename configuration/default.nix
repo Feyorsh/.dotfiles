@@ -50,7 +50,6 @@ in
     ];
   };
 
-  services.nix-daemon.enable = true;
   nix = {
     package = pkgs.nixVersions.latest;
 
@@ -153,18 +152,21 @@ in
     home = "/Users/${username}";
     shell = pkgs.fish;
   };
+  system.primaryUser = username;
   programs.fish.enable = true;
   programs.zsh.enable = true;
 
   networking.hostName = "Opal";
   networking.computerName = "Opal";
+  networking.applicationFirewall.enableStealthMode = true;
+
   time.timeZone = "America/New_York";
 
   security.chmodbpf = {
     enable = true;
     members = [ username ];
   };
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   services.xquartz.enable = true;
 
@@ -243,7 +245,6 @@ in
 
     # system/security
     defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
-    defaults.alf.stealthenabled = 1;
     defaults.loginwindow.GuestEnabled = false;
 
     # keyboard
@@ -257,10 +258,10 @@ in
   };
 
 
-  system.activationScripts.postUserActivation.text = ''
-    # Following line should allow us to avoid a logout/login cycle
-    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-  '';
+  # system.activationScripts.postUserActivation.text = ''
+  #   # Following line should allow us to avoid a logout/login cycle
+  #   /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  # '';
 
   launchd.daemons = {
     "fdLimitUp".serviceConfig = {
