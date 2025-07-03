@@ -30,7 +30,7 @@ function get_mod_time() {
 }
 
 function force_sync() {
-    if [[ $1 =~ "iCloud" ]]; then
+    if [[ $1 =~ "iCloud" ]] && [[ -f $1 ]]; then
         head -c 1 "$1" > /dev/null
     fi
 }
@@ -68,6 +68,6 @@ for f in "$local"/*.org; do
 done
 
 # sync beorg's own files from remote to local
-for f in "$remote"/beorg-*.org; do
+for f in "$remote"/*-beorg.org; do
     update_file "$f" "$local/$(basename "$f")"
 done
