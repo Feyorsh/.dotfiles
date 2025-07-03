@@ -2,7 +2,11 @@
 let
   emacsDiffScript = pkgs.writeShellScriptBin "emacs-ediff" ''
     set -euxo pipefail
-    emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
+    if [ "$#" -gt 3 ]; then
+        emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
+    else
+        emacsclient --eval "(ediff-merge-directories \"$1\" \"$2\" nil \"$3\")"
+    fi
   '';
 in
 {
@@ -16,6 +20,19 @@ in
       template-aliases = {
         "format_short_signature(signature)" = "signature.name()";
         "format_timestamp(timestamp)" = "separate(' ', timestamp.format('%a %e %b %Y %T'), surround('(', ')', timestamp.ago()))";
+      };
+      templates = {
+        draft_commit_description = ''
+           concat(
+             coalesce(description, builtin_draft_commit_description, "\n"),
+             surround(
+               "\nJJ: This commit contains the following changes:\n", "",
+               indent("JJ:     ", diff.stat(72)),
+             ),
+             "\nJJ: ignore-rest\n",
+             diff.git(),
+           )
+        '';
       };
       signing = {
         behaviour = "own";
@@ -33,10 +50,13 @@ in
       ui = {
         default-command = "status";
         movement.edit = true;
+        log-synthetic-elided-nodes = true;
         merge-editor = "ediff";
+        # diff-editor = "ediff";
         diff.tool = ["difft" "--color=always" "$left" "$right"];
       };
       git = {
+        write-change-id-header = true;
         fetch = ["upstream" "origin"];
         private-commits = "description(glob:'private:*')";
         sign-on-push = true;
@@ -45,6 +65,7 @@ in
       merge-tools.ediff = {
         program = lib.getExe emacsDiffScript;
         merge-args = ["$left" "$right" "$base" "$output"];
+        edit-args = ["$left" "$right" "$output"];
       };
       core = {
         fsmonitor = "watchman";
