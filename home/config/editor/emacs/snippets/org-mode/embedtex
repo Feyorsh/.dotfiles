@@ -1,0 +1,7 @@
+# name: embed tex
+# key: embedtex
+# --
+#+LATEX_HEADER: \usepackage{attachfile}
+#+LATEX: \textattachfile[print=false]{\jobname.tex}{}
+
+$0

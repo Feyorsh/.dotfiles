@@ -1,0 +1,21 @@
+# name: default options
+# key: defaultopts
+# --
+#+OPTIONS: toc:nil
+#+OPTIONS: title:nil
+#+OPTIONS: num:nil
+#+OPTIONS: todo:nil
+
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{mathtools}
+#+LATEX_HEADER: \usepackage{bm}
+#+LATEX_HEADER: \usepackage{parskip}
+#+LATEX_HEADER: \usepackage{nopageno}
+
+#+LATEX_HEADER: \usepackage[p,osf]{cochineal}
+#+LATEX_HEADER: \usepackage[cochineal,cochf,vvarbb]{newtxmath}
+#+LATEX_HEADER: \usepackage[cal=boondoxo]{mathalfa}
+#+LATEX_HEADER: \usepackage[scale=.95,type1]{cabin}
+#+LATEX_HEADER: \usepackage{inconsolata}
+
+$0

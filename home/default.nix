@@ -37,7 +37,10 @@
 
       (texlive.combine {
         inherit (texlive) scheme-medium
+          braket cjk nopageno
+
           mylatexformat capt-of
+          fvextra tcolorbox pdfcol
           cochineal xstring fontaxes
           inconsolata upquote
           cabin
