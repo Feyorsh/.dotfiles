@@ -32,7 +32,7 @@
 
       (runCommandLocal "xcode" {} ''
          mkdir -p $out/Applications/Xcode.app
-         ln -s ${pkgs.darwin.xcode_16_1}/* $out/Applications/Xcode.app/
+         ln -s ${pkgs.darwin.xcode_16_3}/* $out/Applications/Xcode.app/
        '')
 
       (texlive.combine {
