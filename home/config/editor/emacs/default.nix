@@ -116,7 +116,6 @@ in
       envrc
       restclient
       disaster pkgs.zig_0_13
-      poke pkgs.poke
       dape
       docker pkgs.colima pkgs.docker pkgs.docker-compose
       deadgrep
@@ -154,13 +153,13 @@ in
 
       (trivialBuild rec {
         pname = "org";
-        version = "9.7.23-git";
+        version = "9.7.31-git";
         src = fetchFromGitea {
           domain = "code.tecosaur.net";
           owner = "tec";
           repo = "org-mode";
-          rev = "4bb159ae7834fa1f4d76153fbee85c7c5518ba66";
-          hash = "sha256-8S4F2xH3xVa6nXL74sR8y3VPXG4tk+0wiwSa4Ep0Dr4=";
+          rev = "bfecf6658900f3b0f1939627ddf3514ad2e21d90";
+          hash = "sha256-uKvI3woYHzKQvl6ReWoHbuFv68n4rdXYpGmE4Gvnf7U=";
           forceFetchGit = true;
         };
         buildPhase = ''
@@ -333,7 +332,6 @@ in
   home.packages = [
     emacsWrapped
     pkgs.nerd-fonts.symbols-only
-    pkgs.poke.info
   ];
 
   home.sessionVariables = {

@@ -4,36 +4,15 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    fyshpkgs = {
-      url = "github:Feyorsh/fyshpkgs";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    pwnypus = {
-      url = "github:Feyorsh/pwnypus/main";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    fyshpkgs.url = "github:Feyorsh/fyshpkgs";
+    pwnypus.url = "github:Feyorsh/pwnypus/main";
 
-    darwin = {
-      url = "github:LnL7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    mac-app-util = {
-      url = "github:hraban/mac-app-util";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    darwin.url = "github:LnL7/nix-darwin";
+    home-manager.url = "github:nix-community/home-manager";
+    mac-app-util.url = "github:hraban/mac-app-util";
 
-    spicetify-nix = {
-      url = "github:Gerg-L/spicetify-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    firefox-darwin = {
-      url = "github:bandithedoge/nixpkgs-firefox-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    spicetify-nix.url = "github:Gerg-L/spicetify-nix";
+    firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
     emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay/native-comp-ld64-patch";
   };
 

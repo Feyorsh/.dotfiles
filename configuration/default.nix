@@ -51,6 +51,7 @@ in
   };
 
   nix = {
+    enable = true;
     package = pkgs.nixVersions.latest;
 
     gc = {
@@ -71,9 +72,6 @@ in
       trusted-users = [ "root" "@admin" ];
 
       sandbox = true;
-      # TODO system flake can be built in sandbox once https://github.com/NixOS/nix/pull/12570 lands
-      # https://github.com/NixOS/nix/issues/4119
-      # extra-sandbox-paths = [ "/nix/store" ];
 
       fallback = true;
       warn-dirty = false;
@@ -94,23 +92,23 @@ in
     #     "aarch64-linux"
     #   ];
     # }];
-    linux-builder = {
-      enable = true;
-      config = {
-        virtualisation = {
-          darwin-builder = {
-            diskSize = 40 * 1024;
-          };
-        };
-      };
-    };
+   linux-builder = {
+     enable = true;
+     config = {
+       virtualisation = {
+         darwin-builder = {
+           diskSize = 40 * 1024;
+         };
+       };
+     };
+   };
 
-    channel.enable = false;
-    nixPath = [
-      "nixpkgs=flake:nixpkgs"
-      "darwin=flake:darwin"
-      "home-manager=flake:home-manager"
-    ];
+   channel.enable = false;
+   nixPath = [
+     "nixpkgs=flake:nixpkgs"
+     "darwin=flake:darwin"
+     "home-manager=flake:home-manager"
+   ];
 
     registry = {
       darwin.to = {
@@ -173,7 +171,7 @@ in
   programs.ccache = {
     enable = true;
     packageNames = [
-      "emacs29-macport"
+      "emacs30-macport"
       "llvm"
     ];
   };
@@ -253,15 +251,14 @@ in
     defaults.NSGlobalDomain.InitialKeyRepeat = 20;
     defaults.NSGlobalDomain.KeyRepeat = 2;
     defaults.NSGlobalDomain."com.apple.trackpad.forceClick" = true;
-    defaults.NSGlobalDomain."com.apple.AppleMultitouchTrackpad.TrackpadTwoFingerFromRightEdgeSwipeGesture" = 0;
     defaults.hitoolbox.AppleFnUsageType = "Change Input Source";
   };
 
 
-  # system.activationScripts.postUserActivation.text = ''
-  #   # Following line should allow us to avoid a logout/login cycle
-  #   /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-  # '';
+  system.activationScripts.activateConfig.text = ''
+    # Following line should allow us to avoid a logout/login cycle
+    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  '';
 
   launchd.daemons = {
     "fdLimitUp".serviceConfig = {
