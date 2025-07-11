@@ -64,7 +64,9 @@
     enabledExtensions = with spicePkgs.extensions; [
       playNext
       volumePercentage
+      fullAppDisplay
     ];
+    alwaysEnableDevTools = true;
     theme = spicePkgs.themes.text;
     colorScheme = "RosePineMoon";
   };
