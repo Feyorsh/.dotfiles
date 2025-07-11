@@ -2434,9 +2434,13 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
 
 *** TODO Lisp
 #+begin_src elisp
-(setq-default lisp-indent-function 'common-lisp-indent-function)
+(use-package lisp
+  :init
+  (setq-default lisp-indent-function 'common-lisp-indent-function))
 
 (use-package sly)
+
+(use-package paredit)
 #+end_src
 
 *** Haskell

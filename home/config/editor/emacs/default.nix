@@ -231,7 +231,7 @@ in
       python-mls pkgs.ruff pkgs.basedpyright
       haskell-mode
       markdown-mode
-      sly
+      sly paredit
       (nix-mode.overrideAttrs (prev: {
         patches = (prev.patches or []) ++ [ (fetchpatch {
           name = "flake-shebangs.patch";
