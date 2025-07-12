@@ -1306,6 +1306,15 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
       (elfeed))
     (defalias 'fysh/rss 'fysh/elfeed)
 
+    (defun elfeed-search-set-entry-feed-title (feed-title)
+      "Manually set the feed title for the entry under point.
+    Sets the :feed-title key of the entry's metadata. See `elfeed-meta'."
+      (interactive "sFeed title: ")
+      (let ((entry (elfeed-search-selected :ignore-region)))
+        (unless entry
+          (error "No entry selected!"))
+        (setf (elfeed-meta entry :feed-title) feed-title)
+        (elfeed-search-update-entry entry)))
     (defun fysh/elfeed-add-entry (url &optional title feed-id date tags)
       "Manually add an entry to the Elfeed database"
       (interactive (list (read-string "URL: " (and (elfeed-looks-like-url-p (current-kill 0)) (current-kill 0)))))
@@ -1329,11 +1338,12 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
                                                 (dom-children (dom-by-tag dom 'body)))
                                         (buffer-string)))
              (feed-alist (mapcar (lambda (feed) (cons (elfeed-meta (elfeed-db-get-feed feed) :title) feed)) (mapcar #'car elfeed-feeds)))
-             (feed-id (or feed-id
-                          (let ((completion-extra-properties (list :annotation-function
+             (feed-title (let ((completion-extra-properties (list :annotation-function
                                                                    (lambda (c)
                                                                      (format #("    %s" 4 6 (face font-lock-doc-face)) (cdr (assoc-string c feed-alist)))))))
-                            (cdr (assoc-string (completing-read "Feed (optional): " feed-alist nil nil nil nil) feed-alist)))))
+                            (completing-read "Feed (optional): " feed-alist nil 'confirm-after-completion nil nil)))
+             (feed-id (or feed-id
+                            (cdr (assoc-string feed-title feed-alist))))
              (date (or date (ffloor (float-time))))
              (tags (or (and (listp tags) tags) (mapcar #'intern (completing-read-multiple "Tags: " (-uniq (flatten-list (mapcar #'cdr elfeed-feeds)))))))
              (clean-url (elfeed-cleanup url))
@@ -1347,8 +1357,25 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
                      :content content
                      :enclosures nil
                      :content-type 'html
-                     :meta `(,@(unless feed-id (list :feed-title (or site-name domain)))))))
+                     :meta `(,@(unless feed-id (list :feed-title (or (unless (string-empty-p feed-title) feed-title) site-name domain)))))))
         (elfeed-db-add (list entry))))
+    (define-advice elfeed-search-print-entry--default (:after (entry) fysh/entry-feed-title)
+      (save-excursion
+        (when-let ((feed-title (elfeed-meta entry :feed-title))
+                   (match (text-property-search-backward 'face 'elfeed-search-feed-face t)))
+          (delete-region (prop-match-beginning match) (prop-match-end match))
+          (goto-char (prop-match-beginning match))
+          (insert (propertize feed-title 'face 'elfeed-search-feed-face)))))
+    (define-advice elfeed-show-refresh--mail-style (:after () fysh/entry-feed-title)
+      (save-excursion
+        (goto-char (point-min))
+        (when-let ((feed-title (elfeed-meta elfeed-show-entry :feed-title))
+                   (_ (re-search-forward "^Feed: " nil t))
+                   (inhibit-read-only t)
+                   (match (text-property-search-forward 'face 'message-header-other t)))
+          (delete-region (prop-match-beginning match) (prop-match-end match))
+          (goto-char (prop-match-beginning match))
+          (insert (propertize feed-title 'face 'message-header-other)))))
     :config
     (use-package elfeed-org
         :demand t
