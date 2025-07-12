@@ -81,8 +81,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 	      version-control t
 	      kept-new-versions 5
 	      kept-old-versions 0
-	      delete-old-versions t
-          vc-make-backup-files t))
+	      delete-old-versions t))
 #+end_src
 
 ** Config
@@ -108,6 +107,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (setq x-stretch-cursor t)
     (setq confirm-kill-processes nil)
     (setq frame-resize-pixelwise t)
+    (setq auto-revert-verbose nil)
 
     (setq use-file-dialog nil)
     (setq use-dialog-box nil)
@@ -2897,7 +2897,6 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
 (use-package tramp
   :commands (sudo-find-file sudo-this-file)
   :init
-  (seq-difference vc-handled-backends '(RCS CVS SVN SCCS SRC Bzr Hg))
   :config
   (setq tramp-default-method "ssh")
   (setq tramp-auto-save-directory (expand-file-name "tramp-autosave" user-emacs-directory))
@@ -2926,10 +2925,7 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
         (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
                 "-o ControlMaster=auto -o ControlPersist=yes"))
   ;; (setq tramp-histfile-override nil)
-  (defun my-vc-off-if-remote ()
-    (if (file-remote-p (buffer-file-name))
-        (setq-local vc-handled-backends nil)))
-  (add-hook 'find-file-hook 'my-vc-off-if-remote))
+)
 #+end_src
 
 *** PDF Viewer
@@ -3045,8 +3041,6 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
       (interactive)
       (consult-fd (project-root (project-current t))))
     :config
-    (add-to-list 'project-vc-extra-root-markers ".jj")
-
     (setq project-switch-commands
           '((?f "Find file" project-find-file)
             (?d "Dired" project-dired)
@@ -3058,6 +3052,7 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
             (?v "Magit" project-magit-status)
             (?k "Kill buffers" project-kill-buffers)))
 
+    (add-to-list 'project-vc-extra-root-markers ".jj")
     (setq project-vc-merge-submodules nil)
     (setq project-find-functions '(project-try-vc
                                    project-try-nix)))
@@ -3129,7 +3124,8 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 	   ("account" "%(binary) -f %(ledger-file) reg %(account)"))))
 #+end_src
 
-*** TODO Magit
+*** VCS
+**** TODO Magit
 #+begin_src elisp
 (use-package magit
     :general
@@ -3162,7 +3158,6 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   (setq magit-refs-show-commit-count 'all)
   :init
   (setq evil-collection-magit-want-horizontal-movement t)
-  (setq vc-follow-symlinks t)
   (add-to-list 'safe-local-variable-values '(vc-default-patch-addressee . "bug-gnu-emacs@gnu.org"))
   (add-to-list 'safe-local-variable-values '(magit-revision-insert-related-refs))
   (add-to-list 'safe-local-variable-values '(magit-refresh-buffers))
@@ -3206,7 +3201,59 @@ GitHub token is added to pass like so:
 pass add Feyorsh^forge@api.github.com
 #+end_src
 
-**** Jujutsu
+**** VC
+#+begin_src elisp
+(use-package vc
+	:general ('global "C-x v" #'fysh/vc)
+    :init
+    ;; from matheuristic/dotfiles
+    (require 'transient)
+    (transient-define-prefix fysh/vc ()
+      "Version control commands."
+      ["Version control"
+       ["Commit log"
+        ("L" "Root log" vc-print-root-log)
+        ("l" "File log" vc-print-log)
+        ("g" "File annotate" vc-annotate)
+        ("h" "Region history" vc-region-history)
+        ("/" "Search" vc-log-search)]
+       ["Revision"
+        ("D" "Root diff" vc-root-diff)
+        ("=" "File diff" vc-diff)
+        ("_" "File Ediff" vc-ediff)
+        ("~" "File rev other" vc-revision-other-window)]
+       ["Other"
+        ("d" "Dir" vc-dir)
+        ("a" "Update changelog" vc-update-change-log)
+        ("SPC" "Refresh file state" vc-refresh-state)
+        ("M-c" "Create repo" vc-create-repo)
+        ("M-r" "Resolve conflicts" vc-resolve-conflicts)]]
+      [["Operations"
+        ("v" "Next file action" vc-next-action)
+        ("i" "Register file" vc-register)
+        ("G" "Ignore file" vc-ignore)
+        ("-" "Delete file" vc-delete-file)
+        ("R" "Rename file" vc-rename-file)]
+       ["Branch"
+        ("I" "Pull preview" vc-log-incoming)
+        ("O" "Push preview" vc-log-outgoing)
+        ("P" "Push" vc-push)
+        ("+" "Pull" vc-pull)
+        ("m" "Merge" vc-merge)
+        ("r" "Switch tag/branch" vc-retrieve-tag)
+        ("s" "Create tag/branch" vc-create-tag)
+        ("u" "Revert" vc-revert)]])
+
+    (setq vc-follow-symlinks t)
+    (setq vc-make-backup-files t)
+    (setq vc-handled-backends (seq-difference vc-handled-backends '(RCS CVS SVN SCCS SRC Bzr Hg)))
+
+    (defun fysh/vc-off-if-remote ()
+      (if (file-remote-p (buffer-file-name))
+          (setq-local vc-handled-backends nil)))
+    :hook (find-file . fysh/vc-off-if-remote))
+#+end_src
+
 #+begin_src elisp
 (use-package vc-jj
     :init
@@ -3448,6 +3495,7 @@ It's 2024; man is significantly better than woman. /s
 #+begin_src elisp
 (use-package diff-hl
     :init
+    (setq diff-hl-command-prefix (kbd "C-c d"))
     (global-diff-hl-mode))
 #+end_src
 
