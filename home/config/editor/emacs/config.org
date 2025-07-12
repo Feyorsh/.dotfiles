@@ -3591,6 +3591,8 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
     ('xwidget-webkit-mode-map "M-=" #'xwidget-webkit-zoom-in)
     ('xwidget-webkit-mode-map "M--" #'xwidget-webkit-zoom-out)
     ('shr-map "v" nil)
+    ('shr-map "w" nil)
+    ('shr-map "y" #'shr-maybe-probe-and-copy-url)
     ('normal 'eww-mode-map "<" #'eww-back-url)
     ('normal 'eww-mode-map ">" #'eww-forward-url)
     :config
