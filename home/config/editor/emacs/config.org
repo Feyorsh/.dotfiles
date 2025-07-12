@@ -2714,6 +2714,7 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
     :general
 	(leader-def "n" #'nix-edit)
     :init
+    (add-to-list 'sh-ancestor-alist '(nix-shell . bash))
     (define-advice nix-edit (:around (fn &rest args) local-nixpkgs)
       (interactive (list (nix-read-file) nil))
       (apply fn (if current-prefix-arg
@@ -2814,8 +2815,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     :config
     (add-to-list 'comint-output-filter-functions #'comint-osc-process-output)
     (setq display-comint-buffer-action '(display-buffer))
-    )
-
+    (setq comint-prompt-read-only t))
 #+end_src
 Interesting, but I don't currently have a use-case.
 #+begin_src elisp
@@ -3354,6 +3354,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 	(setq auto-mode-case-fold nil)
 	(add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
 	(add-to-list 'auto-mode-alist '("go.mod\\'" . go-mod-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
