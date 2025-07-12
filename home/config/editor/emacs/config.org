@@ -1591,7 +1591,7 @@ Use Zone as a true screen saver that prevents sleep.
              (certs (plist-get server-args :client-certificate)))
         (if-let ((erc-buffer (get-buffer server)))
             (with-current-buffer erc-buffer
-              (unless (erc-server-process-alive) (erc-server-reconnect)))
+              (unless erc-server-connected (erc-server-reconnect)))
           (switch-to-buffer erc-buffer)
           (progn
             (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
@@ -1603,7 +1603,7 @@ Use Zone as a true screen saver that prevents sleep.
       (interactive)
       (require 'erc)
       (tab-switch "erc")
-      (let ((autojoin-server "Libera.Chat")
+      (let* ((autojoin-server "Libera.Chat")
             (erc-server-buffer (erc-buffer-do (lambda () (string= (buffer-name) autojoin-server)))))
         (fysh/erc-join-server autojoin-server)
         (if erc-server-buffer
@@ -1658,6 +1658,8 @@ Use Zone as a true screen saver that prevents sleep.
 
     (setq erc-show-speaker-membership-status t)
 
+    (require 'erc-match)
+    (add-to-list 'erc-pals "andrewk")
     (add-to-list 'erc-modules 'notifications)
     ;; used in erc-notifications, not just erc-track-mode
     (setq erc-track-exclude `(,erc-nick ,(concat erc-nick erc-nick-uniquifier) "NickServ" "ChanServ"))
