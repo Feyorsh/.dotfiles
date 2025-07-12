@@ -1474,6 +1474,7 @@ Use this to setup the dummy empty feed; only has to be done once per database. I
                 (artist (emms-track-get track 'info-artist))
                 (cover (when (eq (emms-track-type track) 'file) (emms-browser-make-cover (emms-browser-get-cover-from-path (file-name-directory (emms-track-name track)))))))
         (string-join (list cover (emms-propertize title 'face 'bold) (emms-propertize artist 'face 'italic)) "\n")))
+    (require 'transient)
     (transient-define-prefix fysh/emms-status ()
       "Transient to control EMMS"
       :transient-non-suffix 'transient--do-quit-one
