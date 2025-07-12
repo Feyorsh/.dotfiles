@@ -68,10 +68,19 @@ in
             "${dictdb}/share/dictd/dictd.conf"
             "--locale"
             "en_US.UTF-8"
+            "--pid-file"
+            "/var/run/dictd/dictd.pid"
           ];
           GroupName = "dictd";
           UserName = "dictd";
           RunAtLoad = true;
+          StandardOutPath = "/tmp/dictd.out.log";
+          StandardErrorPath = "/tmp/dictd.err.log";
         };
+
+        system.activationScripts.postActivation.text = ''
+          mkdir -p /var/run/dictd
+          chown -R dictd:dictd /var/run/dictd
+        '';
       };
 }
