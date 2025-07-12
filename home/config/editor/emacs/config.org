@@ -1825,7 +1825,8 @@ Need to stop loading my Org files on startup...
   (add-to-list 'safe-local-variable-values '(org-latex-images-centered . nil))
   :general
   ("C-c l" #'org-store-link)
-  ("C-c C-b" #'org-latex-export-to-pdf)
+  :general-config
+  ('org-mode-map "C-c C-b" #'org-latex-export-to-pdf)
   :hook ((org-mode . (lambda () (jinx-mode -1)))
          (org-after-refile-insert . save-buffer))
   :custom-face
@@ -1865,7 +1866,9 @@ Need to stop loading my Org files on startup...
 
   (setq org-show-notification-timeout nil
         org-show-notification-handler (lambda (message) (fysh/notif-alert "Org-mode" message nil nil nil nil org-show-notification-timeout "/System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/Resources/Ringtones/Radial-EncoreInfinitum.m4r")))
-  (add-to-list 'org-latex-packages-alist '("" "listings"))
+  (add-to-list 'org-latex-packages-alist '("dvipsnames" "xcolor"))
+  (add-to-list 'org-latex-default-packages-alist '("" "microtype" ("pdflatex")))
+  (setq org-latex-hyperref-template "\\hypersetup{\n colorlinks=true,\n urlcolor=SkyBlue,\n linkcolor=PineGreen,\n citecolor=Maroon,\n pdfauthor={%a},\n pdftitle={%t},\n pdfkeywords={%k},\n pdfsubject={%s},\n pdfcreator={%c},\n pdflang={%L}}\n")
   (add-to-list 'display-buffer-alist '("\\*Org Links\\*" display-buffer-no-window (allow-no-window . t))))
 #+end_src
 
@@ -2478,11 +2481,6 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
 #+begin_src elisp
 (use-package haskell-mode
     :mode "\\.hs\\'")
-#+end_src
-
-*** TODO Elixir
-#+begin_src elisp
-(use-package elixir-ts-mode)
 #+end_src
 
 *** TODO C/C++
