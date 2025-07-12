@@ -115,6 +115,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     (setq warning-minimum-level :error)
 
+    (setq completion-ignored-extensions (seq-difference completion-ignored-extensions '(".o" ".so" ".lib")))
+
     ;; bug#73773
     (defvar subword-mode nil)
     ;; needed while libgccjit is broken in nixpkgs
