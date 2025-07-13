@@ -1396,8 +1396,8 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
     (add-to-list 'elfeed-search-face-alist '(prog elfeed-search-prog-title-face))
     (add-to-list 'elfeed-search-face-alist '(good elfeed-search-good-title-face))
 
-    (setq-default elfeed-search-filter "-trash @6-months-ago +unread")
-    (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("In progress" . "-trash +prog") ("News" . "-trash @1-week-ago +aggregator +unread")))
+    (setq-default elfeed-search-filter "-trash @6-months-ago")
+    (setq fysh/elfeed-filters '(("Blogs" . "-trash +blog") ("Comics" . "-trash +webcomic") ("In progress" . "-trash +prog") ("News" . "-trash @1-week-ago +aggregator")))
     (defun fysh/elfeed-pick-filter (filter)
       (interactive (list (alist-get (completing-read "Filter: " (mapcar (lambda (s) (car s)) fysh/elfeed-filters)) fysh/elfeed-filters nil nil 'equal)))
       (setq elfeed-search-filter filter)
