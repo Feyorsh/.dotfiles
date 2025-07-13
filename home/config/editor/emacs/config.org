@@ -3077,33 +3077,20 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
                                    project-try-nix)))
 #+end_src
 
-*** TODO Perspective
-Ugh. /Every/ persp/workspace package I use is lacking. I'm trying vanilla tab-bar-mode, which I've warmed up to significantly.
-https://mmk2410.org/2022/02/11/using-emacs-tab-bar-mode
+*** Tab Bar
 #+begin_src elisp
-(use-package emacs
-    :init
-  (defcustom tab-bar-switch-hook nil
-    "Hook run after `tab-switch` is finished."
-    :type 'hook)
-  (defun tab-name ()
-    "Get name of current tab, or index if there's no name."
-    (let* ((current-tab (tab-bar--current-tab))
-           (tab-index (tab-bar--current-tab-index))
-           (explicit-name (alist-get 'explicit-name current-tab))
-           (tab-name (alist-get 'name current-tab)))
-      (if explicit-name tab-name (+ 1 tab-index))))
+(use-package tab-bar
+  :config
+  (define-advice tab-bar-rename-tab (:after (name &rest tab-number) rename-vterm)
+    (unless tab-number
+      (setq vterm-buffer-name (format "*vterm* (%s)" name))))
   :general
-  ;; this is a hack, but I'm content with it for the time being because emacs 30.1 adds a proper hook.
-  ('global "C-x p" (lambda () (interactive) (progn (call-interactively #'tab-switch) (run-with-timer 10 nil (lambda () (run-hooks 'tab-bar-switch-hook))))))
+  ('global "C-x p" #'tab-switch)
   :custom
   (tab-bar-show nil)
   (tab-bar-new-tab-choice "*scratch*")
   :hook
-  ;; TODO this doesn't work when creating a new perspective
-  (tab-bar-switch . (lambda () (setq vterm-buffer-name (format "*vterm* (%s)" (tab-name)))))
-  ;; (after-init . (lambda () ((tab-bar-mode) (tab-bar-rename-tab "emacs"))))
-  )
+  (tab-bar-tab-post-select-functions . (lambda (_ new-tab) (setq vterm-buffer-name (format "*vterm* (%s)" (alist-get 'name new-tab))))))
 #+end_src
 
 *** Direnv

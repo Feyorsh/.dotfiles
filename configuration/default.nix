@@ -41,6 +41,7 @@ in
       libertinus
       etBook
       atkinson-hyperlegible
+      gentium-book
 
       jetbrains-mono
       julia-mono
