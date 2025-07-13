@@ -3268,6 +3268,13 @@ pass add Feyorsh^forge@api.github.com
     (add-to-list 'vc-handled-backends 'jj))
 #+end_src
 
+**** Ediff
+#+begin_src elisp
+(use-package ediff
+    :config
+  (setq ediff-window-setup-function #'ediff-setup-windows-plain))
+#+end_src
+
 *** Debugger
 **** TODO GUD
 The OG.
