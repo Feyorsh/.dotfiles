@@ -39,16 +39,15 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1748861719,
-        "narHash": "sha256-7KODj9YM8uTXAqvetScf5p+X11Un9W8+Jw1OeneJxNc=",
+        "lastModified": 1748197396,
+        "narHash": "sha256-8ZmK89+QKqW4jZk7xd2aWOE7WT7FXuRzVuOKbROydXQ=",
         "owner": "what-the-functor",
         "repo": "nix-emacs30-macport-overlay",
-        "rev": "73b420264b9072989ddfd9672d0cf236a34b3e47",
+        "rev": "8012248478fa08e29d3f53842c38326f858b2735",
         "type": "github"
       },
       "original": {
         "owner": "what-the-functor",
-        "ref": "native-comp-ld64-patch",
         "repo": "nix-emacs30-macport-overlay",
         "type": "github"
       }
@@ -516,11 +515,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1743595372,
-        "narHash": "sha256-e3x1mhpPpYgyyin9j/VbrBpOT5PFpEfx2hkxVZuJZhg=",
+        "lastModified": 1752381641,
+        "narHash": "sha256-R2iDZb94RosuCeuIukacZVVXxzWYr4jn/QI/ax15nW8=",
         "owner": "Gerg-L",
         "repo": "spicetify-nix",
-        "rev": "543f12dd14c62ddee79ab79fbfd8726f312b89ff",
+        "rev": "8f9fd947c52aa6adb6bafe72516eccf186708954",
         "type": "github"
       },
       "original": {

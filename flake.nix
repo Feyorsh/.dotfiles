@@ -13,7 +13,9 @@
 
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
-    emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay/native-comp-ld64-patch";
+    # TODO patching ld64 unnecessary after https://github.com/NixOS/nixpkgs/pull/423403
+    # emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay/native-comp-ld64-patch";
+    emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay";
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
