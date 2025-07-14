@@ -3433,15 +3433,20 @@ The default "Find all references" uses =elisps-refs.el= and is unfortunately rea
 It's 2024; man is significantly better than woman. /s
 (Oh, and the man-db doesn't generate automatically on macOS, you have to run ~sudo mandb -c~.)
 #+begin_src elisp
-(use-package emacs
-    :general
+(use-package man
+  :general
   (leader-def "m" #'consult-man)
   :config
   (define-advice Man-bgproc-sentinel (:around (fn &rest args) silence-logs)
     (let ((inhibit-message t))
       (apply fn args)))
   (setq Man-notify-method 'pushy)
-  (setq Man-switches "-a"))
+  (setq Man-switches "-a")
+  (define-advice Man-notify-when-ready (:after (man-buffer) fysh/shorten-man-bufname)
+    (with-current-buffer man-buffer
+      (let ((buf-name (buffer-name)))
+        (when (string-match " \\(\\S-*?\\)\\(?:\\.gz\\)?\\*$" buf-name)
+          (rename-buffer (format "*Man %s*" (file-name-nondirectory (match-string 1 buf-name))) t))))))
 #+end_src
 
 **** DevDocs

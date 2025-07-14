@@ -392,7 +392,7 @@ in
         body = ''
           set -l vterm_elisp ()
           for arg in $argv
-              set -a vterm_elisp (printf '"%s" ' (string replace -a -r '([\\\\"])' '\\\\\\\\$1' $arg))
+              set -a vterm_elisp (printf '"%s" ' (string replace -a -r -- '([\\\\"])' '\\\\\\\\$1' $arg))
           end
           vterm_printf '51;E'(string join ''' $vterm_elisp)
         '';
@@ -403,7 +403,7 @@ in
       '';
       man = ''
         if begin; [ -n "$INSIDE_EMACS" ]; end
-            vterm_cmd man "$argv"
+            vterm_cmd man (string join " " -- "-l" (command man -w "$argv" 2>/dev/null))
         else
             command man "$argv"
         end
