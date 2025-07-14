@@ -17,7 +17,7 @@
       fish_vi_key_bindings
     '';
     shellAliases = {
-      rinse = "cd ~/.dotfiles; darwin-rebuild switch --flake .#Opal --option sandbox false; cd -";
+      rinse = "sudo darwin-rebuild switch --flake ~/.dotfiles#Opal";
       mkown = "sudo chown -R $USER:(id -gn)";
     };
     shellAbbrs = {
