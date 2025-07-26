@@ -33,6 +33,7 @@ in
              diff.git(),
            )
         '';
+        git_push_bookmark = ''"fysh/push-" ++ change_id.short()'';
       };
       signing = {
         behaviour = "own";
@@ -53,14 +54,13 @@ in
         log-synthetic-elided-nodes = true;
         merge-editor = "ediff";
         # diff-editor = "ediff";
-        diff.tool = ["difft" "--color=always" "$left" "$right"];
+        diff-formatter = ["difft" "--color=always" "$left" "$right"];
       };
       git = {
         write-change-id-header = true;
         fetch = ["upstream" "origin"];
         private-commits = "description(glob:'private:*')";
         sign-on-push = true;
-        push-bookmark-prefix = "fysh/push-";
       };
       merge-tools.ediff = {
         program = lib.getExe emacsDiffScript;
