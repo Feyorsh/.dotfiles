@@ -94,7 +94,13 @@ in
   };
 
   home.packages = with pkgs; [ watchman ];
-  programs.emacs.extraPackages = epkgs: (with epkgs; [ vc-jj ]);
+  programs.emacs.extraPackages = epkgs: (with epkgs; [ (vc-jj.overrideAttrs (_: rec {
+    src = pkgs.fetchurl {
+      url = "https://elpa.gnu.org/packages/vc-jj-${version}.tar";
+      hash = "sha256-Pnw7F9N4wyDsp1/M+SPa9JEzD+L2Ko9Dt53H5X0BmvM=";
+    };
+    version = "0.4";
+  })) ]);
 
   programs.fish.functions = {
     fish_jj_prompt = {
