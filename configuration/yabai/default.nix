@@ -75,7 +75,7 @@ in
       yabai -m rule --add app="Emacs" title="^Ediff$" manage=off
 
       yabai -m rule --add app="^Spotify$" mouse_follows_focus=on scratchpad=spotify grid=11:11:1:1:9:9
-      yabai -m rule --add app="^Alacritty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
+      yabai -m rule --add app="^Ghostty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
 
       # tried to autotoggle scratchpads that lost focus, didn't work very well
       # yabai -m signal --add event=window_focused app="!^Spotify$" action="yabai -m query --windows --space | jq -er '.[] | select(.scratchpad!=\"spotify\") | select(.\"is-visible\")' && yabai -m window --toggle spotify"
@@ -91,7 +91,7 @@ in
     skhd = "${skhd'}/bin/skhd";
     yabai = "${pkgs.yabai}/bin/yabai";
     jq = "${pkgs.jq}/bin/jq";
-    alacritty = args: "${pkgs.alacritty}/bin/alacritty msg create-window ${args} || open -a ${pkgs.alacritty}/Applications/Alacritty.app ${lib.optionalString (builtins.stringLength != 0) "--args"} ${args}";
+    ghostty = args: "open -na Ghostty.app ${lib.optionalString (builtins.stringLength != 0) "--args"} ${args}";
 
     lab = "0x2B";
     rab = "0x2F";
@@ -194,7 +194,7 @@ in
       yabai < escape ; default
 
       # applications
-      default, yabai < rshift - t : ${alacritty ""}
+      default, yabai < rshift - t : ${ghostty ""}
 
       # navigation
 
@@ -244,7 +244,7 @@ in
       # scratchpads
 
       yabai < s : ${yabai} -m window --toggle spotify || open -a Spotify
-      yabai < t : (${yabai} -m window --toggle term || ${alacritty "-T scratch -o 'window.decorations = \"none\"'"}); ${escape}
+      yabai < t : (${yabai} -m window --toggle term || ${ghostty "--title=scratch --window-decoration=none"}); ${escape}
 
       # toggles
 

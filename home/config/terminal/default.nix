@@ -4,6 +4,7 @@
     ./shell
     ./tmux.nix
     ./emulator/alacritty.nix
+    ./emulator/ghostty.nix
   ];
 
   home.file.".hushlogin".text = "";
@@ -18,7 +19,7 @@
 
     if $_regex($_gdb_setting_str("prompt"), ".*pwndbg.*")
         set show-tips off
-    done
+    end
   '';
 
   xdg.configFile."pwn.conf".source = (pkgs.formats.ini {}).generate "pwn.conf" {
