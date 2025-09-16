@@ -20,6 +20,7 @@ in
     gnugrep
     gnutar
     gzip
+    xz
     unixtools.wall
     unixtools.watch
     iproute2mac
