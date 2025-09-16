@@ -39,15 +39,16 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1748197396,
-        "narHash": "sha256-8ZmK89+QKqW4jZk7xd2aWOE7WT7FXuRzVuOKbROydXQ=",
+        "lastModified": 1752959671,
+        "narHash": "sha256-K9RO9PJC701LVVuEwyyaAgIH9JDbv9Ib8JRAHMcdWmw=",
         "owner": "what-the-functor",
         "repo": "nix-emacs30-macport-overlay",
-        "rev": "8012248478fa08e29d3f53842c38326f858b2735",
+        "rev": "b92c88e044d602f1c82b48a09230c385ad324388",
         "type": "github"
       },
       "original": {
         "owner": "what-the-functor",
+        "ref": "native-comp-ld64-patch",
         "repo": "nix-emacs30-macport-overlay",
         "type": "github"
       }
@@ -428,11 +429,11 @@
     },
     "nixpkgs_7": {
       "locked": {
-        "lastModified": 1751949589,
-        "narHash": "sha256-mgFxAPLWw0Kq+C8P3dRrZrOYEQXOtKuYVlo9xvPntt8=",
+        "lastModified": 1754029845,
+        "narHash": "sha256-q1dgGGBv+bucxvdodvpimt958s1NbKx/tE83LD4P2ag=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9b008d60392981ad674e04016d25619281550a9d",
+        "rev": "a7822a17050fedda63794775b9090880c8214290",
         "type": "github"
       },
       "original": {
