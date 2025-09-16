@@ -178,6 +178,18 @@ in
     ];
   };
 
+  services.tailscale = {
+    enable = true;
+    package = pkgs.tailscale.overrideAttrs (prev: {
+      # use builtin ifconfig (BSD) instead of inetutils ifconfig
+      postPatch = (prev.postPatch or "") + ''
+        sed -e 's,"ifconfig","/sbin/ifconfig",' \
+            -i wgengine/router/router_userspace_bsd.go
+      '';
+      doCheck = false;
+    });
+  };
+
   services.dictd.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
