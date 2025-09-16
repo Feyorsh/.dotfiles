@@ -50,7 +50,6 @@ in
 
         users.users.dictd = {
           description = "DICT.org dictd server";
-          home = "${dictdb}/share/dictd";
           uid = 105;
         };
         users.knownUsers = [ "dictd" ];
@@ -60,27 +59,31 @@ in
         };
         users.knownGroups = [ "dictd" ];
 
-        launchd.daemons.dictd.serviceConfig = {
-          ProgramArguments = [
-            "${pkgs.dict}/sbin/dictd"
-            "-s"
-            "-c"
-            "${dictdb}/share/dictd/dictd.conf"
-            "--locale"
-            "en_US.UTF-8"
-            "--pid-file"
-            "/var/run/dictd/dictd.pid"
-          ];
-          GroupName = "dictd";
-          UserName = "dictd";
-          RunAtLoad = true;
-          StandardOutPath = "/tmp/dictd.out.log";
-          StandardErrorPath = "/tmp/dictd.err.log";
+        launchd.daemons = {
+          dictd.serviceConfig = {
+            ProgramArguments = [
+              "/bin/sh" "-c" "/bin/wait4path /var/run/dictd &amp;&amp; exec ${pkgs.dict}/sbin/dictd"
+              "-s"
+              "-c"
+              "${dictdb}/share/dictd/dictd.conf"
+              "--locale"
+              "en_US.UTF-8"
+              "--pid-file"
+              "/var/run/dictd/dictd.pid"
+            ];
+            UserName = "dictd";
+            GroupName = "dictd";
+            RunAtLoad = true;
+            StandardOutPath = "/tmp/dictd.out.log";
+            StandardErrorPath = "/tmp/dictd.err.log";
+          };
+          dictd-setup = {
+            script = ''
+              mkdir -p /var/run/dictd
+              chown -R dictd:dictd /var/run/dictd
+            '';
+            serviceConfig.RunAtLoad = true;
+          };
         };
-
-        system.activationScripts.postActivation.text = ''
-          mkdir -p /var/run/dictd
-          chown -R dictd:dictd /var/run/dictd
-        '';
       };
 }
