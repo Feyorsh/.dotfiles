@@ -2192,6 +2192,7 @@ Website stuff:
     :init
   (add-to-list 'safe-local-variable-values '(eval require 'ox-hugo))
   :config
+  (setq org-hugo-use-code-for-kbd t)
   (setq org-html-with-latex 'html)
   (setq org-latex-to-html-convert-command "latexmlmath '%i' --preload=physics 2>/dev/null")
   (define-advice org-html-latex-environment (:override (latex-environment _contents info) fysh/org-html-latex-environment-with-mathml)
