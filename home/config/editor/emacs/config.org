@@ -628,7 +628,7 @@ Oldest trick in the book! (Not really.)
 	 "C-j" #'vertico-next
      "C-S-k" (lambda () (interactive) (scroll-other-window-down 1))
 	 "C-k" #'vertico-previous
-	 "C-u" #'vertico-scroll-down
+	 "C-b" #'vertico-scroll-down
 	 "C-d" #'vertico-scroll-up)
     ('normal 'vertico-map
 	 "<escape>" #'abort-recursive-edit)
@@ -759,10 +759,12 @@ Oldest trick in the book! (Not really.)
                           :key (lambda () (gptel-api-key-from-auth-source "gptel:github-models"))
                           :models '(gpt-4o
                                     gpt-4o-mini
+                                    gpt-4.1
+                                    gpt-4.1-mini
                                     meta-llama-3.1-405b-instruct
                                     llama-3.2-90B-vision-instruct
                                     DeepSeek-R1)))
-    (setq gptel-model 'gpt-4o)
+    (setq gptel-model 'gpt-4.1)
     (setq gptel-expert-commands t)
     (setq gptel-display-buffer-action
 		  `(,(lambda (buffer &optional action norecord)
