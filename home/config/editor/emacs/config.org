@@ -1692,9 +1692,9 @@ Use Zone as a true screen saver that prevents sleep.
       (require 'erc)
       (tab-switch "erc")
       (let* ((autojoin-server "Libera.Chat")
-            (erc-server-buffer (erc-buffer-do (lambda () (string= (buffer-name) autojoin-server)))))
-        (fysh/erc-join-server autojoin-server)
-        (if erc-server-buffer
+             (erc-joined-servers (erc-buffer-filter (lambda () (and (erc-server-buffer-p) (not (string-match-p "^ " (buffer-name))))))))
+        (mapc #'fysh/erc-join-server (or (mapcar #'buffer-name erc-joined-servers) `(,autojoin-server)))
+        (if erc-joined-servers
             (fysh/erc--window-setup)
           (add-hook 'erc-join-hook #'fysh/erc--window-setup))))
     (defun fysh/erc--window-setup ()
@@ -1733,7 +1733,7 @@ Use Zone as a true screen saver that prevents sleep.
 	(setq erc-kill-queries-on-quit t)
 	(setq erc-kill-server-buffer-on-quit t)
     ;; regex isn't case sensitive
-    (setq erc-autojoin-channels-alist '(("libera" "#emacs" "#nethack" "#zig" "#lobsters" "#nixos") ("oftc" "#llvm" "#asahi")))
+    (setq erc-autojoin-channels-alist '(("libera" "#emacs" "#nethack" "#nethack-el" "#zig" "#lobsters" "#nixos") ("oftc" "#llvm" "#asahi" "#asahi-re")))
     (setq erc-interpret-mirc-color t)
     (setq erc-header-line-format nil)
     (setq erc-hide-list '("JOIN" "PART" "QUIT" "353"))
@@ -1751,6 +1751,7 @@ Use Zone as a true screen saver that prevents sleep.
     (add-to-list 'erc-modules 'notifications)
     ;; used in erc-notifications, not just erc-track-mode
     (setq erc-track-exclude `(,erc-nick ,(concat erc-nick erc-nick-uniquifier) "NickServ" "ChanServ"))
+    ;; this requires turning on notifications for Emacs in System Settings!
     (define-advice erc-notifications-notify (:override (nick msg &optional privp) applescript-notify)
       (setq erc-notifications-last-notification
             (let* ((channel (if privp (erc-get-buffer nick) (current-buffer)))
@@ -1772,7 +1773,7 @@ Use Zone as a true screen saver that prevents sleep.
 
     (add-to-list 'debug-ignored-errors "irc\..*/6697 nodename nor servname provided, or not known")
 
-    (delete 'track erc-modules)
+    (erc-track-mode -1)
 
     (use-package erc-hl-nicks :demand t)
     (use-package erc-sasl
@@ -1782,12 +1783,12 @@ Use Zone as a true screen saver that prevents sleep.
     (erc-update-modules))
 #+end_src
 Instead of gnarsty password-based auth, we can use a certificate to authenticate. For some reason, OFTC has to use SHA-1 instead of SHA-256.
-#+begin_src shell :dir (expand-file-name "erc" user-emacs-directory) :mkdirp yes :results none :eval no
-nix shell nixpkgs#openssl
-openssl req -x509 -new -newkey ed25519 -sha256 -subj "/" -days 365 -nodes -out libera.pem -keyout libera.pem
-openssl req -x509 -new -newkey ed25519 -sha1 -subj "/" -days 365 -nodes -out oftc.pem -keyout oftc.pem
+#+begin_src shell :dir (expand-file-name "erc" user-emacs-directory) :mkdirp yes :results silent :shebang "#!/usr/bin/env nix\n#!nix shell nixpkgs#openssl --command bash" :eval no
+openssl req -x509 -new -newkey ed25519 -sha256 -subj "/" -days 730 -nodes -out libera.pem -keyout libera.pem
+openssl x509 -in libera.pem -noout -fingerprint -sha256 | awk -F= '{printf "Libera: "; gsub(":",""); print tolower ($2)}'
+openssl req -x509 -new -newkey ed25519 -sha1 -subj "/" -days 730 -nodes -out oftc.pem -keyout oftc.pem
+openssl x509 -in libera.pem -noout -fingerprint -sha1 | awk -F= '{printf "OFTC: "; gsub(":",""); print tolower ($2)}'
 chmod 400 *.pem
-# openssl req -nodes -newkey rsa:2048 -keyout nick.key -x509 -days 3650 -out nick.cer
 #+end_src
 And then once connected, run
 #+begin_src erc :eval no
