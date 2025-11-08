@@ -6,6 +6,7 @@
     settings = {
       macos-titlebar-proxy-icon = "hidden";
       macos-icon = "xray";
+      quit-after-last-window-closed = true;
     };
   };
 }
