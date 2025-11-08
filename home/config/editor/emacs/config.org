@@ -3593,6 +3593,7 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 	(add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.toml\\'" . toml-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
+	(add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
 	(add-to-list 'auto-mode-alist '("cmake" . cmake-ts-mode)))
 
 (use-package treesit-fold
