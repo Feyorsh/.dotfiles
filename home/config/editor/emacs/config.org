@@ -3117,7 +3117,7 @@ So I can commit tax fraud productively.
 Make ~ledger-reports~ programmatic to reflect the current billing cycle
 #+begin_src elisp
 (use-package ledger-mode
-    :mode "\\.ledger\\'"
+    :mode "\\.\\(ledger\\|journal\\)\\'"
     :config
     (setq ledger-copy-transaction-insert-blank-line-after t)
     :custom
