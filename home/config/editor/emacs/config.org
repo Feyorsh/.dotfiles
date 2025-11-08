@@ -3417,6 +3417,35 @@ GitHub token is added to pass like so:
 pass add Feyorsh^forge@api.github.com
 #+end_src
 
+#+begin_src elisp
+(use-package consult-gh
+  :config
+  (use-package consult-gh-transient
+    :demand t)
+  (use-package consult-gh-embark
+    :demand t
+    :config (consult-gh-embark-mode +1))
+  ;; doesn't really work unfortunately
+  ;; (use-package consult-gh-forge
+  ;;   :demand t
+  ;;   :config
+  ;;   (require 'magit)
+  ;;   (require 'forge)
+  ;;   (consult-gh-forge-mode +1))
+  (setq consult-gh-default-interactive-command #'consult-gh-transient)
+  (setq consult-gh-confirm-before-clone nil)
+  (setq consult-gh-default-clone-directory "~/Personal/oss")
+  (setq consult-gh-ask-for-path-before-save nil)
+  (setq consult-gh-default-save-directory "~/Downloads")
+  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
+
+  (add-to-list 'savehist-additional-variables 'consult-gh--known-orgs-list)
+  (add-to-list 'savehist-additional-variables 'consult-gh--known-repos-list)
+
+  (setq consult-gh-show-preview t
+        consult-gh-preview-key "C-,"))
+#+end_src
+
 **** VC
 #+begin_src elisp
 (use-package vc
