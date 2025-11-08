@@ -245,6 +245,7 @@ in
       }) pkgs.geckodriver
       yasnippet yasnippet-capf
       sis
+      package-lint-flymake
 
       # prog-modes
       python-mls pkgs.ruff pkgs.basedpyright
