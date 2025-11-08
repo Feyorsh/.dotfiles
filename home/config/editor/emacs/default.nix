@@ -146,7 +146,25 @@ in
       prescient
 
       gptel
-
+    ] ++ (let
+      withEmbark = true;
+      consult-omni =
+        trivialBuild rec {
+          pname = "consult-omni";
+          version = "0.3-unstable-2025-08-01";
+          src = fetchFromGitHub {
+            owner = "armindarvish";
+            repo = pname;
+            rev = "d0a24058bf0dda823e5f1efcae5da7dc0efe6bda";
+            hash = "sha256-dzKkJ+3lMRkHRuwe43wpzqnFvF8Tl6j+6XHUsDhMX4o=";
+          };
+          postPatch = lib.optionalString (!withEmbark) ''
+            rm consult-omni-embark.el
+          '';
+          postInstall = "cp -r sources $LISPDIR/sources";
+          packageRequires = [ consult ] ++ lib.optionals withEmbark [ embark-consult ];
+        };
+    in [ consult-omni ]) ++ [
       gcmh
       vlf
       helpful
