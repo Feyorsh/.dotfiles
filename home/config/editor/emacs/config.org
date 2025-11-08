@@ -935,7 +935,7 @@ gpg --export <identity> | curl -T - https://keys.openpgp.org
 **** Midnight-mode (cron)
 Midnight-mode suffers from a (likely longstanding) bug making it non-idempotent (it runs at eval-time, not just "midnight").
 This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01149.html][4745baf]], but I really only need a simple timer, so I'll do it myself.
-#+begin_src elisp
+#+begin_src elisp :tangle no
 (use-package midnight
     :demand t
     :config
