@@ -61,7 +61,7 @@ else
 fi
 
 # sync local to remote for all other org files
-for f in "$local"/*.org; do
+for f in "$local"/{*.org,roam}; do
     if [[ "$(basename "$f")" != "inbox.org" ]]; then
         update_file "$f" "$remote/$(basename "$f")"
     fi
