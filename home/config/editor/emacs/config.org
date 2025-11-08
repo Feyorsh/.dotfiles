@@ -2556,6 +2556,14 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
   (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
 #+end_src
 
+*** Go
+#+begin_src elisp
+(use-package go-ts-mode
+    :config
+    (add-to-list 'org-src-lang-modes '("go" . go-ts))
+    (setq go-ts-mode-indent-offset 4))
+#+end_src
+
 *** TODO Lisp
 #+begin_src elisp
 (use-package lisp
@@ -3407,9 +3415,12 @@ Eglot!
            nix-mode nix-ts-mode
            rust-ts-mode
            zig-mode
+           go-mode go-ts-mode
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
           . (lambda () (unless (or (not eglot-enabled)
                                    buffer-read-only
+                                   (not buffer-file-name)
+                                   (not (and (boundp 'magit-buffer-revision) magit-buffer-revision))
                                    (file-remote-p default-directory))
                          (eglot-ensure)))))
   :init
