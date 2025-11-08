@@ -3479,7 +3479,15 @@ pass add Feyorsh^forge@api.github.com
 **** Ediff
 #+begin_src elisp
 (use-package ediff
-    :config
+  :init
+  (defvar ediff--window-configuration-before nil)
+  :hook
+  (ediff-before-setup . (lambda () (setq ediff--window-configuration-before (current-window-configuration))))
+  (ediff-quit . (lambda () (set-window-configuration ediff--window-configuration-before)))
+  :config
+  (setq ediff-show-ancestor nil)
+  (setq ediff-keep-variants nil)
+  (setq ediff-split-window-function #'split-window-horizontally)
   (setq ediff-window-setup-function #'ediff-setup-windows-plain))
 #+end_src
 
