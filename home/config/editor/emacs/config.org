@@ -1375,7 +1375,8 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+begin_src elisp
 (use-package elfeed
     :commands (elfeed fysh/elfeed fysh/elfeed-add-entry)
-    :hook (elfeed-search-mode . (lambda () (text-scale-increase 2)))
+    :hook ((elfeed-search-mode . (lambda () (text-scale-increase 2)))
+           (elfeed-search-update . elfeed-db-save-safe))
     :custom-face
     (elfeed-search-trashed-title-face
      ((t (:foreground "red" :weight extra-bold))))
