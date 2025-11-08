@@ -1730,27 +1730,36 @@ A shame the author passed away.
 Nethack as God intended: in ~lisp~ mode.
 #+begin_src elisp
 (use-package nethack
+  :load-path (expand-file-name "~/Personal/oss/nethack-el/")
   :commands (nethack)
+  :custom
+  (nethack-mono-font-family "JetBrains Mono")
   :custom-face
   (nethack-message-highlight-face ((t (:inherit bold :foreground "DarkSeaGreen" :background unspecified))))
-  :general-config
-  ('insert 'nh-map-mode-map "C-w" nil)
-  ('normal 'nh-menu-mode-map "RET" nil) ;; necessary?
   :init
-  (define-advice nethack-installed-p (:override () disable-check) t)
   (define-advice nhapi-restore-window-configuration (:after (&rest _) evil-fix-cursor)
     (setq-local evil-insert-state-cursor 'hbar))
-  (define-advice nh-read-char (:around (fn &rest args) unwiden-cursor)
-    (let ((x-stretch-cursor nil)) (apply fn args)))
+  (define-advice nhapi-create-menu-window (:after (menuid) rename-announcements)
+    (when (= menuid 4)
+      (with-current-buffer (format "*menu* %d" menuid)
+        (rename-buffer "*nethack announce*"))))
+  (define-advice nhapi-create-text-window (:after (menuid) rename-game-over)
+    (when (= menuid 3)
+      (when-let ((b (get-buffer "*game over*"))) (kill-buffer b))
+      (with-current-buffer (format "*text* %d" menuid)
+        (rename-buffer "*game over*"))))
   (defun nethack-x-warn-low-hp (attr new old percent)
-    "Print a message in `nh-message-buffer' when hitpoints get low."
+    "Print a message in `nethack-message-buffer' when hitpoints get low."
     (when (and (string-equal attr "HP")
                (< new old)
                (< percent 20))
-      (nhapi-message 'atr-blink "Hitpoints below 20%")))
+      (nethack-nhapi-message 'atr-blink "Hitpoints below 20%")))
   :config
+  (setq nethack-environment `("MAIL=/tmp/nh.mbox" ,(concat "MAILREADER=" (executable-find "nh-open-mu4e"))))
+  (setq nethack-raw-print-buffer-name "*leaderboard*")
   (add-hook 'nethack-status-attribute-change-functions 'nethack-x-warn-low-hp)
-  (add-to-list 'evil-insert-state-modes 'nh-map-mode))
+  (mapc (lambda (m) (evil-set-initial-state m 'emacs)) '(nethack-map-mode nethack-menu-mode))
+  (add-to-list 'evil-buffer-regexps '("^\\*nethack announce\\*$" . emacs)))
 #+end_src
 
 **** Zone
