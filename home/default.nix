@@ -20,8 +20,9 @@
 
     packages = with pkgs; [
       gimp
+      inkscape
 
-      (python312.withPackages(ps: with ps; [ ipython requests numpy ]))
+      (python313.withPackages(ps: with ps; [ ipython requests numpy ]))
 
       alt-tab-macos
       monitorcontrol
@@ -47,6 +48,8 @@
           newtx
           mathalpha boondox;
       })
+
+      adwaita-icon-theme
     ];
 
     stateVersion = "23.05";
