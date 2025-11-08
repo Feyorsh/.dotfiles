@@ -1305,6 +1305,72 @@ If you can't use an app password, use OAuth with something like [[https://gitlab
 mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
 
+*** Gnus
+#+begin_src elisp
+(use-package gnus
+  :autoload (gnus-topics-mode)
+  :init
+  (mkdir "~/.gnus" t)
+  (setq gnus-home-directory (expand-file-name "~/.gnus"))
+
+  (defun fysh/gnus ()
+    "Browse mailing lists"
+    (interactive)
+    (tab-switch "gnus")
+    (delete-other-windows)
+    (gnus))
+  :general-config
+  ('normal '(gnus-summary-mode-map gnus-group-mode-map gnus-server-mode-map) "J" nil)
+  ('normal 'gnus-article-mode-map "C-j" #'gnus-article-summary-next-thread)
+  ('normal 'gnus-article-mode-map "C-k" #'gnus-article-summary-prev-thread)
+  :config
+  (require 'gnus-topic)
+  (defun gnus-article-summary-next-thread ()
+    (interactive)
+    (with-selected-window (get-buffer-window gnus-summary-buffer) (gnus-summary-next-article)))
+  (defun gnus-article-summary-prev-thread ()
+    (interactive)
+    (with-selected-window (get-buffer-window gnus-summary-buffer) (gnus-summary-prev-article)))
+  ;; (defun gnus-exec-in-summary (fn &rest args)
+  ;;   (gnus-eval-in-buffer-window gnus-summary-buffer (apply fn args)))
+  ;; (advice-add #'gnus-summary-mark-read-and-unread-as-read :around #'gnus-exec-in-summary)
+  ;; (advice-add #'gnus-summary-show-thread :around #'gnus-exec-in-summary)
+  (define-advice gnus-summary-scroll-up (:after (&rest _) point-in-article)
+    (select-window (gnus-get-buffer-window gnus-article-buffer)))
+
+  (setq gnus-save-newsrc-file nil
+        gnus-read-newsrc-file nil)
+  (setq gnus-use-dribble-file nil)
+  (setq gnus-select-method '(nnnil nil))
+  (setq gnus-secondary-select-methods '((nntp "news.gmane.io")
+                                        (nntp "nntp.lore.kernel.org")))
+  (setq gnus-check-new-newsgroups nil)
+  (setq gnus-thread-sort-functions
+        '(gnus-thread-sort-by-most-recent-date
+          (not gnus-thread-sort-by-number)))
+  (setq gnus-thread-hide-subtree t)
+  (setq gnus-use-cache 'passive)
+  (setq gnus-summary-display-arrow nil)
+
+  (setq gnus-summary-line-format "%1z %-16&user-date;%22=%~(ignore \" \")B%~(ignore \" \")s %(%[%f%]%)\n")
+  (setq gnus-sum-thread-tree-root " "
+        gnus-sum-thread-tree-false-root ""
+        gnus-sum-thread-tree-single-indent " "
+        gnus-sum-thread-tree-vertical "│ "
+        gnus-sum-thread-tree-indent " "
+        gnus-sum-thread-tree-leaf-with-other "├ "
+        gnus-sum-thread-tree-single-leaf "└")
+
+  (gnus-add-configuration
+   '(article
+     (horizontal 1.0 (summary 70 point)
+                     (article 1.0))))
+  (gnus-add-configuration '(summary (vertical 1.0 (summary 1.0 point))))
+  :hook
+  ((gnus-group-mode . gnus-topic-mode)
+   (gnus-summary-mode . (lambda () (setq cursor-in-non-selected-windows nil)))))
+#+end_src
+
 *** RSS
 #+begin_src elisp
 (use-package elfeed
