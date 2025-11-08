@@ -2595,7 +2595,7 @@ parent."
 #+begin_src elisp
 (use-package org-roam
     :config
-  (setq org-roam-directory "~/Personal/roam")
+  (setq org-roam-directory "~/Personal/org/roam")
   (setq org-roam-capture-templates '(("d" "default" plain "%?" :target (file+head "${slug}.org" "#+TITLE: ${title}\n#+CREATED: %u\n#+LAST_MODIFIED: %U") :unnarrowed t)))
   (org-roam-db-autosync-mode))
 #+end_src
