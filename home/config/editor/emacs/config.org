@@ -2060,6 +2060,7 @@ Need to stop loading my Org files on startup...
         org-use-fast-todo-selection 'expert)
 
   (setf (alist-get 'file org-link-frame-setup) #'find-file)
+  (add-to-list 'org-file-apps '("\\.pdf\\'" . emacs))
 
   (setq org-show-notification-timeout nil
         org-show-notification-handler (lambda (message) (fysh/notif-alert "Org-mode" message nil nil nil nil org-show-notification-timeout "/System/Library/PrivateFrameworks/ToneLibrary.framework/Versions/A/Resources/Ringtones/Radial-EncoreInfinitum.m4r")))
