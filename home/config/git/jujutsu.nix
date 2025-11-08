@@ -3,10 +3,16 @@ let
   emacsDiffScript = pkgs.writeShellScriptBin "emacs-ediff" ''
     set -euxo pipefail
     if [ "$#" -gt 3 ]; then
-        emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
+        emacsclient --eval "(progn (add-hook 'ediff-quit-hook (lambda () (make-empty-file \"$${3%/*}/done\"))) (ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\"))"
     else
-        emacsclient --eval "(ediff-merge-directories \"$1\" \"$2\" nil \"$3\")"
+        emacsclient --eval "(progn (add-hook 'ediff-quit-hook (lambda () (make-empty-file \"$${3%/*}/done\"))) (ediff-merge-directories \"$1\" \"$2\" nil \"$3\"))"
     fi
+    ret=$?
+    # emacsclient --eval will exit immediately, so use an auxiliary file to indicate that the merge is finished
+    until [ -f "$${3%/*}/done" ]; do
+        sleep 0.1
+    done
+    exit $?
   '';
 in
 {
@@ -21,6 +27,19 @@ in
         "format_short_signature(signature)" = "signature.name()";
         "format_timestamp(timestamp)" = "separate(' ', timestamp.format('%a %e %b %Y %T'), surround('(', ')', timestamp.ago()))";
       };
+      aliases = {
+        "tug" = ["util" "exec" "--" "sh" "-c" ''
+          if [ "x$1" = "x" ]; then
+              jj bookmark move --from 'heads(::@ & bookmarks())' --to '@-'
+          else
+              jj bookmark move --to '@-' "$@"
+          fi
+        ''];
+        "init" = ["util" "exec" "--" "sh" "-c" ''
+          jj git init --colocate
+          jj bookmark track 'glob:*@origin'
+        ''];
+      };
       templates = {
         draft_commit_description = ''
            concat(
@@ -32,6 +51,9 @@ in
              "\nJJ: ignore-rest\n",
              diff.git(),
            )
+        '';
+        commit_trailers = ''
+          if(!trailers.contains_key("Change-Id"), format_gerrit_change_id_trailer(self))
         '';
         git_push_bookmark = ''"fysh/push-" ++ change_id.short()'';
       };
@@ -53,7 +75,7 @@ in
         movement.edit = true;
         log-synthetic-elided-nodes = true;
         merge-editor = "ediff";
-        # diff-editor = "ediff";
+        diff-editor = "ediff";
         diff-formatter = ["difft" "--color=always" "$left" "$right"];
       };
       git = {
