@@ -393,6 +393,13 @@ in
     shellAliases = {
       ff = "vterm_find_file";
       ee = "open -a ${emacsWrapped}/Applications/Emacs.app";
+      emacs = ''
+        if begin; [ -n "$INSIDE_EMACS" ]; end
+            vterm_find_file "$argv"
+        else
+            command emacs "$argv"
+        end
+      '';
     };
     functions = {
       vterm_printf = ''
@@ -418,7 +425,9 @@ in
       };
       vterm_find_file = ''
         set -q argv[1]; or set argv[1] "."
-        vterm_cmd find-file (realpath "$argv")
+        for arg in $argv
+            vterm_cmd find-file (realpath "$arg")
+        end
       '';
       man = ''
         if begin; [ -n "$INSIDE_EMACS" ]; end
