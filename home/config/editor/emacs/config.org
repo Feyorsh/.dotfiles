@@ -990,7 +990,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (defvar mu4e-drafts-folder "~/.mu4e")
     (defvar mu4e-trash-folder "~/.mu4e")
     (defvar mu4e-sent-folder "~/.mu4e")
-    (defvar mu4e-attachment-dir "~/Downloads")
+    (defvar mu4e-attachment-dir "~/Downloads/")
 
     (setq mail-user-agent 'mu4e-user-agent)
     (setq mml-secure-smime-encrypt-to-self t)
@@ -1202,6 +1202,15 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     :custom-face
     (mu4e-thread-fold-face ((t (:inherit mu4e-header-face)))))
 #+end_src
+
+#+begin_src elisp
+(use-package consult-mu
+  :config
+  (setq consult-mu-maxnum 200)
+  (setq consult-mu-mark-previewed-as-read nil)
+  (setq consult-mu-mark-viewed-as-read nil))
+#+end_src
+
 There is actually no reason to keep my app password in ~authinfo~ because we don't use ~auth-sources~. Lol.
 It was good, but ended up being annoying because gpg-agent didn't persistently cache creds (i.e. I should be able to use my gpg key _anywhere_ within X hours if I use it somewhere once)
 

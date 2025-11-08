@@ -59,5 +59,20 @@ in {
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     mu4e
     org-msg
+
+    (let withEmbark = true; in trivialBuild rec {
+      pname = "consult-mu";
+      version = "1.0-unstable-2025-08-01";
+      src = fetchFromGitHub {
+        owner = "armindarvish";
+        repo = pname;
+        rev = "4958fb651917b0f9f79f436f7a753263c8003537";
+        hash = "sha256-cRFYTnfwWz4bxCirDHJ43Vw3eAYthJ5auRHLd+Cgo5c=";
+      };
+      postPatch = lib.optionalString (!withEmbark) ''
+        rm extras/consult-mu-{compose,contacts}-embark.el
+      '';
+      packageRequires = [ consult mu4e ] ++ lib.optionals (withEmbark) [ embark ];
+    })
   ]);
 }
