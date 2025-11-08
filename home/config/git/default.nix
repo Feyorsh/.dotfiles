@@ -50,5 +50,6 @@
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     magit magit-delta
     forge
+    consult-gh consult-gh-forge consult-gh-embark
   ]);
 }
