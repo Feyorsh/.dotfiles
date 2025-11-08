@@ -76,6 +76,7 @@ in
 
       yabai -m rule --add app="^Spotify$" mouse_follows_focus=on scratchpad=spotify grid=11:11:1:1:9:9
       yabai -m rule --add app="^Ghostty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
+      yabai -m rule --add app="^Emacs$" title="^Spotlight$" mouse_follows_focus=on scratchpad=spotlight grid=11:11:1:1:9:9
 
       # tried to autotoggle scratchpads that lost focus, didn't work very well
       # yabai -m signal --add event=window_focused app="!^Spotify$" action="yabai -m query --windows --space | jq -er '.[] | select(.scratchpad!=\"spotify\") | select(.\"is-visible\")' && yabai -m window --toggle spotify"
@@ -195,6 +196,7 @@ in
 
       # applications
       default, yabai < rshift - t : ${ghostty ""}
+      default, yabai < cmd - space : emacsclient --eval '(fysh/spotlight)'
 
       # navigation
 
