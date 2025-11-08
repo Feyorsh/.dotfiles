@@ -552,6 +552,17 @@ Oldest trick in the book! (Not really.)
   (after-init . gcmh-mode))
 #+end_src
 
+#+begin_src elisp
+(use-package so-long
+  :hook
+  ((after-init . global-so-long-mode)
+   (so-long-minor-mode . (lambda () (setq evil-ex-hl-update-delay 0.25)))))
+#+end_src
+
+#+begin_src elisp
+(use-package vlf-setup)
+#+end_src
+
 ** Completion
 **** Corfu
 #+begin_src elisp
