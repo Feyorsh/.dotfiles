@@ -3362,6 +3362,8 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
    "K" nil
    "J" nil
    )
+  :hook
+  (magit-mode . (lambda () (setq evil-ex-hl-update-delay 0.25)))
   :config
   (setq magit-diff-refine-hunk t)
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
