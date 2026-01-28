@@ -42,6 +42,7 @@ function update_file() {
 
     # check that $from is newer than $to and that they are different
     if [ "$(get_mod_time "$from")" -gt "$(get_mod_time "$to")" ] && ! cmp -s "$from" "$to"; then
+        mkdir -p "$(dirname "$to")"
         cp "$from" "$to"
         echo "Synced from $from to $to"
     fi
@@ -61,9 +62,10 @@ else
 fi
 
 # sync local to remote for all other org files
-for f in "$local"/{*.org,roam}; do
+shopt -s globstar
+for f in "$local"/{roam/**,*.org}; do
     if [[ "$(basename "$f")" != "inbox.org" ]]; then
-        update_file "$f" "$remote/$(basename "$f")"
+        update_file "$f" "$remote/${f#"$local"/}"
     fi
 done
 
