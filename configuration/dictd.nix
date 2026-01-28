@@ -60,20 +60,19 @@ in
         users.knownGroups = [ "dictd" ];
 
         launchd.daemons = {
-          dictd.serviceConfig = {
-            ProgramArguments = [
-              "/bin/sh" "-c" "/bin/wait4path /var/run/dictd &amp;&amp; exec ${pkgs.dict}/sbin/dictd"
-              "-s"
-              "-c"
-              "${dictdb}/share/dictd/dictd.conf"
-              "--locale"
-              "en_US.UTF-8"
-              "--pid-file"
-              "/var/run/dictd/dictd.pid"
-            ];
+          dictd.serviceConfig = let
+            launch-script = pkgs.writeShellScriptBin "dictd-wrapper" ''
+            ${pkgs.dict}/sbin/dictd -s \
+              -c ${dictdb}/share/dictd/dictd.conf \
+              --locale en_US.UTF-8 \
+              --pid-file /var/run/dictd/dictd.pid
+            '';
+          in {
+            Program = lib.getExe launch-script;
             UserName = "dictd";
             GroupName = "dictd";
             RunAtLoad = true;
+            KeepAlive = true;
             StandardOutPath = "/tmp/dictd.out.log";
             StandardErrorPath = "/tmp/dictd.err.log";
           };
