@@ -3045,7 +3045,6 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     (setq vterm-max-scrollback 5000)
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
-	(setq vterm-tramp-shells '(("ssh" "bash") ("docker" "/bin/sh")))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
 
