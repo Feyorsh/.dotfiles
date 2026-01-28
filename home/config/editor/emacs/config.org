@@ -3184,6 +3184,7 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
   (setq tramp-ssh-controlmaster-options
         (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
                 "-o ControlMaster=auto -o ControlPersist=yes"))
+  (setq tramp-remote-process-environment (delete "LC_CTYPE=''" tramp-remote-process-environment))
   ;; (setq tramp-histfile-override nil)
 )
 #+end_src
