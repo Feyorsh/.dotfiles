@@ -36,7 +36,7 @@ Good .emacs.ds:
 :PROPERTIES:
 :header-args:elisp: :tangle "~/.config/emacs/early-init.el"
 :END:
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-early-init
 (setq package-enable-at-startup nil)
 
 ;; sigh. https://github.com/nix-community/emacs-overlay/issues/212#issuecomment-1073284967
@@ -686,6 +686,8 @@ Oldest trick in the book! (Not really.)
 (use-package yasnippet
     :hook ((post-self-insert . kthk/yas-try-expanding-auto-snippets)
            (after-init . yas-global-mode))
+    :general
+    ('yas-keymap "<tab>" #'yas-next-field-or-cdlatex)
     :init
     (setq yas-alias-to-yas/prefix-p nil)
     :config
@@ -700,45 +702,39 @@ Oldest trick in the book! (Not really.)
     (defun kthk/yas-try-expanding-auto-snippets ()
       (when (and (boundp 'yas-minor-mode) yas-minor-mode)
         (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
-          (yas-expand))))))
+          (yas-expand))))
+    (defun cdlatex-in-yas-field ()
+      ;; Check if we're at the end of the Yas field
+      (when-let* ((_ (overlayp yas--active-field-overlay))
+                  (end (overlay-end yas--active-field-overlay)))
+        (if (>= (point) end)
+            ;; Call yas-next-field if cdlatex can't expand here
+            (let ((s (thing-at-point 'sexp)))
+              (unless (and s (assoc (substring-no-properties s)
+                                    cdlatex-command-alist-comb))
+                (yas-next-field-or-maybe-expand)
+                t))
+          ;; otherwise expand and jump to the correct location
+          (let (cdlatex-tab-hook minp)
+            (setq minp
+                  (min (save-excursion (cdlatex-tab)
+                                       (point))
+                       (overlay-end yas--active-field-overlay)))
+            (goto-char minp) t))))
 
-(use-package cdlatex
-    :hook ((cdlatex-tab . yas-expand)
-           (cdlatex-tab . cdlatex-in-yas-field))
-    :config
-    (use-package yasnippet
-        :general
-      ('yas-keymap "<tab>" #'yas-next-field-or-cdlatex)
-      :config
-      (defun cdlatex-in-yas-field ()
-        ;; Check if we're at the end of the Yas field
-        (when-let* ((_ (overlayp yas--active-field-overlay))
-                    (end (overlay-end yas--active-field-overlay)))
-          (if (>= (point) end)
-              ;; Call yas-next-field if cdlatex can't expand here
-              (let ((s (thing-at-point 'sexp)))
-                (unless (and s (assoc (substring-no-properties s)
-                                      cdlatex-command-alist-comb))
-                  (yas-next-field-or-maybe-expand)
-                  t))
-            ;; otherwise expand and jump to the correct location
-            (let (cdlatex-tab-hook minp)
-              (setq minp
-                    (min (save-excursion (cdlatex-tab)
-                                         (point))
-                         (overlay-end yas--active-field-overlay)))
-              (goto-char minp) t))))
-
-      (defun yas-next-field-or-cdlatex nil
-        (interactive)
-        "Jump to the next Yas field correctly with cdlatex active."
-        (if (and (not (save-excursion
-                        (beginning-of-line)
-                        (looking-at org-keyword-regexp)))
-                 (or (bound-and-true-p cdlatex-mode)
-                     (bound-and-true-p org-cdlatex-mode)))
-            (cdlatex-tab)
-          (yas-next-field-or-maybe-expand))))
+    (use-package cdlatex
+        :hook ((cdlatex-tab . yas-expand)
+               (cdlatex-tab . cdlatex-in-yas-field)))
+    (defun yas-next-field-or-cdlatex nil
+      (interactive)
+      "Jump to the next Yas field correctly with cdlatex active."
+      (if (and (not (save-excursion
+                      (beginning-of-line)
+                      (looking-at org-keyword-regexp)))
+               (or (bound-and-true-p cdlatex-mode)
+                   (bound-and-true-p org-cdlatex-mode)))
+          (cdlatex-tab)
+        (yas-next-field-or-maybe-expand))))
 
 (use-package yasnippet-capf)
 #+end_src
@@ -2007,7 +2003,7 @@ This isn't /strictly/ IRC related, but...
 ** Language
 *** TODO Org
 Need to stop loading my Org files on startup...
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package org
 	:init
   (setq org-directory "~/Personal/org")
@@ -2030,10 +2026,6 @@ Need to stop loading my Org files on startup...
 
   (add-to-list 'safe-local-variable-values '(org-latex-image-default-width . "2cm"))
   (add-to-list 'safe-local-variable-values '(org-latex-images-centered . nil))
-  :general
-  ("C-c l" #'org-store-link)
-  :general-config
-  ('org-mode-map "C-c C-b" #'org-latex-export-to-pdf)
   :hook ((org-mode . (lambda () (jinx-mode -1)))
          (org-after-refile-insert . save-buffer))
   :custom-face
@@ -2047,6 +2039,9 @@ Need to stop loading my Org files on startup...
         org-src-window-setup 'current-window
         org-indirect-buffer-display 'current-window
 		org-export-with-smart-quotes t
+        org-id-link-to-org-use-id 'use-existing
+        org-id-link-use-context t
+        org-id-link-consider-parent-id t
         org-ascii-links-to-notes nil
         org-ascii-charset 'utf-8
         org-latex-prefer-user-labels t
@@ -2066,8 +2061,19 @@ Need to stop loading my Org files on startup...
 	    org-special-ctrl-a/e t
 	    org-insert-heading-respect-content t
 	    org-pretty-entities t
+        org-image-align 'center
+        org-hide-emphasis-markers t
         org-ellipsis " ▾"
         org-use-fast-todo-selection 'expert)
+
+  ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
+  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w)" "|" "DONE(d)" "LATE(l)" "CANCELED(c)")))
+  (setq org-todo-keyword-faces '(("TODO" . org-todo)
+                                 ("WAIT" . "orange red")
+                                 ("PROG" . "deep pink")
+                                 ("LATE" . "dark red")
+                                 ("DONE" . org-done)
+                                 ("CANCELED" . "dark red")))
 
   (setf (alist-get 'file org-link-frame-setup) #'find-file)
   (add-to-list 'org-file-apps '("\\.pdf\\'" . emacs))
@@ -2080,6 +2086,14 @@ Need to stop loading my Org files on startup...
   (add-to-list 'display-buffer-alist '("\\*Org Links\\*" display-buffer-no-window (allow-no-window . t))))
 #+end_src
 
+Keybindings defined here to avoid having to load general in org-async-init
+#+begin_src elisp
+(use-package org
+  :general
+  ("C-c l" #'org-store-link)
+  :general-config
+  ('org-mode-map "C-c C-b" (lambda () (interactive) (org-latex-export-to-pdf (not (or (null org-export-async-init-file) current-prefix-arg))))))
+#+end_src
 
 #+begin_src elisp
 (use-package org
@@ -2117,24 +2131,13 @@ And now to make it *pretty*
   :custom-face
   (org-table ((t (:inherit font-lock-function-name-face))))
   :config
+  (setopt org-hide-leading-stars t)
   (setq org-modern-star 'replace)
-  ;; logging is configured on a per-file basis (although it really ought to be per-file for agenda files)
-  (setq org-todo-keywords '((sequence "TODO(t)" "PROG(p)" "WAIT(w)" "|" "DONE(d)" "LATE(l)" "CANCELED(c)")))
-  (setq org-todo-keyword-faces '(("TODO" . org-todo)
-                                 ("WAIT" . "orange red")
-                                 ("PROG" . "deep pink")
-                                 ("LATE" . "dark red")
-                                 ("DONE" . org-done)
-                                 ("CANCELED" . "dark red")))
   (setq org-modern-todo-faces
         '(("WAIT" :background "orange red" :foreground "white")
           ("PROG" :background "deep pink" :foreground "white")
           ("LATE" :background "dark red" :foreground "white")
-          ("CANCELED" :background "dark red" :foreground "white")))
-  (setq org-priority-faces '((?A . org-level-1)
-                             (?B . org-level-2)
-                             (?C . org-level-3)
-                             (?D . org-level-4))))
+          ("CANCELED" :background "dark red" :foreground "white"))))
 
 (use-package org-modern-indent
     :hook (org-mode . org-modern-indent-mode)
@@ -2160,10 +2163,9 @@ And now to make it *pretty*
 (add-hook 'org-mode-hook #'+setup-org-mode-left-margin)
   #+end_src
 Now for Babel:
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package org
     :commands (org-babel-eval org-babel-tangle org-babel-execute-src-block)
-    ;; :after (wolfram-mode ob-sagemath)
     :init
     (define-advice org-babel-execute-src-block (:around (fn &rest args) fysh/load-language)
       "Load language if needed"
@@ -2197,11 +2199,12 @@ Now for Babel:
 #+end_src
 
 Website stuff:
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package ox-hugo
     :init
   (add-to-list 'safe-local-variable-values '(eval require 'ox-hugo))
   :config
+  (add-to-list 'org-export-backends 'org)
   (setq org-hugo-use-code-for-kbd t)
   (setq org-html-with-latex 'html)
   (setq org-latex-to-html-convert-command "latexmlmath '%i' --preload=physics 2>/dev/null")
@@ -2250,7 +2253,7 @@ CONTENTS is nil.  INFO is a plist holding contextual information."
 		(t (org-html--wrap-latex-environment latex-frag info caption label))))))
 #+end_src
 Adding links to PDFs with Org.
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package org-pdftools
 	:hook (org-mode . org-pdftools-setup-link))
 #+end_src
@@ -2294,6 +2297,10 @@ Agenda stuff
         org-priority-highest ?A
         org-priority-lowest ?D
         org-priority-start-cycle-with-default t
+        org-priority-faces '((?A . org-level-1)
+                             (?B . org-level-2)
+                             (?C . org-level-3)
+                             (?D . org-level-4))
 
         org-agenda-skip-deadline-prewarning-if-scheduled t
 		org-agenda-skip-scheduled-if-done t
@@ -2386,9 +2393,7 @@ Taken from Doom Emacs."
 #+begin_src elisp
 (use-package org
   :config
-  (setq org-highlight-latex-and-related '(native)
-        org-image-align 'center
-        org-hide-emphasis-markers t)
+  (setq org-highlight-latex-and-related '(native))
 
   (copy-face 'fixed-pitch 'fysh/org-mode-latex-face)
   (advice-add 'org-src-font-lock-fontify-block
@@ -2536,11 +2541,14 @@ Taken from Doom Emacs."
 	('org-cdlatex-mode-map "<tab>" #'cdlatex-tab))
 #+end_src
 Adding Koma Script ~article~ class to org mode:
-#+begin_src elisp :tangle no
-(setq org-latex-classes '(("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}")) ("report" "\\documentclass[11pt]{report}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}")) ("book" "\\documentclass[11pt]{book}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+#+begin_src elisp :noweb-ref org-async-init
+(setq org-latex-classes '(("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+                          ("report" "\\documentclass[11pt]{report}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+                          ("book" "\\documentclass[11pt]{book}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+                          ("pset" "\\documentclass[]{pset}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
 #+end_src
 Add nice fontification
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package engrave-faces
 	:init
   (setq org-latex-src-block-backend 'engraved))
@@ -2551,7 +2559,7 @@ Add colors. This requires Koma Script _and_ Xcolor
 ;; 	:straight (ox-chameleon :type git :host github :repo "tecosaur/ox-chameleon"))
 #+end_src
 "Ignore" headlines (promotes children) from =ox-extra=.
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (defun org-export-ignore-headlines (data backend info)
   "Remove headlines tagged \"ignore\" retaining contents and promoting children.
 Each headline tagged \"ignore\" will be removed retaining its
@@ -2610,6 +2618,21 @@ parent."
   (org-roam-db-autosync-mode))
 #+end_src
 
+**** Org async export
+#+begin_src elisp
+(use-package org
+  :config
+  (setq org-export-async-init-file (expand-file-name "org-export-async-init.el" user-emacs-directory)))
+#+end_src
+
+#+begin_src elisp :tangle "~/.config/emacs/org-export-async-init.el" :noweb yes
+<<org-async-early-init>>
+(eval-and-compile (require 'use-package))
+(setq use-package-always-defer nil)
+
+<<org-async-init>>
+#+end_src
+
 *** Typst
 #+begin_src elisp
 (use-package typst-ts-mode
@@ -2627,7 +2650,7 @@ parent."
 #+end_src
 
 *** TODO Python
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package python
     :mode ("\\.py\\'" . python-ts-mode)
     :interpreter ("python" . python-ts-mode)
@@ -2645,7 +2668,7 @@ parent."
 #+end_src
 
 *** Julia
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package julia-ts-mode
     :mode ("\\.jl\\'" . julia-ts-mode)
     :interpreter ("julia" . julia-ts-mode))
@@ -2666,20 +2689,20 @@ parent."
 *** TODO Zig
 Panic because chals are due soon 😰
 Add a setting such that ~zig run~ creates an exe in the expected place, not the .cache directory
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package zig-mode
     :mode "\\.zig\\'")
 #+end_src
 
 *** TODO Rust
-#+begin_src elisp :tangle no
+#+begin_src elisp :tangle no :noweb-ref org-async-init
 (use-package rustic
 	:custom
   (rustic-analyzer-command '("rustup" "run" "stable" "rust-analyzer")))
 #+end_src
 
 *** Go
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package go-ts-mode
     :config
     (add-to-list 'org-src-lang-modes '("go" . go-ts))
@@ -2698,14 +2721,14 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
 #+end_src
 
 *** Haskell
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package haskell-mode
     :mode "\\.hs\\'")
 #+end_src
 
 *** TODO C/C++
 I realized I don't actually use an "official" style; I think functions should be formatted like statements.
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package cc-mode
     :mode ("\\.[ch]\\(pp\\)?\\'" . c-or-c++-ts-mode)
     :init
@@ -2806,18 +2829,18 @@ Fortunately someone wrote a Tree-sitter grammar... perfect!
 
 *** Vimscript
 For when I'm feeling /particularly/ evil...
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package vimrc-mode
     :mode "\\tridactylrc\\'")
 #+end_src
 
 *** Meson
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package meson-mode)
 #+end_src
 
 *** Shell
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package sh-script
   :hook ((sh-mode . flymake-mode)
          (after-save . executable-make-buffer-file-executable-if-script-p))
@@ -2826,7 +2849,7 @@ For when I'm feeling /particularly/ evil...
 #+end_src
 
 *** Markdown
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package markdown-mode
     :mode "\\.md\\'"
     :config
@@ -2893,7 +2916,7 @@ or \\[markdown-toggle-inline-images]."
 
 *** YAML
 TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party ~yaml-mode~ should be used instead.
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package yaml-mode
     :mode "\\.ya?ml\\'")
 #+end_src
@@ -2963,7 +2986,7 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
 
 *** Mathematica
 Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package wolfram-mode
     :after org
     :mode ("\\.m\\'" "\\.wl\\'")
@@ -2978,7 +3001,7 @@ Following guide from [[https://rgoswami.me/posts/org-mathematica/][here]]
 #+end_src
 
 *** Sage
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package sage-shell-mode
     :mode ("\\.sage\\'" . sage-shell:sage-mode)
     :interpreter "sage"
@@ -3113,7 +3136,7 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
 #+end_src
 
 *** Tramp
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package tramp
   :commands (sudo-find-file sudo-this-file)
   :init
@@ -3312,7 +3335,7 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
 #+end_src
 
 *** Direnv
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package envrc
     :hook (after-init . envrc-global-mode)
     :init
@@ -3608,7 +3631,7 @@ Eglot!
 *** Treesitter
 Emacs 29 has tree sitter built in, which adds ts specific major modes (for backward compatibility).
 Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]]; that being said, this is /really/ hacky and ugly.
-#+begin_src elisp
+#+begin_src elisp :noweb-ref org-async-init
 (use-package treesit
 	:init
 	(setq major-mode-remap-alist '((bash-mode . bash-ts-mode)
