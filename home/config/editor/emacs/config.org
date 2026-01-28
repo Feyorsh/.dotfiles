@@ -1110,6 +1110,9 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (use-package org-msg
         :demand t
         :config
+        (when (locate-library "jinx")
+          ;; I disabled jinx by default in org buffers as a performance hack; re-enable it so I don't sound like an idiot
+          (add-hook 'org-msg-edit-mode-hook #'jinx-mode))
         (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
 	    (setq org-msg-startup "hidestars indent inlineimages")
 	    (setq org-msg-default-alternatives '((new . (text))
@@ -1328,7 +1331,7 @@ Host imap.gmail.com
 User ghubs25@gmail.com
 PassCmd "pass show msmtp:gmail"
 Port 993
-SSLType IMAPS
+TLSType IMAPS
 AuthMechs LOGIN
 
 IMAPStore personal-remote
@@ -1352,7 +1355,7 @@ Host outlook.office365.com
 User georgeh3@illinois.edu
 PassCmd "mutt_oauth2.py ~/.password-store/msmtp:outlook.gpg"
 Port 993
-SSLType IMAPS
+TLSType IMAPS
 AuthMechs XOAUTH2
 
 IMAPStore school-remote
