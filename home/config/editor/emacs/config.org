@@ -986,7 +986,7 @@ This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01
                               :sort t
                               :interactive consult-omni-intereactive-commands-type
                               :annotate nil)
-  (setq consult-omni-multi-sources '("calc" "fd" "ripgrep" "man" "Dictionary" "gptel-nopreview" "Wikipedia" "Apps"))
+  (setq consult-omni-multi-sources '("calc" "fd" "man" "Dictionary" "gptel-nopreview" "Wikipedia" "Apps"))
   (setq consult-omni-local-sources '("calc" "fd" "ripgrep" "man" "Dictionary" "Apps"))
   (consult-omni-sources-load-modules)
 
@@ -1011,12 +1011,13 @@ See `consult-omni-multi' for more details.
   (define-advice consult-omni (:around (fn &rest args) prefix-for-local)
     (interactive)
     (funcall-interactively (if current-prefix-arg #'consult-omni-local fn) args))
+  :init
   (defun fysh/spotlight ()
     (interactive)
-    (let* ((width (floor (* 0.8 (display-pixel-width))))
-           (height (floor (* 0.8 (display-pixel-height))))
-           (left  (floor (* 0.1 (display-pixel-width))))
-           (top (floor (* 0.1 (display-pixel-height))))
+    (let* ((width (floor (* 0.8 (window-pixel-width))))
+           (height (floor (* 0.8 (window-pixel-height))))
+           (left  (floor (* 0.2 (window-pixel-width))))
+           (top (floor (* 0.2 (window-pixel-height))))
            (params `((name . "Spotlight")
                      (width . ,(cons 'text-pixels width))
                      (height . ,(cons 'text-pixels height))
@@ -1029,8 +1030,8 @@ See `consult-omni-multi' for more details.
            (logo-size (image-size logo))
            (logo-height (cdr logo-size))
            (logo-width (car logo-size))
-           (top-margin (floor (/ (- (frame-height) logo-height) 2)))
-           (left-margin (floor (/ (- (frame-width) logo-width) 2)))
+           (top-margin (floor (/ (- (frame-height frame) logo-height) 2)))
+           (left-margin (floor (/ (- (frame-width frame) logo-width) 2)))
            (default-directory (expand-file-name "~")))
       (with-selected-frame frame
         (select-frame-set-input-focus frame)

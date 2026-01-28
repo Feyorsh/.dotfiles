@@ -196,7 +196,8 @@ in
 
       # applications
       default, yabai < rshift - t : ${ghostty ""}
-      default, yabai < cmd - space : emacsclient --eval '(fysh/spotlight)'
+      default, yabai < 0xB1 : skhd -k "cmd - space"
+      default, yabai < cmd - space : ${config.home-manager.users.${username}.home.profileDirectory}/bin/emacsclient -r --eval '(fysh/spotlight)'
 
       # navigation
 
