@@ -44,7 +44,7 @@ in
       atkinson-hyperlegible
       gentium-book
 
-      jetbrains-mono
+      nerd-fonts.jetbrains-mono
       julia-mono
 
       twemoji-color-font

@@ -1734,7 +1734,7 @@ Nethack as God intended: in ~lisp~ mode.
   :load-path (expand-file-name "~/Personal/oss/nethack-el/")
   :commands (nethack)
   :custom
-  (nethack-mono-font-family "JetBrains Mono")
+  (nethack-mono-font-family "JetBrainsMono Nerd Font")
   :custom-face
   (nethack-message-highlight-face ((t (:inherit bold :foreground "DarkSeaGreen" :background unspecified))))
   :init
@@ -4018,8 +4018,8 @@ I could use ~display-monitors-changed-functions~ to try and maintain a good font
            (prog-mode . visual-line-mode))
     :init
     (defun fonts/default ()
-      (set-face-attribute 'default nil :font (font-spec :family "Jetbrains Mono" :size 17 :weight 'medium) :height 170)
-      (set-face-attribute 'fixed-pitch nil :font (font-spec :family "Jetbrains Mono" :weight 'medium) :height 1.0)
+      (set-face-attribute 'default nil :font (font-spec :family "JetBrainsMono Nerd Font" :size 17 :weight 'medium) :height 170)
+      (set-face-attribute 'fixed-pitch nil :font (font-spec :family "JetBrainsMono Nerd Font" :weight 'medium) :height 1.0)
       (set-face-attribute 'variable-pitch nil :font (font-spec :family "Atkinson Hyperlegible" :weight 'regular) :height 1.1 :weight 'unspecified :slant 'unspecified)
       (dolist (charset '(kana han cjk-misc hangul kanbun bopomofo))
         (set-fontset-font "fontset-default" charset (font-spec :family "Sarasa Mono J" :height 1.0 :weight 'regular)))
