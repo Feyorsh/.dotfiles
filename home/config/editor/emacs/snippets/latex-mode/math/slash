@@ -1,5 +1,0 @@
-# key: //
-# name: slash
-# condition: (and (texmathp) (quote auto))
-# --
-\\slash
