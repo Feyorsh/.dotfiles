@@ -12,6 +12,7 @@
     ./config/finance
     ./config/browser
     ./config/nix.nix
+    ./config/backups.nix
   ];
 
   home = {
