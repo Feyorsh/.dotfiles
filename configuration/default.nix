@@ -203,6 +203,7 @@ in
       doCheck = false;
     });
   };
+  environment.etc."resolver/tails.cale".text = "nameserver 100.100.100.100";
 
   services.dictd.enable = true;
 
