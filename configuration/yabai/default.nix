@@ -73,6 +73,7 @@ in
       yabai -m rule --add app="^GNU Image Manipulation Program$" title!="^GNU Image Manipulation Program$" manage=off
       yabai -m rule --add app="inkscape" title!=" - Inkscape$" manage=off
       yabai -m rule --add app="Emacs" title="^Ediff$" manage=off
+      yabai -m rule --add title="^Extension: (Bitwarden Password Manager)" manage=off
 
       yabai -m rule --add app="^Spotify$" mouse_follows_focus=on scratchpad=spotify grid=11:11:1:1:9:9
       yabai -m rule --add app="^Ghostty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
