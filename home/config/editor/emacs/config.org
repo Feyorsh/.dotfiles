@@ -2642,7 +2642,7 @@ parent."
     (add-to-list 'safe-local-variable-values '(typst-ts-compile-options . "--root .."))
     :config
     (add-to-list 'org-src-lang-modes '("typst" . typst-ts))
-    (setq typst-ts-mode-indent-offset 2)
+    (setq typst-ts-indent-offset 2)
     :custom-face
     (typst-ts-markup-item-indicator-face ((t (:inherit org-list-dt))))
     :general-config
