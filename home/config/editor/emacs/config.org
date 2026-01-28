@@ -3056,7 +3056,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     ('(normal insert motion emacs) 'comint-mode-map "C-d" #'comint-send-eof)
     :config
     (add-to-list 'comint-output-filter-functions #'comint-osc-process-output)
-    (setq display-comint-buffer-action '(display-buffer))
+    (add-to-list 'display-buffer-alist '((category . comint) display-buffer-same-window))
     (setq comint-prompt-read-only t))
 #+end_src
 Interesting, but I don't currently have a use-case.
