@@ -128,7 +128,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (defalias 'rename-this-file 'rename-visited-file)
 
     (defun fysh/native-find-file (filename)
-      (interactive (list (read-file-name "Find file natively: " nil default-directory t)))
+      (interactive (list (read-file-name "Find file natively: " nil nil t (ignore-errors (file-relative-name (or (run-hook-with-args-until-success 'file-name-at-point-functions) (buffer-file-name)))))))
       (org-open-file filename '(16)))
     (defun fysh/custom-find-file ()
       (interactive)
@@ -815,6 +815,7 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
   :general-config
   ('embark-file-map
    "S" #'sudo-find-file)
+  ('embark-file-map "N" #'fysh/native-find-file)
   ('(embark-file-map embark-library-map embark-buffer-map embark-bookmark-map)
     "$" #'vterm-at-file)
   :init
