@@ -67,6 +67,13 @@ in
       keep-outputs = true;
       keep-derivations = true;
 
+      trusted-public-keys = [
+        "emerald:LhXXSgNg+TeXbAvO348YuoRzQRStC84kAHA0LWBDzns="
+      ];
+      trusted-substituters = [
+        "ssh-ng://emerald"
+      ];
+
       experimental-features = "nix-command flakes";
 
       # more like pwn-me-mommy
@@ -79,21 +86,28 @@ in
       warn-dirty = false;
     };
 
-    # buildMachines = [{
-    #   hostName = "Vermillion";
-    #   protocol = "ssh-ng";
-    #   speedFactor = 3;
-    #   sshUser = "nixremote";
-    #   sshKey = "/var/root/.ssh/nixremote";
-    #   supportedFeatures = [
-    #     "kvm"
-    #     "big-parallel"
-    #   ];
-    #   systems = [
-    #     "x86_64-linux"
-    #     "aarch64-linux"
-    #   ];
-    # }];
+    # I only want to use an x86 machine when I need to build x86 artifacts
+    # extraOptions = ''
+    #   builders-use-substitutes = true
+    # '';
+    # distributedBuilds = true;
+
+    buildMachines = [{
+      hostName = "emerald";
+      protocol = "ssh-ng";
+      speedFactor = 3;
+      sshUser = "nixremote";
+      sshKey = "/var/root/.ssh/nixremote";
+      supportedFeatures = [
+        "kvm"
+        "big-parallel"
+        "benchmark"
+      ];
+      systems = [
+        "x86_64-linux"
+      ];
+    }];
+
    linux-builder = {
      enable = true;
      config = {
