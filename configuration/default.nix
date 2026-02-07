@@ -6,6 +6,7 @@ in
   imports = [
     ./yabai
     ./dictd.nix
+    ./xquartz.nix
   ];
 
   # essential packages; my perl-less swiss army chainsaw
