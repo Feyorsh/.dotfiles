@@ -79,10 +79,6 @@ in
       yabai -m rule --add app="^Ghostty$" title="^scratch$" mouse_follows_focus=on scratchpad=term grid=11:11:1:1:9:9
       yabai -m rule --add app="^Emacs$" title="^Spotlight$" mouse_follows_focus=on scratchpad=spotlight grid=11:11:1:1:9:9
 
-      # tried to autotoggle scratchpads that lost focus, didn't work very well
-      # yabai -m signal --add event=window_focused app="!^Spotify$" action="yabai -m query --windows --space | jq -er '.[] | select(.scratchpad!=\"spotify\") | select(.\"is-visible\")' && yabai -m window --toggle spotify"
-      # yabai -m signal --add event=window_focused title="!^scratch$" app="!^Alacritty$" action="yabai -m query --windows --space | jq -er '.[] | select(.scratchpad!=\"term\") | select(.\"is-visible\")' && yabai -m window --toggle term"
-
       yabai -m rule --apply
 
       yabai -m signal --add event=space_changed action="yabai -m window --focus first"
@@ -285,12 +281,11 @@ in
     script = lib.mkForce "";
     serviceConfig.RunAtLoad = true;
     serviceConfig.KeepAlive.SuccessfulExit = false;
-    serviceConfig.ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp; exec ${yabaiScript}" ];
+    serviceConfig.ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} && exec ${yabaiScript}" ];
   };
   launchd.user.agents.skhd.serviceConfig = {
     StandardOutPath = "/tmp/skhd_${username}.out.log";
     StandardErrorPath = "/tmp/skhd_${username}.err.log";
-  #   ProgramArguments = lib.mkForce [ "/bin/sh" "-c" "/bin/wait4path ${yabaiScript} &amp;&amp;" ] ++ [ "${config.services.skhd.package}/bin/skhd" ] ++ lib.optionals (config.services.skhd.skhdConfig != "") [ "-c" "/etc/skhdrc" ];
   };
 
   launchd.user.agents.remapEjectToPlay.serviceConfig = let
@@ -298,7 +293,7 @@ in
       /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0xC000000B8,"HIDKeyboardModifierMappingDst":0xC000000CD}]}'
     '';
   in {
-    ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${bindScript} &amp;&amp; exec ${bindScript}" ];
+    ProgramArguments = [ "/bin/sh" "-c" "/bin/wait4path ${bindScript} && exec ${bindScript}" ];
     RunAtLoad = true;
   };
 }
