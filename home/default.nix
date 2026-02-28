@@ -20,10 +20,13 @@
     homeDirectory = "/Users/ghuebner";
 
     packages = with pkgs; [
-      gimp
+      gimp2
       inkscape
+      imagemagick
 
-      (python313.withPackages(ps: with ps; [ ipython requests numpy ]))
+      (python314.withPackages(ps: with ps; [ ipython requests numpy pwntools ]))
+      uv
+      cargo
 
       alt-tab-macos
       monitorcontrol
@@ -39,16 +42,22 @@
 
       (texlive.combine {
         inherit (texlive) scheme-medium
-          braket cjk nopageno
 
-          mylatexformat capt-of
-          fvextra tcolorbox pdfcol
-          cochineal xstring fontaxes
-          inconsolata upquote
-          cabin
-          newtx
-          mathalpha boondox;
+          # needed for org-mode
+          mylatexformat capt-of preview
+          # needed for jeffe
+          mdframed zref needspace arydshln
+          # needed for pset class
+          cancel fvextra tcolorbox pdfcol
+          # fonts
+          cochineal fontaxes inconsolata cabin newtx mathalpha boondox
+          # misc improvements to defaults
+          xstring upquote
+
+          # misc packages I commonly use
+          braket cjk embedfile nopageno;
       })
+      typst
 
       adwaita-icon-theme
     ];
@@ -62,7 +71,7 @@
   fonts.fontconfig.enable = true;
 
   programs.spicetify = let
-    spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.system};
+    spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   in {
     enable = true;
     enabledExtensions = with spicePkgs.extensions; [

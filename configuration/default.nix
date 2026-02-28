@@ -22,6 +22,7 @@ in
     gnutar
     gzip
     xz
+    zstd
     unixtools.wall
     unixtools.watch
     iproute2mac
@@ -199,7 +200,7 @@ in
       # use builtin ifconfig (BSD) instead of inetutils ifconfig
       postPatch = (prev.postPatch or "") + ''
         sed -e 's,"ifconfig","/sbin/ifconfig",' \
-            -i wgengine/router/router_userspace_bsd.go
+            -i wgengine/router/osrouter/router_userspace_bsd.go
       '';
       doCheck = false;
     });

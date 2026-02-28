@@ -3,7 +3,6 @@
   programs.git = {
     enable = true;
     lfs.enable = true;
-    difftastic.enable = true;
     iniContent.delta.magit-delta = {
       line-numbers = false;
     };
@@ -25,6 +24,7 @@
   };
 
   programs.gh.enable = true;
+  programs.difftastic.enable = true;
 
   home.packages = with pkgs; [
     git-crypt

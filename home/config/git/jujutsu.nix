@@ -89,8 +89,8 @@ in
         merge-args = ["$left" "$right" "$base" "$output"];
         edit-args = ["$left" "$right" "$output"];
       };
-      core = {
-        fsmonitor = "watchman";
+      fsmonitor = {
+        backend = "watchman";
         watchman.register-snapshot-trigger = true;
       };
       colors = {

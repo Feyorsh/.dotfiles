@@ -14,7 +14,7 @@
 
   programs.less = {
     enable = true;
-    keys = ''
+    config = ''
       h noaction 1\e(
       H noaction 50\e(
       l noaction 1\e)

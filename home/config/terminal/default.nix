@@ -3,7 +3,6 @@
   imports = [
     ./shell
     ./tmux.nix
-    ./emulator/alacritty.nix
     ./emulator/ghostty.nix
   ];
 
@@ -15,6 +14,8 @@
     set history size unlimited
     set history remove-duplicates 10
 
+    set auto-load safe-path .
+
     set pagination off
 
     if $_regex($_gdb_setting_str("prompt"), ".*pwndbg.*")
@@ -22,30 +23,11 @@
     end
   '';
 
+  home.sessionVariables.DEBUGINFOD_URLS = "https://debuginfod.elfutils.org/";
+
   xdg.configFile."pwn.conf".source = (pkgs.formats.ini {}).generate "pwn.conf" {
-    # context = {
-    #   timeout = 10;
-    # };
     update = {
       interval = "never";
-    };
-
-  };
-
-  xdg.configFile."poke/pokerc.conf".text = ''
-    .set endian little
-    .set omode tree
-    .set oacutoff 5
-    .set pretty-print yes
-    .set pager yes
-  '';
-
-  programs.bat = {
-    enable = true;
-    config = {
-      theme = "base16";
-      pager = "less -FR";
-      italic-text = "always";
     };
   };
 }

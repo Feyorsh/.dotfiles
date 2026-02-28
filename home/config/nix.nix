@@ -11,7 +11,8 @@
 
     nix-output-monitor
     nixpkgs-review
-    nixfmt-rfc-style
+    nixfmt
+    nix-prefetch
   ];
 
   programs.nix-index = {
