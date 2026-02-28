@@ -12,8 +12,6 @@
     mac-app-util.url = "github:hraban/mac-app-util";
 
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
-    firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
-    emacs30-macport.url = "github:what-the-functor/nix-emacs30-macport-overlay/native-comp-ld64-patch";
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
@@ -28,15 +26,7 @@
         };
         overlays = [
           fyshpkgs.overlay.${system}
-          inputs.firefox-darwin.overlay
-          inputs.emacs30-macport.overlays.default
-          (final: prev: {
-            xorg = prev.xorg.overrideScope (self: super: {
-              libAppleWM = super.libAppleWM.overrideAttrs (prev': {
-                nativeBuildInputs = (prev'.nativeBuildInputs or []) ++ [ final.xorg-autoconf ];
-              });
-            });
-          })
+
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
               icon = ./assets/icons/spotify.icns;
@@ -45,12 +35,13 @@
                 cp $icon Spotify.app/Contents/Resources/Icon.icns
               '';
             });
-
-            alacritty = prev.alacritty.overrideAttrs (prev': {
-              icon = ./assets/icons/alacritty.icns;
-
-              preInstall = ''
-                cp $icon extra/osx/Alacritty.app/Contents/Resources/alacritty.icns
+          })
+          (final: prev: {
+            quartz-wm = prev.quartz-wm.overrideAttrs (prev': {
+              postPatch = ''
+                substituteInPlace lib/dock-support.h \
+                  --replace-fail '#include <ApplicationServices/ApplicationServices.h>' \
+                                 '#define Picture _Picture${"\n"}#include <ApplicationServices/ApplicationServices.h>${"\n"}#undef Picture'
               '';
             });
           })
@@ -75,7 +66,6 @@
 		                  home-manager.darwinModules.home-manager
                       inputs.mac-app-util.darwinModules.default
 		                  inputs.pwnypus.darwinModules.chmodbpf
-		                  inputs.pwnypus.darwinModules.xquartz
 		                  inputs.fyshpkgs.darwinModules.ccache
 	                  ];
         };
