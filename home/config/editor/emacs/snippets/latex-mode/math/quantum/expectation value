@@ -1,0 +1,5 @@
+# name: expectation value
+# key: bkev
+# condition: (and (texmathp) 'auto)
+# --
+\\bra{$1} $2 \\ket{${3:$1}}$0

@@ -1,5 +1,6 @@
 # name: bmatrix (3 x 3)
 # key: 3by3
+# expand-env: ((yas-indent-line 'fixed))
 # --
 \\begin{pmatrix}
 ${1:1} & ${2:0} & ${3:$2} \\\\

@@ -1,0 +1,5 @@
+# name: expected value
+# key: ev
+# condition: (and (texmathp) 'auto)
+# --
+\\mathbb{E}[$0]

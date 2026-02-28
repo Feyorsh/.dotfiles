@@ -1,0 +1,5 @@
+# name: not equals
+# key: !=
+# condition: (and (texmathp) (quote auto))
+# --
+\neq

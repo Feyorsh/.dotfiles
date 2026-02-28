@@ -1,5 +1,6 @@
 # name: bmatrix (2 x 2)
 # key: 2by2
+# expand-env: ((yas-indent-line 'fixed))
 # --
 \\begin{pmatrix}
 ${1:1} & ${2:0} \\\\

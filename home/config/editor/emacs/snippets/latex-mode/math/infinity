@@ -1,0 +1,5 @@
+# name: infinity
+# key: inf
+# condition: (and (texmathp) (quote auto))
+# --
+\\infty

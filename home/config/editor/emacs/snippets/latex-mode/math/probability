@@ -1,0 +1,5 @@
+# name: probability
+# key: prob
+# condition: (and (texmathp) 'auto)
+# --
+\\mathbb{P}[$0]
