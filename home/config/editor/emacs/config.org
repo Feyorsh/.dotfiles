@@ -186,7 +186,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     :custom (custom-file (expand-file-name "custom.el" temporary-file-directory))
     (safe-local-variable-values
-     '((eval setq-local lexical-binding t)
+     '((lexical-binding . t)
        (eval add-hook 'after-save-hook
         (lambda nil
           (if
@@ -2149,7 +2149,9 @@ And now to make it *pretty*
     (setq org-startup-indented t)
     :config
     (setq org-indent-mode-turns-on-hiding-stars nil))
+#+end_src
 
+#+begin_src elisp
 ;; tecosaur the goat for this one
 (defvar +org-mode-left-margin-width 1
   "The `left-margin-width' to be used in `org-mode' buffers.")
@@ -2396,6 +2398,9 @@ Taken from Doom Emacs."
 **** LaTeX
 #+begin_src elisp
 (use-package org
+  :init
+  (add-to-list 'safe-local-variable-values '(org-latex-title-command . "\\HomeworkHeader"))
+  (add-to-list 'safe-local-variable-values '(org-export-date-timestamp-format . "%d/%m/%Y"))
   :config
   (setq org-highlight-latex-and-related '(native))
 
@@ -2546,7 +2551,8 @@ Taken from Doom Emacs."
 #+end_src
 Adding Koma Script ~article~ class to org mode:
 #+begin_src elisp :noweb-ref org-async-init
-(setq org-latex-classes '(("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+(setq org-latex-classes '(("article" "\\documentclass[11pt]{article}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+                          ("scrartcl" "\\documentclass[11pt]{scrartcl}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
                           ("report" "\\documentclass[11pt]{report}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
                           ("book" "\\documentclass[11pt]{book}" ("\\part{%s}" . "\\part*{%s}") ("\\chapter{%s}" . "\\chapter*{%s}") ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
                           ("pset" "\\documentclass[]{pset}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
@@ -2595,6 +2601,17 @@ parent."
 (add-hook 'org-export-filter-parse-tree-functions #'org-export-ignore-headlines)
 #+end_src
 
+Remove zero width spaces
+#+begin_src elisp :noweb-ref org-async-init
+(use-package ox
+  :config
+  (defun +org-export-remove-zero-width-space (text _backend _info)
+    "Remove zero width space from TEXT."
+    (unless (org-export-derived-backend-p 'org)
+      (replace-regexp-in-string "\u200b" "" text)))
+  (add-to-list 'org-export-filter-final-output-functions #'+org-export-remove-zero-width-space))
+#+end_src
+
 ***** Overleaf
 #+begin_src elisp
 (use-package overleaf
@@ -2631,6 +2648,12 @@ parent."
 
 #+begin_src elisp :tangle "~/.config/emacs/org-export-async-init.el" :noweb yes
 <<org-async-early-init>>
+
+(load "site-start")
+;; hack local variables finds a local variables footer inside a string (where double quotes are escaped), resulting in an invalid read.
+(load "shorthands")
+(setq hack-read-symbol-shorthands-function (eval-when-compile `(lambda (&rest args) (unless (string-match-p "org-export-process" load-file-name) (and (functionp (quote ,hack-read-symbol-shorthands-function)) (apply (quote ,hack-read-symbol-shorthands-function) args))))))
+
 (eval-and-compile (require 'use-package))
 (setq use-package-always-defer nil)
 
@@ -2644,6 +2667,7 @@ parent."
     :init
     (add-to-list 'safe-local-variable-values '(typst-ts-watch-options . "--root .."))
     (add-to-list 'safe-local-variable-values '(typst-ts-compile-options . "--root .."))
+    (add-to-list 'safe-local-variable-values '(doom-modeline-enable-word-count . t))
     :config
     (add-to-list 'org-src-lang-modes '("typst" . typst-ts))
     (setq typst-ts-indent-offset 2)
@@ -2858,7 +2882,6 @@ For when I'm feeling /particularly/ evil...
     :mode "\\.md\\'"
     :config
     (set-face-background 'markdown-code-face (doom-color 'base1))
-    (setq markdown-fontify-code-blocks-natively t)
     (defun markdown-display-inline-images ()
       "Add inline image overlays to image links in the buffer.
 This can be toggled with `markdown-toggle-inline-images'
@@ -3431,6 +3454,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 		 ))
 	 ))
   (dir-locals-set-directory-class (expand-file-name "~/Personal/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class (expand-file-name "~/Personal/feyor.sh") 'huge-git-repository)
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
   (magit-diff-revision-summary ((t (:weight semi-bold :inherit magit-diff-revision-summary-highlight)))))
@@ -3603,6 +3627,7 @@ Eglot!
            nix-mode nix-ts-mode
            rust-ts-mode
            zig-mode
+           typst-ts-mode
            go-mode go-ts-mode
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
           . (lambda () (unless (or (not eglot-enabled)
@@ -3613,17 +3638,23 @@ Eglot!
                          (eglot-ensure)))))
   :init
   (setq-default eglot-enabled t) ;; opt-in to use eglot
+  (add-to-list 'safe-local-variable-values '(eglot-server-programs . (((c-mode c-ts-mode c++-mode c++-ts-mode) . ("ctags-lsp")))))
   :config
+  (define-advice eglot--format-markup (:filter-args (args) fysh/eglot-disable-slow-md)
+    (list (car args) (or (cadr args) #'markdown-view-mode)))
   (use-package eglot-jl
       :demand t
       :config
-    (eglot-jl-init))
+      (eglot-jl-init))
   (use-package eglot-booster
       :demand t
-      :config (eglot-booster-mode))
+      :config
+      (setq eglot-booster-io-only t)
+      (eglot-booster-mode))
   (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
   (add-to-list 'eglot-server-programs '((swift-mode) . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
+  (add-to-list 'eglot-server-programs '((typst-ts-mode) . ("tinymist")))
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0
@@ -4073,7 +4104,7 @@ More likely is that my init.el is just really scuffed.
 
 
 ;; Local Variables:
-;; eval: (setq-local lexical-binding t)
+;; lexical-binding: t
 ;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t)
 ;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t)
 ;; End:
