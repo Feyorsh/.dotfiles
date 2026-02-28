@@ -47,3 +47,4 @@ blacklistadd ^https://www.nytimes.com/(crosswords|games|puzzles).*
 blacklistadd ^https://discord.com
 blacklistadd ^https://leetcode.com
 blacklistadd ^https://hackerrank.com
+blacklistadd ^https://overleaf.com
