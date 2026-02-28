@@ -745,7 +745,7 @@ Oldest trick in the book! (Not really.)
     :general-config
     ('gptel-mode-map "RET" #'gptel-send)
     :config
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
 
     (setq gptel-default-mode 'org-mode)
     (setq gptel-backend (gptel-make-openai "GitHub Models"
@@ -1232,7 +1232,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 		  message-sendmail-envelope-from 'header
 		  mu4e-compose-dont-reply-to-self t
 		  mu4e-compose-format-flowed t
-		  message-citation-line-format "On %a, %b %-e, %Y at %T EST %N wrote:\n"
+		  message-citation-line-format "On %a, %b %-e, %Y at %T CST %N wrote:\n"
 		  message-citation-line-function 'message-insert-formatted-citation-line
 		  gnus-article-date-headers '(combined-local-lapsed)
 		  gnus-boring-article-headers '(empty followup-to reply-to to-list long-to)
@@ -1781,7 +1781,7 @@ Use Zone as a true screen saver that prevents sleep.
 **** IRC
 #+begin_src elisp
 (use-package erc
-	:commands (erc erc-tls erc-join-server)
+	:commands (erc erc-tls fysh/erc-join-server)
     :init
 	(defvar erc-server-list
 	  `(,`("Libera.Chat" :server "irc.libera.chat"
@@ -1840,7 +1840,7 @@ Use Zone as a true screen saver that prevents sleep.
 	(define-advice erc-next-command (:before-while () no-cycle)
 	  erc-input-ring-index)
 
-	(setq erc-nick "Shorden")
+	(setq erc-nick "shorden")
     ;; not fuly sure if this is correct, but autojoining without ident means I'm uncloaked?
     (setq erc-autojoin-timing 'ident)
     (setq erc-autojoin-delay 1)
@@ -1998,6 +1998,9 @@ This isn't /strictly/ IRC related, but...
 **** Matrix
 #+begin_src elisp
 (use-package ement
+    :hook (evil-collection-setup . (lambda (&rest _)
+                                     (general-def 'normal 'ement-room-mode-map "J" nil)
+                                     (general-def 'normal 'ement-room-mode-map "K" #'ement-room-scroll-down-command)))
     :config
     (setq ement-save-sessions t
           ement-room-send-message-filter #'ement-room-send-org-filter
@@ -2743,7 +2746,8 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
   :init
   (setq-default lisp-indent-function 'common-lisp-indent-function))
 
-(use-package sly)
+(use-package sly
+  :hook (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'sly-mode-map "K" nil))))
 
 (use-package paredit)
 #+end_src
@@ -3601,12 +3605,6 @@ The OG.
 **** TODO Dape
 #+begin_src elisp
 (use-package dape)
-#+end_src
-
-**** TODO poke
-#+begin_src elisp
-(use-package poke
-    :commands (poke poke-poked))
 #+end_src
 
 *** LSP
