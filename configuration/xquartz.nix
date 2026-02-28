@@ -4,6 +4,8 @@ let
   cfg = config.services.xquartz;
   xauth = pkgs.xorg.xauth;
 in {
+  meta.maintainers = [ lib.maintainers.feyorsh or "feyorsh" ];
+
   options.services.xquartz = {
     enable = mkEnableOption "XQuartz";
     package = mkOption {
@@ -17,12 +19,13 @@ in {
     environment = let
       daemon = "org.nixos.xquartz.privileged_startx.plist";
       agent = "org.nixos.xquartz.startx.plist";
+      plistLocation = name: builtins.head (builtins.match ".*cp ([^[:space:]]+-${name}) .*" (builtins.readFile "${cfg.package}/bin/xquartz-install"));
     in {
       systemPackages = [ cfg.package ];
 
       launchDaemons.${daemon}.source =
         (pkgs.substitute {
-          src = "${dirOf (builtins.unsafeGetAttrPos "pname" cfg.package).file}/${daemon}";
+          src = plistLocation daemon;
           substitutions = [
             "--replace-fail"
             "@PRIVILEGED_STARTX@"
@@ -36,7 +39,7 @@ in {
 
       launchAgents.${agent}.source =
         (pkgs.substitute {
-          src = "${dirOf (builtins.unsafeGetAttrPos "pname" cfg.package).file}/${agent}";
+          src = plistLocation agent;
           substitutions = [
             "--replace-fail"
             "@LAUNCHD_STARTX@"
