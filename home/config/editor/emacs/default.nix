@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (pkgs) fetchFromBitbucket fetchFromGitHub fetchFromGitea fetchpatch;
+  inherit (pkgs) fetchFromGitHub fetchFromGitea fetchpatch;
   emacs' = pkgs.emacs30-macport.overrideAttrs (prev: {
     patches = (prev.patches or []) ++ [
       (fetchpatch {
@@ -84,23 +84,19 @@ in
           '';
         });
       }) # pkgs.pantalaimon
+
       (elfeed.overrideAttrs(prev: {
         patches = (prev.patches or []) ++ [
           ./patches/elfeed-collide-links.patch
           ./patches/elfeed-shr.patch
         ];
       })) elfeed-org
-      emms
-      (pkgs.mpv.overrideAttrs (prev: {
-        patches = (prev.patches or []) ++ [ (fetchpatch {
-          url = "https://patch-diff.githubusercontent.com/raw/mpv-player/mpv/pull/15115.patch";
-          hash = "sha256-3iaD2t/bzzlo6FFcPac/bPuVg5adbBFPI3HUeXysRrc=";
-        }) ];
-      })) pkgs.spotifyd pkgs.imagemagick pkgs.python312Packages.tinytag
+
+      emms pkgs.mpv pkgs.imagemagick pkgs.python312Packages.tinytag
 
       persistent-scratch
       dirvish
-      vterm
+      vterm eat
       shx
       (trivialBuild rec {
         pname = "comint-fold";
@@ -119,6 +115,7 @@ in
       dape
       docker pkgs.colima pkgs.docker pkgs.docker-compose
       deadgrep
+      casual
 
       evil evil-snipe evil-visualstar evil-numbers evil-surround
       evil-collection
@@ -227,28 +224,12 @@ in
       org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
 
       auctex cdlatex mathjax pkgs.nodejs
-      (trivialBuild rec {
-        pname = "overleaf";
-        version = "1.1.0";
-        src = fetchFromGitHub {
-          owner = "vale981";
-          repo = "overleaf.el";
-          rev = "v${version}";
-          hash = "sha256-zDXUWSs8HqUdKYSbtzloXZe51jBmudWXsyhpdBE8lqc=";
-        };
-        patches = [ (fetchpatch {
-          name = "firefox-path.patch";
-          url = "https://patch-diff.githubusercontent.com/raw/vale981/overleaf.el/pull/5.patch";
-          hash = "sha256-su+enyUKys+d6p9bYL+Ue1G/u3K0EdBA5qNckmc/rA8=";
-        }) ];
-        packageRequires = [ plz websocket webdriver ];
-      }) pkgs.geckodriver
       yasnippet yasnippet-capf
       sis
       package-lint-flymake
 
       # prog-modes
-      python-mls pkgs.ruff pkgs.basedpyright
+      python-mls pkgs.ruff pkgs.ty pkgs.basedpyright
       haskell-mode
       markdown-mode
       sly paredit
@@ -274,18 +255,7 @@ in
           mv ./extra/magit-nix3.el .
         '';
       })
-      (nix-update.overrideAttrs {
-        patches = [
-          (fetchpatch {
-            url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/14.patch";
-            hash = "sha256-uxCdSKzW67c05s1V6NXJsJssncnunAWK7NFHDZatjao=";
-          })
-          (fetchpatch {
-            url = "https://patch-diff.githubusercontent.com/raw/jwiegley/nix-update-el/pull/15.patch";
-            hash = "sha256-lXs4V2fMaKvQn+iGvw1TZ90tIGG0pfYTNZn+M8n4fpY=";
-          })
-        ];
-      }) pkgs.nix-prefetch-git
+      nix-update pkgs.nix-prefetch-git
       verilog-ts-mode
       swift-mode pkgs.sourcekit-lsp
       terraform-mode
@@ -300,7 +270,8 @@ in
       vimrc-mode
       meson-mode
       # other LSPs
-      pkgs.clang-tools pkgs.rust-analyzer pkgs.gopls pkgs.shellcheck
+      eglot
+      pkgs.clang-tools pkgs.ctags-lsp pkgs.rust-analyzer pkgs.gopls pkgs.shellcheck pkgs.tinymist
 
       # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
       (treesit-grammars.with-grammars (grammars: [
@@ -318,16 +289,37 @@ in
         };
       })))) treesit-fold
 
-      (trivialBuild rec {
-        pname = "eglot-booster";
-        version = "0.1.0";
-        src = fetchFromGitHub {
-          owner = "jdtsmith";
-          repo = pname;
-          rev = "e6daa6bcaf4aceee29c8a5a949b43eb1b89900ed";
-          hash = "sha256-PLfaXELkdX5NZcSmR1s/kgmU16ODF8bn56nfTh9g6bs=";
-        };
-      }) pkgs.emacs-lsp-booster
+      eglot-booster pkgs.emacs-lsp-booster
+      (let
+        version = "0.3.3";
+       in
+        with pkgs; python3Packages.buildPythonApplication {
+          pname = "rassumfrassum";
+          inherit version;
+          pyproject = true;
+
+          src = pkgs.fetchFromGitHub {
+            owner = "joaotavora";
+            repo = "rassumfrassum";
+            tag = "v${version}";
+            hash = "sha256-3Hcews5f7o45GUmFdpLwkAHf0bthC1tUikkxau952Ec=";
+          };
+
+          postPatch = ''
+            patchShebangs rass test/
+          '';
+
+          build-system = [ python3Packages.setuptools ];
+          doCheck = false;
+
+          meta = {
+            description = "Connect an LSP client to multiple LSP servers";
+            homepage = "https://github.com/joaotavora/rassumfrassum";
+            changelog = "https://github.com/joaotavora/rassumfrassum/releases/tag/v${version}";
+            license = lib.licenses.gpl3Plus;
+            maintainers = [ lib.maintainers.cmm ];
+          };
+      })
 
       nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion
 
@@ -336,16 +328,7 @@ in
       rainbow-mode
       diff-hl difftastic
 
-      (trivialBuild rec {
-        pname = "ultra-scroll";
-        version = "0.3.2";
-        src = fetchFromGitHub {
-          owner = "jdtsmith";
-          repo = pname;
-          rev = "2c517bf9b61bf432f706ff8a585ba453c7476be2";
-          hash = "sha256-U2QTbxkch/oGdXXnzf2EPX3Ga3VYmQlnjC/JKBq5DEI=";
-        };
-      })
+      ultra-scroll
     ]);
   };
 
