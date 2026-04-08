@@ -3770,9 +3770,10 @@ The default "Find all references" uses =elisps-refs.el= and is unfortunately rea
       (require 'deadgrep)
       (fset 'deadgrep--arguments-orig (symbol-function #'deadgrep--arguments))
       (define-advice helpful--all-references (:override (button) fysh/use-deadgrep)
-        (cl-letf* (((symbol-function 'deadgrep--arguments)
+        (cl-letf* ((orig (symbol-function #'deadgrep--arguments))
+                   ((symbol-function 'deadgrep--arguments)
                     (lambda (&rest args)
-                      `("--follow" "--type=elisp" "--type=gzip" "--search-zip" ,@(butlast (apply #'deadgrep--arguments-orig args)) ,lisp-directory ,(-first (lambda (p) (string-suffix-p "/share/emacs/site-lisp" p)) load-path)))))
+                      `("--follow" "--type=elisp" "--type=gzip" "--search-zip" ,@(butlast (apply orig args)) ,lisp-directory ,(-first (lambda (p) (string-suffix-p "/share/emacs/site-lisp" p)) load-path)))))
           (deadgrep (symbol-name (button-get button 'symbol)) default-directory))))
 
 	(setq helpful-max-buffers 2)
