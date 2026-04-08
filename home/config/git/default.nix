@@ -7,6 +7,8 @@
       line-numbers = false;
     };
 
+    signing.format = null;
+
     includes = [
       {
         path = ./config;
