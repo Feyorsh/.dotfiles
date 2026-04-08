@@ -38,6 +38,7 @@
 [fetch]
     prune = true
     pruneTags = true
+    showForcedUpdates = false
 [commit]
     verbose = true
 [help]
