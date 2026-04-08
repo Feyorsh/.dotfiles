@@ -777,6 +777,46 @@ Oldest trick in the book! (Not really.)
       (if current-prefix-arg (call-interactively fn)
         (funcall-interactively fn "*gptel*" nil nil t))))
 #+end_src
+
+#+begin_src elisp
+(use-package agent-shell
+  :config
+  ;; TODO customize this to a semi-temp directory to avoid littering everywhere
+  ;; agent-shell--default-transcript-file-path
+  (setq agent-shell-thought-process-expand-by-default t)
+  :init
+  (defvar fysh/agent-shell-claude-chat-prompt
+    "You are a large language model living in Emacs and a helpful assistant. Respond concisely unless told otherwise.")
+  (defun fysh/agent-shell--replace-system-prompt-decorator (request)
+    (when (equal (map-elt request :method) "session/new")
+      (let* ((params (copy-tree (or (map-elt request :params) '())))
+             (meta (copy-tree (or (alist-get '_meta params) '()))))
+        (setf (alist-get 'systemPrompt meta) fysh/agent-shell-claude-chat-prompt)
+        (setf (alist-get 'claudeCode meta) '((options (env (CLAUDE_CODE_EFFORT_LEVEL . "low")))))
+        (setf (alist-get '_meta params) meta)
+        (map-put! request :params params)))
+    request)
+  (defun agent-shell-claude-chat (&optional arg)
+    (interactive "P")
+    (require 'agent-shell)
+    (cl-letf* ((orig (symbol-function #'agent-shell--start))
+              ((symbol-function #'agent-shell--start)
+               (lambda (&rest args)
+                 (let ((existing-decorator (plist-get args :outgoing-request-decorator)))
+                   (apply orig
+                          (plist-put args :outgoing-request-decorator
+                                     (if existing-decorator
+                                         (lambda (request)
+                                           (fysh/agent-shell--replace-system-prompt-decorator
+                                            (or (funcall existing-decorator request) request)))
+                                       #'fysh/agent-shell--replace-system-prompt-decorator)))))))
+      (cond
+        ((or (equal arg '(4)) (length= (agent-shell-buffers) 0))
+         (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :new-shell t))
+        (t
+         (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :switch-to-shell t))))))
+#+end_src
+
 **** TODO Other stuff
 At some point I need to lazy-load my entire config. Supposedly straight's ~defer:~ and eval-after-load could help with this.
 #+begin_src elisp
