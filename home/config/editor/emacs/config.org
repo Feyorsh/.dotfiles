@@ -2916,6 +2916,8 @@ For when I'm feeling /particularly/ evil...
 (use-package sh-script
   :hook ((sh-mode . flymake-mode)
          (after-save . executable-make-buffer-file-executable-if-script-p))
+  :config
+  (add-to-list 'sh-ancestor-alist '(nix . bash))
   :init
   (setq sh-shell-file (executable-find "bash")))
 #+end_src
