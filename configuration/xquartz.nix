@@ -2,7 +2,6 @@
 with lib;
 let
   cfg = config.services.xquartz;
-  xauth = pkgs.xorg.xauth;
 in {
   meta.maintainers = [ lib.maintainers.feyorsh or "feyorsh" ];
 
@@ -55,7 +54,7 @@ in {
           ];
         }).outPath;
         etc."ssh/ssh_config.d/70-xquartz.conf".text = ''
-          XAuthLocation ${xauth}/bin/xauth
+          XAuthLocation ${pkgs.xauth}/bin/xauth
         '';
     };
   };
