@@ -100,6 +100,46 @@
         RunAtLoad = true;
       };
     };
+    scirate-to-rss = {
+      enable = true;
+      config = let
+        feed-generator = with pkgs.python3Packages; buildPythonApplication {
+          pname = "scirate-atom-generator";
+          version = "0.0.1";
+          pyproject = true;
+          src = pkgs.fetchgit {
+            url = "https://gist.github.com/Feyorsh/641601ee9ca9769afd63fc3b0e413899";
+            rev = "a19afbb5ba5bb98d750cae01062b37dfc09b9fc7";
+            hash = "sha256-7ripZtAv6xOzLT9X5fmXFGK959txkw/ZQfkqevDvfcU=";
+          };
+          build-system = [
+            setuptools
+          ];
+          dependencies = [
+            beautifulsoup4
+            requests
+          ];
+          meta = {
+            description = "Scraper to convert personalized SciRate home page to an Atom feed";
+            license = lib.licenses.wtfpl;
+            mainProgram = "scirate-feed";
+          };
+        };
+      in {
+        ProgramArguments = [
+          "${lib.getExe pkgs.bash}"
+          "-c"
+          "mkdir -p /tmp/scirate-feed; ${lib.getExe feed-generator} > /tmp/scirate-feed/feed.xml 2>/tmp/scirate-feed/err.log"
+        ];
+        EnvironmentVariables = {
+          "XDG_CONFIG_HOME" = "/tmp";
+        };
+        StartCalendarInterval = [{
+          Hour = 9;
+          Minute = 0;
+        }];
+      };
+    };
   };
 
   programs.gpg = {
