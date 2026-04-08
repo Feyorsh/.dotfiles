@@ -44,7 +44,7 @@ in
       source-serif-pro
       sarasa-gothic
       libertinus
-      etBook
+      et-book
       atkinson-hyperlegible
       gentium-book
 
