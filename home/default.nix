@@ -60,6 +60,8 @@
       })
       typst
 
+      zotero
+
       adwaita-icon-theme
     ];
 
