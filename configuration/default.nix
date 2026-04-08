@@ -34,6 +34,8 @@ in
     ripgrep
     fd
     jq
+
+    openssh
   ];
 
   fonts = {
