@@ -13,6 +13,7 @@
     ./config/browser
     ./config/nix.nix
     ./config/backups.nix
+    ./config/ai.nix
   ];
 
   home = {
