@@ -3,6 +3,8 @@
   programs.fish = {
     enable = true;
     interactiveShellInit = ''
+      set -U fish_greeting
+
       set -g async_prompt_functions _pure_prompt_git
 
       set fish_cursor_default     block      blink
@@ -31,7 +33,7 @@
       cheat = "command cheat -c $argv | $PAGER";
       mkcd = "mkdir -p $argv && cd $argv";
       alert = "command $argv; afplay (random choice ~/Profile/Sounds/*) &";
-      dugb = "du -h -d 1 $argv | grep -P 'G\t'";
+      dugb = "du -h -d 1 $argv 2>/dev/null | grep -P 'G\t'";
     };
     plugins = [
       { name = "pure"; src = pkgs.fishPlugins.pure.src; }

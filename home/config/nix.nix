@@ -33,6 +33,7 @@
         end
       '';
     ",," = "string match -r '/nix/store/.*/' $PATH[1]";
+    ",,," = "open -na (,,)/Applications/*.app";
   };
 
   # (runCommand "nix-manuals" { nativeBuildInputs = [ docbook2x ]; } ''
