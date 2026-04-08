@@ -36,15 +36,6 @@
               '';
             });
           })
-          (final: prev: {
-            quartz-wm = prev.quartz-wm.overrideAttrs (prev': {
-              postPatch = ''
-                substituteInPlace lib/dock-support.h \
-                  --replace-fail '#include <ApplicationServices/ApplicationServices.h>' \
-                                 '#define Picture _Picture${"\n"}#include <ApplicationServices/ApplicationServices.h>${"\n"}#undef Picture'
-              '';
-            });
-          })
         ];
       };
     in
