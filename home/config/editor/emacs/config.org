@@ -630,7 +630,7 @@ Oldest trick in the book! (Not really.)
 	 "C-d" #'vertico-scroll-up)
     ('normal 'vertico-map
 	 "<escape>" #'abort-recursive-edit)
-    ('vertico-map
+    ('vertico-grid-map
 	 "C-h" #'vertico-grid-left
 	 "C-l" #'vertico-grid-right)
     ('insert 'vertico-map
