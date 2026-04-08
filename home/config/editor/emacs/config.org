@@ -722,7 +722,9 @@ Oldest trick in the book! (Not really.)
 
     (use-package cdlatex
         :hook ((cdlatex-tab . yas-expand)
-               (cdlatex-tab . cdlatex-in-yas-field)))
+               (cdlatex-tab . cdlatex-in-yas-field))
+        :config
+        (setq cdlatex-env-alist '(("equation*" "\\begin{equation*}\n?\n\\end{equation*}" nil))))
     (defun yas-next-field-or-cdlatex nil
       (interactive)
       "Jump to the next Yas field correctly with cdlatex active."
