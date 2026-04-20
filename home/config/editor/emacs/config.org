@@ -109,6 +109,10 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (setq frame-resize-pixelwise t)
     (setq auto-revert-verbose nil)
 
+    (setq-default cursor-in-non-selected-windows nil)
+
+    (setq window-combination-resize t)
+
     (setq use-file-dialog nil)
     (setq use-dialog-box nil)
     (defalias 'yes-or-no-p 'y-or-n-p)
@@ -121,6 +125,11 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (defvar subword-mode nil)
     ;; needed while libgccjit is broken in nixpkgs
     (defvar warning-suppress-types nil)
+
+    (setq-default bidi-display-reordering 'left-to-right
+                  bidi-paragraph-direction 'left-to-right)
+    (setq bidi-inhibit-bpa t)
+    (setq redisplay-skip-fontification-on-input t)
 
     ;; show tooltips on point hover, not just mouse hover
     (setq help-at-pt-display-when-idle t)
