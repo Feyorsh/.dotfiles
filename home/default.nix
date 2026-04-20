@@ -13,7 +13,7 @@
     ./config/browser
     ./config/nix.nix
     ./config/backups.nix
-    ./config/ai.nix
+    ./config/ai
   ];
 
   home = {
@@ -28,6 +28,8 @@
       (python314.withPackages(ps: with ps; [ ipython requests numpy pwntools ]))
       uv
       cargo
+
+      hyperfine
 
       alt-tab-macos
       monitorcontrol
