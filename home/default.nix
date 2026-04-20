@@ -144,6 +144,18 @@
         }];
       };
     };
+    elfeed-offline = {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "${lib.getExe' inputs.elfeed-offline.packages.${pkgs.stdenv.hostPlatform.system}.default "elfeed-offline"}"
+          "--no-auth"
+          "--cert" "/Users/${config.home.username}/.elfeed/ssl/server.pem"
+          "--key" "/Users/${config.home.username}/.elfeed/ssl/server.key"
+        ];
+        RunAtLoad = true;
+      };
+    };
   };
 
   programs.gpg = {

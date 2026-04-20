@@ -12,6 +12,8 @@
     mac-app-util.url = "github:hraban/mac-app-util";
 
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
+
+    elfeed-offline.url = "github:Feyorsh/elfeed-offline";
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
