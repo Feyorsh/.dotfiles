@@ -39,12 +39,10 @@ let
       name = "emacs";
       paths = [ final ];
       nativeBuildInputs = [ pkgs.makeWrapper ];
-      # incredibly cursed setup: this ensures emacsclient starts up the server if it isn't running (the path to emacs is important because of pathing) and that it doesn't create a new frame if run from within emacs.
+      # incredibly cursed setup: this ensures emacsclient starts up the server if it isn't running (the path to emacs is important because of pathing), suppresses output unless something is being evaled, and that it doesn't create a new frame if run from within emacs.
       postBuild = ''
-        # rm $out/Applications/Emacs.app/Contents/MacOS/Emacs
-        # makeWrapper $out/bin/emacsclient $out/Applications/Emacs.app/Contents/MacOS/Emacs --inherit-argv0 --add-flags "-c -a $out/Applications/Emacs.app/Contents/MacOS/.Emacs-wrapped"
         rm $out/bin/emacsclient
-        makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _t "-c" --add-flags "\"\''${_t/\''${INSIDE_EMACS:+*}/-u}\" -a $out/Applications/Emacs.app/Contents/MacOS/Emacs"
+        makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _c '-c' --add-flags ' ''${_c/''${INSIDE_EMACS:+*}/} ''${ [[ " $@ " != *" -e "* ]] && echo "-u"; } -a $out/Applications/Emacs.app/Contents/MacOS/Emacs'
 
         rm $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
         cp ${./emacs.icns} $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
