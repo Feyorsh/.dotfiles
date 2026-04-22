@@ -1,20 +1,23 @@
 { pkgs, ... }:
+let
+  caveman = pkgs.fetchFromGitHub {
+    owner = "JuliusBrussee";
+    repo = "caveman";
+    tag = "v1.2.0";
+    hash = "sha256-asJsuZEaWjDEML/u7L7icX1pP36K83hB3EKGZV6wfiE=";
+  };
+  emacs-skills = pkgs.fetchFromGitHub {
+    owner = "xenodium";
+    repo = "emacs-skills";
+    rev = "de7adccbc4aef5f4e1e7ebc7a487bdcd7f95509a";
+    hash = "sha256-ilgWnb3w+6mkeLwy5xkU5iX0NRbguur7iTLVqCu27TA=";
+  };
+in
 {
   programs.claude-code = {
     enable = true;
     marketplaces = {
-      emacs-skills = pkgs.fetchFromGitHub {
-        owner = "xenodium";
-        repo = "emacs-skills";
-        rev = "de7adccbc4aef5f4e1e7ebc7a487bdcd7f95509a";
-        hash = "sha256-ilgWnb3w+6mkeLwy5xkU5iX0NRbguur7iTLVqCu27TA=";
-      };
-      caveman = pkgs.fetchFromGitHub {
-        owner = "JuliusBrussee";
-        repo = "caveman";
-        tag = "v1.2.0";
-        hash = "sha256-asJsuZEaWjDEML/u7L7icX1pP36K83hB3EKGZV6wfiE=";
-      };
+      inherit caveman emacs-skills;
     };
     lspServers = {
       python = {
@@ -107,6 +110,40 @@
 
   programs.codex = {
     enable = true;
+    custom-instructions = builtins.readFile ./CLAUDE.md;
+    skills = "${pkgs.symlinkJoin {
+      name = "plugins";
+      paths = [ caveman emacs-skills ];
+    }}/skills";
+    rules = {
+      # deny
+      destructive = ''prefix_rule(pattern=[["rm", "dd", "mkfs", "shutdown", "reboot"]], decision="forbidden")'';
+      network = ''prefix_rule(pattern=[["curl", "ssh", "nc"]], decision="forbidden")'';
+      sudo = ''prefix_rule(pattern=[["sudo", "su"]], decision="forbidden")'';
+      # prompt
+      emacs = ''prefix_rule(pattern=[["emacs", "emacsclient"]], decision="prompt")'';
+      python = ''prefix_rule(pattern=[["python", "python3"]], decision="prompt")'';
+      zig-prompt = ''prefix_rule(pattern=["zig", ["run", "test"]], decision="prompt")'';
+      # allow
+      zig-allow = ''prefix_rule(pattern=["zig", ["build-exe", "build", "cc", "fmt"]], decision="allow")'';
+      nix = ''prefix_rule(pattern=["nix", ["develop", "shell", "build", "log", "fmt"]], decision="allow", match=["nix shell nixpkgs#hello", "nix build .#", "/nix/store/...-wine-wow64-staging-11.1.drv"], not_match=["nix develop nixpkgs#hello --command 'rm -rf /'", "nix shell .# -c 'python3 -c 'print(\"pwned\")'", "nix run nixpkgs#curl"])'';
+      git = ''prefix_rule(pattern=["git", ["status", "log", "diff", "show"]], decision="allow")'';
+      read = ''prefix_rule(pattern=[["cat", "ls", "grep", "rg", "fd"]], decision="allow", not_match=["cat ~/.ssh/id_ed25519", "rg '.*' ~/.gnupg/**", "ls ~/Mail", "grep '.*' ~/Library/**"])'';
+    };
+    settings = {
+      sandbox_mode = "workspace-write";
+      approval_policy = "unless-trusted";
+
+      show_raw_agent_reasoning = true;
+
+      features = {
+        codex_hooks = true;
+      };
+
+      analytics.enabled = false;
+      feedback.enabled = false;
+      history.persistence = "none"; # use agent-shell's instead
+    };
   };
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
