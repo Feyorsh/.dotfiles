@@ -4171,6 +4171,11 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
 (use-package mathjax
     :hook (eww-mode . mathjax-shr-setup))
 #+end_src
+#+begin_src elisp
+(use-package elpher
+  :config
+  (setq elpher-open-urls-with-eww t))
+#+end_src
 
 ** UI
 *** Early Init
