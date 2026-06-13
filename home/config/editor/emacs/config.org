@@ -1745,6 +1745,7 @@ mutt_oauth2.py --authorize --verbose --authflow devicecode
           (goto-char (prop-match-beginning match))
           (insert (propertize feed-title 'face 'message-header-other)))))
     :config
+    (elfeed-web-start)
     (use-package elfeed-org
         :demand t
         :config
