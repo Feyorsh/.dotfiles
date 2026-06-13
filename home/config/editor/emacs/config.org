@@ -3423,7 +3423,28 @@ I'd like to change the cursor blink behaviour.
 I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
 (use-package dired
+  :general-config
+  ('dired-mode-map "<tab>" #'dired-subtree-toggle)
+  :config
+  (use-package dired-collapse
+    :demand t
     :config
+    (global-dired-collapse-mode +1))
+  (use-package dired-preview
+    :config
+    (setq dired-preview-delay 0.7)
+    (setq dired-preview-max-size (expt 2 20))
+    (setq dired-preview-ignored-extensions-regexp (concat "\\."
+                                                          "\\(gz\\|"
+                                                          "zst\\|"
+                                                          "tar\\|"
+                                                          "xz\\|"
+                                                          "rar\\|"
+                                                          "zip\\|"
+                                                          "iso\\|"
+                                                          "epub"
+                                                          "\\)")))
+
   (setq dired-kill-when-opening-new-dired-buffer t
         dired-auto-revert-buffer t
         dired-recursive-copies 'always
