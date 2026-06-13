@@ -72,6 +72,7 @@
   };
   programs.home-manager.enable = true;
 
+  home.preferXdgDirectories = true;
   xdg.enable = true;
 
   fonts.fontconfig.enable = true;
