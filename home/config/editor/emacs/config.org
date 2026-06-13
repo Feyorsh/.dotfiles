@@ -2383,7 +2383,9 @@ Website stuff:
     :init
   (add-to-list 'safe-local-variable-values '(eval require 'ox-hugo))
   :config
+  (setq org-html-html5-fancy t)
   (add-to-list 'org-export-backends 'org)
+  (add-to-list 'org-hugo-external-file-extensions-allowed-for-copying "webp")
   (setq org-hugo-use-code-for-kbd t)
   (setq org-html-with-latex 'html)
   (setq org-latex-to-html-convert-command "latexmlmath '%i' --preload=physics 2>/dev/null")
