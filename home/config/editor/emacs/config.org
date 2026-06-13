@@ -3345,6 +3345,7 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
   :commands (sudo-find-file sudo-this-file)
   :init
   :config
+  (require 'tramp-rpc)
   (setq tramp-default-method "ssh")
   (setq tramp-auto-save-directory (expand-file-name "tramp-autosave" user-emacs-directory))
   (setq enable-remote-dir-locals t)

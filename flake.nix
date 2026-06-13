@@ -37,10 +37,10 @@
               ((super.emacsPackagesFor emacs).overrideScope (
                 _: esuper: {
                   tramp = esuper.tramp.overrideAttrs (_: rec {
-                    version = "2.8.1.3";
+                    version = "2.8.2";
                     src = pkgs.fetchurl {
                       url = "https://elpa.gnu.org/packages/tramp-${version}.tar";
-                      sha256 = "1jjbgg48q6dlfp9rpn0pla4mlclw60079d51bgnb84q3pv3zdqwj";
+                      hash = "sha256-FquL+QnjoTpLXQ3vFEF1VGE1kpt/HixDQpOhGUOcNbU=";
                     };
                   });
                 }
