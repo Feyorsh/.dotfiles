@@ -1,7 +1,5 @@
 { pkgs, lib, config, ... }:
 {
-  home.file.".nethackrc".source = ./nethackrc;
-
   home.packages = with pkgs; [
     (nethack.overrideAttrs(prev: {
       postPatch = (prev.postPatch or "") + ''
@@ -42,7 +40,4 @@
       RunAtLoad = true;
     };
   };
-
-
-  # programs.emacs.extraPackages = epkgs: (with epkgs; [ (pkgs.callPackage ./package.nix { inherit trivialBuild; }) ]);
 }
