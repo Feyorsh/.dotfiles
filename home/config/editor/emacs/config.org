@@ -3590,6 +3590,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     :config
     (setq ledger-copy-transaction-insert-blank-line-after t)
     :custom
+    (ledger-binary-path "hledger.sh")
     (ledger-reports
      '(("report1" "ledger [[ledger-mode-flags]] -f ~/Downloads/expenses.ledger reg Liabilities\\:Credit\\ Card\\:Personal -b 2023/02/09 -e 2023/03/09")
 	   ("monthly_expenses" "ledger -f ~/Downloads/expenses.ledger reg Expenses\\:Personal -b 2022/12/09 -e 2023/01/04 --real")
