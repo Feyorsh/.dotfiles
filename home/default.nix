@@ -24,6 +24,7 @@
       gimp2
       inkscape
       imagemagick
+      ffmpeg
 
       (python314.withPackages(ps: with ps; [ ipython requests numpy pwntools ]))
       uv
