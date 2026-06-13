@@ -1237,6 +1237,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (mu4e-view-mode . (lambda () (visual-line-mode 1)))
     (mu4e-compose-mode . turn-off-auto-fill)
     (mu4e-compose-mode . fysh/message-sign)
+    (message-send . fysh/confirm-different-reply-from-original-recipient)
     :general-config
     ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "gR" #'mu4e-update-mail-and-index)
@@ -1268,6 +1269,15 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (read-mail-command 'mu4e)
     (mml-secure-openpgp-sign-with-sender t)
     :config
+    (defun fysh/confirm-different-reply-from-original-recipient ()
+      "Require confirmation when replying from an address not on the original message."
+      (when-let* ((parent-msg mu4e-compose-parent-message)
+                  (sender-email (cadr (mail-extract-address-components (message-fetch-field "from"))))
+                  (recipient-emails (mapcar #'cadr (mapcan (lambda (f) (mu4e-message-field parent-msg f)) '(:to :cc :bcc)))))
+        (unless (member sender-email recipient-emails)
+          (unless (y-or-n-p (format "This message was not addressed to %s; Send anyway?" sender-email))
+            (user-error "Send aborted")))))
+
     (use-package org-msg
         :demand t
         :config
