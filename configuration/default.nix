@@ -178,7 +178,7 @@ in
   networking.computerName = "Opal";
   networking.applicationFirewall.enableStealthMode = true;
 
-  time.timeZone = "America/Chicago";
+  time.timeZone = "America/Los_Angeles";
 
   security.chmodbpf = {
     enable = true;
