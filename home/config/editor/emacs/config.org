@@ -3515,6 +3515,9 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
     (defun project-try-nix (dir)
       (if-let ((root (locate-dominating-file dir "flake.lock")))
           (cons 'transient root)))
+    (defun project-try-haskell (dir)
+      (if-let ((root (locate-dominating-file dir "stack.yaml")))
+          (cons 'transient root)))
     (defun project-vterm ()
       "Start Vterm in the current project's root."
       (interactive)
@@ -3543,7 +3546,8 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
     (add-to-list 'project-vc-extra-root-markers ".jj")
     (setq project-vc-merge-submodules nil)
     (setq project-find-functions '(project-try-vc
-                                   project-try-nix)))
+                                   project-try-nix
+                                   project-try-haskell)))
 #+end_src
 
 *** Tab Bar
@@ -3824,6 +3828,7 @@ Eglot!
            rust-ts-mode
            zig-mode
            typst-ts-mode
+           haskell-mode
            go-mode go-ts-mode
            c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
           . (lambda () (unless (or (not eglot-enabled)
