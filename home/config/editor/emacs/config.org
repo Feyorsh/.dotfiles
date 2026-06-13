@@ -751,79 +751,174 @@ Oldest trick in the book! (Not really.)
 **** LLMs
 #+begin_src elisp
 (use-package gptel
-    :general-config
-    ('gptel-mode-map "RET" #'gptel-send)
-    :config
-    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+  :general-config
+  ('gptel-mode-map "RET" #'gptel-send)
+  :config
+  (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
 
-    (setq gptel-default-mode 'org-mode)
-    (setq gptel-backend (gptel-make-openai "GitHub Models"
-                          :host "models.inference.ai.azure.com"
-                          :endpoint "/chat/completions"
-                          :stream t
-                          :key (lambda () (gptel-api-key-from-auth-source "gptel:github-models"))
-                          :models '(gpt-4o
-                                    gpt-4o-mini
-                                    gpt-4.1
-                                    gpt-4.1-mini
-                                    meta-llama-3.1-405b-instruct
-                                    llama-3.2-90B-vision-instruct
-                                    DeepSeek-R1)))
-    (setq gptel-model 'gpt-4.1)
-    (setq gptel-expert-commands t)
-    (setq gptel-display-buffer-action
-		  `(,(lambda (buffer &optional action norecord)
-			(let ((window (get-window-with-predicate
-						   (lambda (window) (buffer-local-value 'gptel-mode (window-buffer window))))))
-			  (if window
-				  (progn
-					(select-window window norecord)
-					(switch-to-buffer buffer nil))
-				(pop-to-buffer-same-window buffer norecord))))))
+  (setq gptel-default-mode 'org-mode)
+  (setq gptel-backend (gptel-make-openai "GitHub Models"
+                        :host "models.inference.ai.azure.com"
+                        :endpoint "/chat/completions"
+                        :stream t
+                        :key (lambda () (gptel-api-key-from-auth-source "gptel:github-models"))
+                        :models '(gpt-4o
+                                  gpt-4o-mini
+                                  gpt-4.1
+                                  gpt-4.1-mini
+                                  meta-llama-3.1-405b-instruct
+                                  llama-3.2-90B-vision-instruct
+                                  DeepSeek-R1)))
+  (setq gptel-model 'gpt-4.1)
+  (setq gptel-expert-commands t)
+  (setq gptel-display-buffer-action
+		`(,(lambda (buffer &optional action norecord)
+			 (let ((window (get-window-with-predicate
+						    (lambda (window) (buffer-local-value 'gptel-mode (window-buffer window))))))
+			   (if window
+				   (progn
+					 (select-window window norecord)
+					 (switch-to-buffer buffer nil))
+				 (pop-to-buffer-same-window buffer norecord))))))
 
-    (define-advice gptel (:around (fn &rest args) buffer-name)
-      (interactive)
-      (if current-prefix-arg (call-interactively fn)
-        (funcall-interactively fn "*gptel*" nil nil t))))
+  (define-advice gptel (:around (fn &rest args) buffer-name)
+    (interactive)
+    (if current-prefix-arg (call-interactively fn)
+      (funcall-interactively fn "*gptel*" nil nil t))))
 #+end_src
 
 #+begin_src elisp
 (use-package agent-shell
-  :config
-  ;; TODO customize this to a semi-temp directory to avoid littering everywhere
-  ;; agent-shell--default-transcript-file-path
-  (setq agent-shell-thought-process-expand-by-default t)
-  :init
-  (defvar fysh/agent-shell-claude-chat-prompt
-    "You are a large language model living in Emacs and a helpful assistant. Respond concisely unless told otherwise.")
-  (defun fysh/agent-shell--replace-system-prompt-decorator (request)
-    (when (equal (map-elt request :method) "session/new")
-      (let* ((params (copy-tree (or (map-elt request :params) '())))
-             (meta (copy-tree (or (alist-get '_meta params) '()))))
-        (setf (alist-get 'systemPrompt meta) fysh/agent-shell-claude-chat-prompt)
-        (setf (alist-get 'claudeCode meta) '((options (env (CLAUDE_CODE_EFFORT_LEVEL . "low")))))
-        (setf (alist-get '_meta params) meta)
-        (map-put! request :params params)))
-    request)
-  (defun agent-shell-claude-chat (&optional arg)
-    (interactive "P")
-    (require 'agent-shell)
-    (cl-letf* ((orig (symbol-function #'agent-shell--start))
-              ((symbol-function #'agent-shell--start)
-               (lambda (&rest args)
-                 (let ((existing-decorator (plist-get args :outgoing-request-decorator)))
-                   (apply orig
-                          (plist-put args :outgoing-request-decorator
-                                     (if existing-decorator
-                                         (lambda (request)
-                                           (fysh/agent-shell--replace-system-prompt-decorator
-                                            (or (funcall existing-decorator request) request)))
-                                       #'fysh/agent-shell--replace-system-prompt-decorator)))))))
-      (cond
-        ((or (equal arg '(4)) (length= (agent-shell-buffers) 0))
-         (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :new-shell t))
-        (t
-         (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :switch-to-shell t))))))
+    :commands (fysh/agent-shell-claude-chat-menu fysh/agent-shell--start-chat)
+    :hook (agent-shell-mode . (lambda () (dolist (ev '(permission-request turn-complete))
+                                           (let ((buf (current-buffer)))
+                                           (agent-shell-subscribe-to
+                                            :shell-buffer buf
+                                            :event ev
+                                            :on-event
+                                            `(lambda (event)
+                                                (unless (get-buffer-window ,buf)
+                                                  (fysh/notif-notification (symbol-name (quote ,ev)) "agent-shell" (map-elt (agent-shell-get-config ,buf) :buffer-name) "Glass")
+                                                  )))))))
+    :init
+    (defun agent-shell-claude-chat (&optional arg)
+      (interactive "P")
+      (require 'agent-shell)
+      (if (equal arg '(4))
+          (transient-setup 'fysh/agent-shell-claude-chat-menu)
+        (fysh/agent-shell--start-chat
+         :new-shell (length= (agent-shell-buffers) 0))))
+    :config
+    (setq agent-shell-preferred-agent-config 'codex)
+    (setq agent-shell-openai-default-model-id "gpt-5.5/low")
+    (setq agent-shell-openai-codex-environment (agent-shell-make-environment-variables "INSIDE_EMACS" "codex"
+                                                                                       "CODEX_HOME" (expand-file-name "~/.config/codex/")))
+    (setq agent-shell-pi-environment (agent-shell-make-environment-variables "PI_ACP_ENABLE_EMBEDDED_CONTEXT" "true"))
+
+    (require 'transient)
+    (setq agent-shell-thought-process-expand-by-default t)
+    (setq agent-shell-dot-subdir-function
+          (lambda (subdir)
+            (expand-file-name (file-name-concat "agent-shell" (string-replace "/" "-" (agent-shell-cwd)) subdir) user-emacs-directory)))
+
+    (defconst fysh/agent-shell-claude-chat-directives
+      '((chat . "You are a large language model living in Emacs and a helpful assistant. Respond concisely unless instructed otherwise.")
+        (writing . "You are a large language model and a writing assistant. Respond concisely unless instructed otherwise.")))
+    (defcustom fysh/agent-shell-claude-chat-directive 'chat
+      "System prompt for agent-shell-claude-chat."
+      :type '(choice chat writing)
+      :group 'agent-shell-claude-chat)
+    (defcustom fysh/agent-shell-claude-chat-effort "low"
+      "Effort level for agent-shell-claude-chat."
+      :type '(choice (const "low") (const "medium") (const "high") (const "max"))
+      :group 'agent-shell-claude-chat)
+    (defcustom fysh/agent-shell-claude-chat-model "sonnet"
+      "Model to use for agent-shell-claude-chat."
+      :type '(choice (const "sonnet") (const "opus-4.6") (const "opusplan") (const "haiku"))
+      :group 'agent-shell-claude-chat)
+    (defvar fysh/agent-shell-claude-chat-cwd nil)
+
+    (defun fysh/agent-shell--replace-init-args-decorator (request)
+      (when (equal (map-elt request :method) "session/new")
+        (let* ((params (copy-tree (or (map-elt request :params) '())))
+               (meta (copy-tree (or (alist-get '_meta params) '()))))
+          (when-let ((prompt (alist-get fysh/agent-shell-claude-chat-directive fysh/agent-shell-claude-chat-directives)))
+            (setf (alist-get 'systemPrompt meta) prompt))
+          (setf (alist-get 'claudeCode meta) `((options (env (INSIDE_EMACS . "claude")
+                                                             (CLAUDE_CODE_EFFORT_LEVEL . ,fysh/agent-shell-claude-chat-effort)))))
+          (setf (alist-get '_meta params) meta)
+          (map-put! request :params params)))
+      request)
+
+    (cl-defun fysh/agent-shell--start-chat (&key new-shell)
+      "Start agent-shell-claude-chat, respecting fysh/agent-shell-claude-chat-* vars."
+      (let ((default-directory (or fysh/agent-shell-claude-chat-cwd default-directory))
+            (agent-shell-anthropic-default-model-id fysh/agent-shell-claude-chat-model))
+        (unwind-protect
+             (cl-letf* ((orig (symbol-function #'agent-shell--start))
+                        ((symbol-function #'agent-shell--start)
+                         (lambda (&rest args)
+                           (let ((existing-decorator (plist-get args :outgoing-request-decorator)))
+                             (apply orig
+                                    (plist-put args :outgoing-request-decorator
+                                               (if existing-decorator
+                                                   (lambda (request)
+                                                     (fysh/agent-shell--replace-init-args-decorator
+                                                      (or (funcall existing-decorator request) request)))
+                                                 #'fysh/agent-shell--replace-init-args-decorator)))))))
+               (if new-shell
+                   (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :new-shell t)
+                 (agent-shell--dwim :config (agent-shell-anthropic-make-claude-code-config) :switch-to-shell t))))))
+
+
+    (transient-define-infix fysh/agent-shell--infix-directive ()
+      :description "System prompt"
+      :class 'transient-lisp-variable
+      :variable 'fysh/agent-shell-claude-chat-directive
+      :reader (lambda (prompt _ _)
+                (let* ((completion-extra-properties
+                        (list :annotation-function
+                              (lambda (c)
+                                (funcall #'format #("%s  %s" 4 5 (face font-lock-comment-face))
+                                         (make-string (- (apply #'max (mapcar (lambda (e) (length (symbol-name (car e)))) fysh/agent-shell-claude-chat-directives)) (length c)) ? )
+                                         (cdr (assoc (intern c) fysh/agent-shell-claude-chat-directives))))))
+                       (choice (completing-read prompt fysh/agent-shell-claude-chat-directives nil t)))
+                  (unless (string-empty-p choice) (intern choice)))))
+
+    (transient-define-infix fysh/agent-shell--infix-effort ()
+      :description "Effort level"
+      :class 'transient-lisp-variable
+      :variable 'fysh/agent-shell-claude-chat-effort
+      :reader (lambda (prompt _ _)
+                (let ((choice (downcase (completing-read prompt '("Low" "Medium" "High" "Max") nil t))))
+                  (unless (string-empty-p choice) choice))))
+
+    (transient-define-infix fysh/agent-shell--infix-model ()
+      :description "Model"
+      :class 'transient-lisp-variable
+      :variable 'fysh/agent-shell-claude-chat-model
+      :reader (lambda (prompt _ _)
+                (let ((choice (string-replace " " "" (downcase (completing-read prompt '("Opus-4.6" "Opus plan" "Sonnet" "Haiku") nil t)))))
+                  (unless (string-empty-p choice) choice))))
+
+    (transient-define-infix fysh/agent-shell--infix-cwd ()
+      :description "Working directory"
+      :class 'transient-lisp-variable
+      :variable 'fysh/agent-shell-claude-chat-cwd
+      :reader #'transient-read-existing-directory)
+
+    (transient-define-prefix fysh/agent-shell-claude-chat-menu ()
+      "Configure and launch an agent-shell Claude chat session."
+      ["Parameters"
+       ("s" fysh/agent-shell--infix-directive)
+       ("e" fysh/agent-shell--infix-effort)
+       ("m" fysh/agent-shell--infix-model)
+       ("d" fysh/agent-shell--infix-cwd)]
+      ["Actions"
+       ("RET" "New shell" (lambda () (interactive) (fysh/agent-shell--start-chat :new-shell t)))]
+      (interactive)
+      (setq fysh/agent-shell-claude-chat-cwd nil)
+      (transient-setup 'fysh/agent-shell-claude-chat-menu)))
 #+end_src
 
 **** TODO Other stuff
