@@ -2181,6 +2181,15 @@ This isn't /strictly/ IRC related, but...
 #+end_src
 
 ** Language
+Formatting
+#+begin_src elisp
+(use-package apheleia
+  :init
+  (apheleia-global-mode +1)
+  :custom
+  (apheleia-inhibit-functions (list (lambda () (require 'magit) (when (magit-toplevel) (or (length> (magit-list-remotes) 1) (not (string-match-p "Feyorsh" (or (magit-get "remote" (magit-get-remote) "url") "")))))))))
+#+end_src
+
 *** TODO Org
 Need to stop loading my Org files on startup...
 #+begin_src elisp :noweb-ref org-async-init
