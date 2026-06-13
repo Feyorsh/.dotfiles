@@ -3,6 +3,7 @@
   home.packages = with pkgs; [
     man-pages
     gcc.info
+    binutils.info
   ];
 
   manual.manpages.enable = false;
