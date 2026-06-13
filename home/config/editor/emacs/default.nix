@@ -42,7 +42,7 @@ let
       # incredibly cursed setup: this ensures emacsclient starts up the server if it isn't running (the path to emacs is important because of pathing), suppresses output unless something is being evaled, and that it doesn't create a new frame if run from within emacs.
       postBuild = ''
         rm $out/bin/emacsclient
-        makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _c '-c' --add-flags ' ''${_c/''${INSIDE_EMACS:+*}/} ''${ [[ " $@ " != *" -e "* ]] && echo "-u"; } -a $out/Applications/Emacs.app/Contents/MacOS/Emacs'
+        makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _c '-c' --add-flags ' ''${_c/''${INSIDE_EMACS:+*}/} ''${ [[ " $@ " != *" -e "* && " $@ " != *" --eval "* ]] && echo "-u"; } -a $out/Applications/Emacs.app/Contents/MacOS/Emacs'
 
         rm $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
         cp ${./emacs.icns} $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
