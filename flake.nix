@@ -14,6 +14,7 @@
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
 
     elfeed-offline.url = "github:Feyorsh/elfeed-offline";
+    emacs-tramp-rpc.url = "github:Feyorsh/emacs-tramp-rpc";
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
@@ -28,6 +29,23 @@
         };
         overlays = [
           fyshpkgs.overlay.${system}
+
+          inputs.emacs-tramp-rpc.overlays.default
+          (self: super: {
+            emacsPackagesFor =
+              emacs:
+              ((super.emacsPackagesFor emacs).overrideScope (
+                _: esuper: {
+                  tramp = esuper.tramp.overrideAttrs (_: rec {
+                    version = "2.8.1.3";
+                    src = pkgs.fetchurl {
+                      url = "https://elpa.gnu.org/packages/tramp-${version}.tar";
+                      sha256 = "1jjbgg48q6dlfp9rpn0pla4mlclw60079d51bgnb84q3pv3zdqwj";
+                    };
+                  });
+                }
+              ));
+          })
 
           (final: prev: {
             spotify = prev.spotify.overrideAttrs (prev': {
