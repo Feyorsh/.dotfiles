@@ -979,6 +979,14 @@ Make sure to make your GPG key discoverable; I also publish mine on my website.
 #+begin_src shell :eval no
 gpg --export <identity> | curl -T - https://keys.openpgp.org
 #+end_src
+Extending key expiration date (works with keys that have already expired):
+#+begin_src shell :eval no
+gpg --quick-set-expire <fingerprint> 1y
+gpg --quick-set-expire <fingerprint> 1y '*' # for subkeys, both commands required
+gpg --keyserver keys.openpgp.org --send-keys <key id>
+# to verify, download key from keyserver and run
+gpg --import-options show-only --import *.asc
+#+end_src
 
 **** Midnight-mode (cron)
 Midnight-mode suffers from a (likely longstanding) bug making it non-idempotent (it runs at eval-time, not just "midnight").
