@@ -113,6 +113,8 @@ Forgot where I sourced all this, but basically take a rather conservative approa
 
     (setq window-combination-resize t)
 
+    (put 'list-timers 'disabled nil)
+
     (setq use-file-dialog nil)
     (setq use-dialog-box nil)
     (defalias 'yes-or-no-p 'y-or-n-p)
@@ -3838,6 +3840,7 @@ Eglot!
                                    (file-remote-p default-directory))
                          (eglot-ensure)))))
   :init
+  (setq read-process-output-max (* 4 1024 1024))
   (setq-default eglot-enabled t) ;; opt-in to use eglot
   (add-to-list 'safe-local-variable-values '(eglot-server-programs . (((c-mode c-ts-mode c++-mode c++-ts-mode) . ("ctags-lsp")))))
   :config
