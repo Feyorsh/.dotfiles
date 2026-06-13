@@ -1,10 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    tag = "v1.2.0";
-    hash = "sha256-asJsuZEaWjDEML/u7L7icX1pP36K83hB3EKGZV6wfiE=";
+    tag = "v1.6.0";
+    hash = "sha256-m7HhCW4fXU5pIYRWVP6cvSYUkDHt8R90D9UI3tT7euk=";
   };
   emacs-skills = pkgs.fetchFromGitHub {
     owner = "xenodium";
@@ -26,50 +26,74 @@ in
           "--stdio"
         ];
         command = "basedpyright-langserver";
-        extensionToLanguage = { ".py" = "python"; };
+        extensionToLanguage = {
+          ".py" = "python";
+        };
       };
       go = {
         package = pkgs.gopls;
         args = [ "serve" ];
         command = "gopls";
-        extensionToLanguage = { ".go" = "go"; };
+        extensionToLanguage = {
+          ".go" = "go";
+        };
       };
       rust = {
         package = pkgs.rust-analyzer;
         command = "rust-analyzer";
-        extensionToLanguage = { ".rs" = "rust"; };
+        extensionToLanguage = {
+          ".rs" = "rust";
+        };
       };
       cxx = {
         package = pkgs.clang-tools;
         args = [ "--stdio" ];
         command = "clangd";
-        extensionToLanguage = { ".c" = "c"; ".h" = "c"; ".hpp" = "c++"; ".cpp" = "c++"; ".cxx" = "c++"; ".hxx" = "c++"; ".cc" = "c++"; };
+        extensionToLanguage = {
+          ".c" = "c";
+          ".h" = "c";
+          ".hpp" = "c++";
+          ".cpp" = "c++";
+          ".cxx" = "c++";
+          ".hxx" = "c++";
+          ".cc" = "c++";
+        };
       };
       zig = {
         package = pkgs.zls;
         command = "zls";
-        extensionToLanguage = { ".zig" = "zig"; };
+        extensionToLanguage = {
+          ".zig" = "zig";
+        };
       };
       typst = {
         package = pkgs.tinymist;
         command = "tinymist";
-        extensionToLanguage = { ".typ" = "typst"; };
+        extensionToLanguage = {
+          ".typ" = "typst";
+        };
       };
       nix = {
         package = pkgs.nixd;
         command = "nixd";
-        extensionToLanguage = { ".nix" = "nix"; };
+        extensionToLanguage = {
+          ".nix" = "nix";
+        };
       };
     };
     settings = {
       hooks = {
-        SessionStart = [{
-          matcher = "startup";
-          hooks = [{
-            command = "echo 'caveman mode'";
-            type = "command";
-          }];
-        }];
+        SessionStart = [
+          {
+            matcher = "startup";
+            hooks = [
+              {
+                command = "echo 'caveman mode'";
+                type = "command";
+              }
+            ];
+          }
+        ];
       };
       enabledPlugins = {
         "emacs-skills@emacs-skills" = true;
@@ -110,11 +134,26 @@ in
 
   programs.codex = {
     enable = true;
+
     custom-instructions = builtins.readFile ./CLAUDE.md;
-    skills = "${pkgs.symlinkJoin {
-      name = "plugins";
-      paths = [ caveman emacs-skills ];
-    }}/skills";
+
+    # hack to workaround this option requiring an overly restrictive filesystem.path type
+    skills =
+      let
+        skillsDir = "${
+          pkgs.symlinkJoin {
+            name = "codex-plugins";
+            paths = [
+              caveman
+              emacs-skills
+            ];
+          }
+        }/skills";
+      in
+      lib.mapAttrs (name: _: builtins.readFile (skillsDir + "/${name}/SKILL.md")) (
+        builtins.readDir skillsDir
+      );
+
     rules = {
       # deny
       destructive = ''prefix_rule(pattern=[["rm", "dd", "mkfs", "shutdown", "reboot"]], decision="forbidden")'';
@@ -132,8 +171,10 @@ in
     };
     settings = {
       sandbox_mode = "workspace-write";
-      approval_policy = "unless-trusted";
+      approval_policy = "untrusted";
 
+      model_reasoning_summary = "detailed";
+      hide_agent_reasoning = false;
       show_raw_agent_reasoning = true;
 
       features = {
@@ -142,14 +183,77 @@ in
 
       analytics.enabled = false;
       feedback.enabled = false;
-      history.persistence = "none"; # use agent-shell's instead
+      # history.persistence = "none"; # agent-shell does not support resuming from transcript
     };
   };
 
-  programs.emacs.extraPackages = epkgs: (with epkgs; [
-    gptel gptel-agent
-    agent-shell
+  programs.emacs.extraPackages =
+    epkgs:
+    (with epkgs; [
+      gptel
+      gptel-agent
+      agent-shell
 
-    pkgs.claude-agent-acp pkgs.codex-acp
-  ]);
+      pkgs.claude-agent-acp
+      pkgs.codex-acp
+      (pkgs.callPackage ./pi-coding-agent.nix { })
+      (pkgs.callPackage ./pi-acp.nix { })
+    ]);
+
+  home.file.".pi/agent/models.json".text = builtins.toJSON {
+    providers."llama-cpp" = {
+      baseUrl = "http://vermillion:16111/v1";
+      api = "openai-completions";
+      apiKey = "none";
+      models = [
+        { id = "Qwen3.6-35B-A3B"; }
+        { id = "Qwen3.5-9B"; }
+      ];
+    };
+  };
+  home.file.".pi/agent/settings.json".text = builtins.toJSON {
+    compaction.enabled = true;
+    defaultProvider = "llama-cpp";
+    defaultModel = "Qwen3.6-35B-A3B";
+  };
+  home.file.".pi/agent/extensions/sandbox.json".text = builtins.toJSON {
+    enabled = true;
+    network = {
+      allowedDomains = [ ];
+    };
+    filesystem = {
+      denyRead = [
+        "~/Library"
+        "~/Mail"
+        "~/Personal/Finance"
+        "~/Personal/paperwork"
+        "~/.ssh"
+        "~/.gnupg"
+        "~/.password-store"
+        "~/.restic"
+      ];
+    };
+  };
+
+  home.file.".pi/agent/extensions/sandbox" = {
+    recursive = true;
+    source = pkgs.buildNpmPackage {
+      name = "pi-extension-sandbox";
+      src = pkgs.fetchFromGitHub {
+        owner = "badlogic";
+        repo = "pi-mono";
+        tag = "v0.67.68";
+        hash = "sha256-JNeLyRV62nI0QBcZEjb0/xfmD+SUBKYYQ4BhGrfzbGI=";
+        rootDir = "packages/coding-agent/examples/extensions/sandbox";
+      };
+
+      npmDepsHash = "sha256-eJbT63DS557JrRE/dLLVITtZIHYsCxlowRJHIkSGKTc=";
+
+      postInstall = ''
+        mv $out/lib/node_modules/pi-extension-sandbox _out
+        rm -rf $out
+        mv _out $out
+      '';
+    };
+  };
 }
