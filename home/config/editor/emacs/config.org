@@ -943,6 +943,19 @@ At some point I need to lazy-load my entire config. Supposedly straight's ~defer
               (file-remote-p fp)
             nil))))
 
+(use-package consult-dir
+  :after vertico
+  :general-config
+  ('embark-file-map
+   "S" #'sudo-find-file)
+  :general
+  ('global "C-x C-d" #'consult-dir)
+  ('vertico-map
+   "C-x C-d" #'consult-dir
+   "C-x C-j" #'consult-dir-jump-file)
+  :config
+  (add-to-list 'consult-dir-sources 'consult-dir--source-tramp-ssh t))
+
 (use-package marginalia
     :general-config
   (:keymaps 'minibuffer-local-map "M-a" #'marginalia-cycle)
@@ -1024,11 +1037,6 @@ targets."
       (apply fn args)))
 
   (advice-add #'embark-completing-read-prompter :around #'embark-hide-which-key-indicator))
-
-
-(use-package embark-consult
-    :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 ** Apps
@@ -1135,7 +1143,7 @@ This is fixed in [[https://mail.gnu.org/archive/html/bug-gnu-emacs/2024-09/msg01
                               :sort t
                               :interactive consult-omni-intereactive-commands-type
                               :annotate nil)
-  (setq consult-omni-multi-sources '("calc" "fd" "man" "Dictionary" "gptel-nopreview" "Wikipedia" "Apps"))
+  (setq consult-omni-multi-sources '("fd" "gptel-nopreview" "Wikipedia" "Apps"))
   (setq consult-omni-local-sources '("calc" "fd" "ripgrep" "man" "Dictionary" "Apps"))
   (consult-omni-sources-load-modules)
 
