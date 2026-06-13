@@ -3725,19 +3725,21 @@ pass add Feyorsh^forge@api.github.com
 
 #+begin_src elisp
 (use-package consult-gh
-  :config
+  :init
   (use-package consult-gh-transient
-    :demand t)
+    :commands (consult-gh-transient))
+  :config
   (use-package consult-gh-embark
     :demand t
     :config (consult-gh-embark-mode +1))
   ;; doesn't really work unfortunately
-  ;; (use-package consult-gh-forge
-  ;;   :demand t
-  ;;   :config
-  ;;   (require 'magit)
-  ;;   (require 'forge)
-  ;;   (consult-gh-forge-mode +1))
+  ;; let's give it another shot!
+  (use-package consult-gh-forge
+    :demand t
+    :config
+    (require 'magit)
+    (require 'forge)
+    (consult-gh-forge-mode +1))
   (setq consult-gh-default-interactive-command #'consult-gh-transient)
   (setq consult-gh-confirm-before-clone nil)
   (setq consult-gh-default-clone-directory "~/Personal/oss")
