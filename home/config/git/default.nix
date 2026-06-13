@@ -25,7 +25,12 @@
     ];
   };
 
-  programs.gh.enable = true;
+  programs.gh = {
+    enable = true;
+    settings = {
+      telemetry = "disabled";
+    };
+  };
   programs.difftastic.enable = true;
 
   home.packages = with pkgs; [
