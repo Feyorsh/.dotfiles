@@ -2380,6 +2380,35 @@ Now for Babel:
       (mapc (lambda (s) (add-to-list 'org-src-block-faces '(s (:background "#000000" :extend t)))) (append org-babel-shell-names '("shell")))))
 #+end_src
 
+Citing stuff:
+# #+begin_src elisp :noweb-ref org-async-init
+#+begin_src elisp
+(use-package oc
+  :custom
+  (org-cite-csl-styles-dir (expand-file-name "~/Zotero/styles"))
+  (org-cite-global-bibliography `(,(expand-file-name "~/Zotero/library.bib"))))
+
+(use-package citar
+  :general
+  (:keymaps 'org-mode-map
+            :prefix "C-c b"
+            "b" '(citar-insert-citation :wk "Insert citation")
+            "r" '(citar-insert-reference :wk "Insert reference")
+            "o" '(citar-open-notes :wk "Open note"))
+  :custom
+  ;; redefined here to avoid pulling org-roam into org-export-async-init.el
+  (citar-notes-paths '("~/Personal/org/roam"))
+  (citar-open-note-function 'org-citar-edit-note)
+  (citar-at-point-function 'embark-act))
+
+(use-package citar-org
+  :after oc
+  :custom
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar))
+#+end_src
+
 Website stuff:
 #+begin_src elisp :noweb-ref org-async-init
 (use-package ox-hugo
@@ -2726,6 +2755,11 @@ Taken from Doom Emacs."
     ;;                                   (?t "\\text" nil t nil nil)))
     :general-config
 	('org-cdlatex-mode-map "<tab>" #'cdlatex-tab))
+
+(use-package bibtex
+  :hook (bibtex-mode . (lambda () (setq-local fill-column 9999)))
+  :config
+  (setq bibtex-align-at-equal-sign t))
 #+end_src
 Adding Koma Script ~article~ class to org mode:
 #+begin_src elisp :noweb-ref org-async-init
