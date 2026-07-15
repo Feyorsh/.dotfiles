@@ -434,6 +434,7 @@ Rebind builtin bindings
 	:general-config
 	('motion "RET" nil)
 	('motion 'override "J" #'evil-scroll-down)
+	('motion 'override "gg" #'evil-goto-first-line)
 	('normal "J" nil)
 	('motion 'override "K" #'evil-scroll-up)
 	('motion 'override "H" #'evil-first-non-blank)
@@ -1318,7 +1319,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
 
 			  :vars `((user-full-name . "George Huebner")
 					  (user-mail-address . "george@feyor.sh")
-                      (message-alternative-emails . ,(regexp-opt '("ghubs25@gmail.com")))
+                      (message-alternative-emails . ,(regexp-opt '("ghubs25@gmail.com" "george@sighacks.net")))
 					  (mu4e-index-cleanup nil)
 					  (mu4e-index-lazy-check t)
 					  (mu4e-sent-messages-behavior . delete)
@@ -1904,7 +1905,7 @@ A shame the author passed away.
 Nethack as God intended: in ~lisp~ mode.
 #+begin_src elisp
 (use-package nethack
-  :load-path (expand-file-name "~/Personal/oss/nethack-el/")
+  :load-path "~/Personal/oss/nethack-el/"
   :commands (nethack)
   :custom
   (nethack-mono-font-family "JetBrainsMono Nerd Font")
@@ -2187,7 +2188,7 @@ Formatting
   :init
   (apheleia-global-mode +1)
   :custom
-  (apheleia-inhibit-functions (list (lambda () (require 'magit) (when (magit-toplevel) (or (length> (magit-list-remotes) 1) (not (string-match-p "Feyorsh" (or (magit-get "remote" (magit-get-remote) "url") "")))))))))
+  (apheleia-inhibit-functions (list (lambda () (require 'magit) (when (and (derived-mode-p #'prog-mode) (magit-toplevel)) (or (length> (magit-list-remotes) 1) (not (string-match-p "Feyorsh" (or (magit-get "remote" (magit-get-remote) "url") "")))))))))
 #+end_src
 
 *** TODO Org
@@ -3296,6 +3297,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     (setq vterm-max-scrollback 5000)
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
+    (add-to-list 'vterm-tramp-shells '("rpc" login-shell))
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
 
@@ -3562,7 +3564,9 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
       (if-let ((root (locate-dominating-file dir "flake.lock")))
           (cons 'transient root)))
     (defun project-try-haskell (dir)
-      (if-let ((root (locate-dominating-file dir "stack.yaml")))
+      (when-let ((root (locate-dominating-file
+                        dir
+                        (lambda (d) (directory-files d nil "\\(stack\\.yaml\\|cabal\\.project\\|\\.cabal\\)\\'" t)))))
           (cons 'transient root)))
     (defun project-vterm ()
       "Start Vterm in the current project's root."
@@ -3591,9 +3595,9 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
 
     (add-to-list 'project-vc-extra-root-markers ".jj")
     (setq project-vc-merge-submodules nil)
-    (setq project-find-functions '(project-try-vc
+    (setq project-find-functions '(project-try-haskell
                                    project-try-nix
-                                   project-try-haskell)))
+                                   project-try-vc)))
 #+end_src
 
 *** Tab Bar
@@ -3664,6 +3668,7 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
     "g c" #'magit-clone
     "g ." #'magit-file-dispatch
     )
+  :general-config
   ('magit-blob-mode-map
    "n" nil
    "C-n" #'magit-blob-next
@@ -3905,6 +3910,7 @@ Eglot!
   (add-to-list 'eglot-server-programs '((swift-mode) . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
   (add-to-list 'eglot-server-programs '((typst-ts-mode) . ("tinymist")))
+  (add-to-list 'eglot-server-programs '((haskell-mode haskell-cabal-mode) . ("haskell-language-server-wrapper" "--lsp")))
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0
@@ -4213,7 +4219,7 @@ EWW is useful for opening PDFs in PDFView, but Webkit is significantly better, e
                                                          ((string-match-p "/abs/" url) (eww-browse-url (string-replace "/abs/" "/pdf/" url) args))
                                                          (t (browse-url-default-browser url args)))))
 							    ("\\.pdf" . eww-browse-url)
-							    ("/nix/store/.*" . (lambda (url &rest _) (nix-store-show-path (string-remove-prefix "http://" url))))
+							    ("/nix/store/[^/]*/?$" . (lambda (url &rest _) (nix-store-show-path (string-remove-prefix "http://" url))))
 							    ("." . xwidget-webkit-browse-url)))
     (define-advice xwidget-kill-buffer-query-function (:override () always-kill) t))
 #+end_src

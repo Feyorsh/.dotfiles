@@ -60,274 +60,404 @@ in
   programs.emacs = {
     enable = false; # intentional
     package = emacs';
-    extraPackages = epkgs: (with epkgs; [
-      erc erc-hl-nicks
-      insert-kaomoji
-      (ement.override {
-        taxy-magit-section = taxy-magit-section.overrideAttrs(prev: {
-          patches = (prev.patches or []) ++ [ ./patches/taxy-framep.patch ];
-          patchPhase = ''
-            runHook prePatch
-            mkdir tmp-untar-dir
-            pushd tmp-untar-dir
+    extraPackages =
+      epkgs:
+      (
+        with epkgs;
+        [
+          erc
+          erc-hl-nicks
+          insert-kaomoji
+          (ement.override {
+            taxy-magit-section = taxy-magit-section.overrideAttrs (prev: {
+              patches = (prev.patches or [ ]) ++ [ ./patches/taxy-framep.patch ];
+              patchPhase = ''
+                runHook prePatch
+                mkdir tmp-untar-dir
+                pushd tmp-untar-dir
 
-            tar --extract --verbose --file=$src
-            content_directory=${prev.pname}-${prev.version}
-            patch -d $content_directory < $patches
-            src=$PWD/$content_directory.tar
-            tar --create --verbose --file=$src $content_directory
+                tar --extract --verbose --file=$src
+                content_directory=${prev.pname}-${prev.version}
+                patch -d $content_directory < $patches
+                src=$PWD/$content_directory.tar
+                tar --create --verbose --file=$src $content_directory
 
-            popd
-            runHook postPatch
-          '';
-        });
-      }) # pkgs.pantalaimon
+                popd
+                runHook postPatch
+              '';
+            });
+          })
 
-      (elfeed.overrideAttrs(prev: {
-        patches = (prev.patches or []) ++ [
-          ./patches/elfeed-collide-links.patch
-          ./patches/elfeed-shr.patch
-        ];
-      })) elfeed-org
+          (elfeed.overrideAttrs (prev: {
+            patches = (prev.patches or [ ]) ++ [
+              ./patches/elfeed-collide-links.patch
+              ./patches/elfeed-shr.patch
+            ];
+          }))
+          (melpaBuild rec {
+            pname = "elfeed-web";
+            version = "3.4.2";
+            src = fetchFromGitHub {
+              owner = "skeeto";
+              repo = "elfeed";
+              tag = version;
+              hash = "sha256-PxFM9sb5Xi85ePCKT2Fr6UmSGTcgXkAaq/k35ZcaCXs=";
+            };
+            files = ''("web/*")'';
 
-      emms pkgs.mpv pkgs.imagemagick pkgs.python312Packages.tinytag
+            packageRequires = [
+              simple-httpd
+              elfeed
+            ];
+          })
+          elfeed-org
 
-      persistent-scratch
-      dirvish
-      vterm eat
-      shx
-      (trivialBuild rec {
-        pname = "comint-fold";
-        version = "0.1.0";
-        src = fetchFromGitHub {
-          owner = "jdtsmith";
-          repo = pname;
-          rev = "9b9f2bbc762c846bf328e698413391db149cc759";
-          hash = "sha256-PCI5pLbIConHaOehMmfgZAnEXM1jLS+Rjs8TPKe5wuw=";
-        };
-      })
-      pdf-tools nov
-      envrc
-      restclient
-      disaster pkgs.zig_0_13
-      dape
-      docker pkgs.colima pkgs.docker pkgs.docker-compose
-      deadgrep
-      casual
+          emms
+          pkgs.mpv
+          pkgs.imagemagick
+          pkgs.python312Packages.tinytag
 
-      evil evil-snipe evil-visualstar evil-numbers evil-surround
-      evil-collection
-      (evil-org.overrideAttrs(prev: {
-        src = fetchFromGitHub {
-          owner = "doomelpa";
-          repo = "evil-org-mode";
-          rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
-          hash = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
-        };
-        patchPhase = ''
-          echo ";; Local Variables:" >> evil-org.el
-          echo ";; no-native-compile: t" >> evil-org.el
-          echo ";; no-byte-compile: t" >> evil-org.el
-          echo ";; End:" >> evil-org.el
-        '';
-      }))
+          persistent-scratch
+          dired-collapse
+          dired-subtree
+          dired-preview
+          dirvish
+          (vterm.overrideAttrs (prev: {
+            patches = (prev.patches or [ ]) ++ [
+              (fetchpatch {
+                name = "tramp-rpc.patch";
+                url = "https://github.com/akermu/emacs-libvterm/commit/9495966d9124ac32c307aee5c0aeb4a06be37519.patch";
+                hash = "sha256-7APaaaa3wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
+              })
+            ];
+          }))
 
-      general
-      corfu cape
-      vertico
-      orderless
-      consult
-      embark embark-consult
-      prescient
+          eat
+          shx
+          (trivialBuild rec {
+            pname = "comint-fold";
+            version = "0.1.0";
+            src = fetchFromGitHub {
+              owner = "jdtsmith";
+              repo = pname;
+              rev = "9b9f2bbc762c846bf328e698413391db149cc759";
+              hash = "sha256-PCI5pLbIConHaOehMmfgZAnEXM1jLS+Rjs8TPKe5wuw=";
+            };
+          })
+          pdf-tools
+          nov
+          (envrc.overrideAttrs (prev: {
+            patches = (prev.patches or [ ]) ++ [
+              (fetchpatch {
+                name = "ephemeral-buffers.patch";
+                url = "https://github.com/purcell/envrc/commit/77e9dec1563bc204cc9e086cd8a7d3622196224c.patch";
+                hash = "sha256-7APaaaa3waaaa6XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
+              })
+            ];
+          }))
+          restclient
+          elpher
+          disaster
+          pkgs.zig_0_13
+          dape
+          docker
+          pkgs.colima
+          pkgs.docker
+          pkgs.docker-compose
+          deadgrep
+          wgrep
+          wgrep-deadgrep
+          dumb-jump
+          casual
 
-      gptel
-    ] ++ (let
-      withEmbark = true;
-      consult-omni =
-        trivialBuild rec {
-          pname = "consult-omni";
-          version = "0.3-unstable-2025-08-01";
-          src = fetchFromGitHub {
-            owner = "armindarvish";
-            repo = pname;
-            rev = "d0a24058bf0dda823e5f1efcae5da7dc0efe6bda";
-            hash = "sha256-dzKkJ+3lMRkHRuwe43wpzqnFvF8Tl6j+6XHUsDhMX4o=";
-          };
-          postPatch = lib.optionalString (!withEmbark) ''
-            rm consult-omni-embark.el
-          '';
-          postInstall = "cp -r sources $LISPDIR/sources";
-          packageRequires = [ consult ] ++ lib.optionals withEmbark [ embark-consult ];
-        };
-    in [ consult-omni ]) ++ [
-      gcmh
-      vlf
-      helpful
-      devdocs
+          evil
+          evil-snipe
+          evil-visualstar
+          evil-numbers
+          evil-surround
+          evil-collection
+          (evil-org.overrideAttrs (prev: {
+            src = fetchFromGitHub {
+              owner = "doomelpa";
+              repo = "evil-org-mode";
+              rev = "06518c65ff4f7aea2ea51149d701549dcbccce5d";
+              hash = "sha256-3li3Y1kyof6+i2qgHxDtfA8KQWPw6tPSbc1vjGpUI4c=";
+            };
+            patchPhase = ''
+              echo ";; Local Variables:" >> evil-org.el
+              echo ";; no-native-compile: t" >> evil-org.el
+              echo ";; no-byte-compile: t" >> evil-org.el
+              echo ";; End:" >> evil-org.el
+            '';
+          }))
 
-      (trivialBuild rec {
-        pname = "org";
-        version = "9.7.31-git";
-        src = fetchFromGitea {
-          domain = "code.tecosaur.net";
-          owner = "tec";
-          repo = "org-mode";
-          rev = "bfecf6658900f3b0f1939627ddf3514ad2e21d90";
-          hash = "sha256-uKvI3woYHzKQvl6ReWoHbuFv68n4rdXYpGmE4Gvnf7U=";
-          forceFetchGit = true;
-        };
-        buildPhase = ''
-          emacs -batch -Q -L lisp -l ../mk/org-fixup \
-            --eval '(progn (setq org-fake-release "${version}" org-fake-git-version "${version}-fake") (org-make-autoloads))'
-        '';
-        preInstall = "cd lisp";
-      })
-      org-contrib ox-clip
-      org-modern
-      (trivialBuild rec {
-        pname = "org-modern-indent";
-        version = "0.5.1";
-        src = fetchFromGitHub {
-          owner = "jdtsmith";
-          repo = pname;
-          rev = "refs/tags/v${version}";
-          hash = "sha256-st3338Jk9kZ5BLEPRJZhjqdncMpLoWNwp60ZwKEObyU=";
-        };
-        packageRequires = [ org compat ];
-      })
-      org-pdftools
-      engrave-faces
-      (ox-hugo.overrideAttrs(prev: {
-        patchPhase = ''
-          for f in ./*.el; do
-              echo ";; Local Variables:" >> $f
-              echo ";; no-native-compile: t" >> $f
-              echo ";; no-byte-compile: t" >> $f
-              echo ";; End:" >> $f
-          done
-        '';
-      }))
-      (trivialBuild rec {
-        pname = "ob-mathematica";
-        version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
-        src = fetchFromGitHub {
-          owner = "tririver";
-          repo = pname;
-          rev = version;
-          hash = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
-        };
-        patches = [ ./patches/ob-mathematica.diff ];
-      })
-      # probably not keeping all of these...
-      org-roam org-roam-bibtex org-roam-ui org-roam-timestamps org-roam-ql
+          general
+          corfu
+          cape
+          vertico
+          orderless
+          consult
+          consult-dir
+          embark
+          embark-consult
+          prescient
+        ]
+        ++ (
+          let
+            withEmbark = true;
+            consult-omni = trivialBuild rec {
+              pname = "consult-omni";
+              version = "0.3-unstable-2025-08-01";
+              src = fetchFromGitHub {
+                owner = "armindarvish";
+                repo = pname;
+                rev = "d0a24058bf0dda823e5f1efcae5da7dc0efe6bda";
+                hash = "sha256-dzKkJ+3lMRkHRuwe43wpzqnFvF8Tl6j+6XHUsDhMX4o=";
+              };
+              postPatch = lib.optionalString (!withEmbark) ''
+                rm consult-omni-embark.el
+              '';
+              postInstall = "cp -r sources $LISPDIR/sources";
+              packageRequires = [ consult ] ++ lib.optionals withEmbark [ embark-consult ];
+            };
+          in
+          [ consult-omni ]
+        )
+        ++ [
+          gcmh
+          vlf
+          helpful
+          devdocs
 
-      auctex cdlatex mathjax pkgs.nodejs
-      yasnippet yasnippet-capf
-      sis
-      package-lint-flymake
+          (trivialBuild rec {
+            pname = "org";
+            version = "9.7.31-git";
+            src = fetchFromGitea {
+              domain = "code.tecosaur.net";
+              owner = "tec";
+              repo = "org-mode";
+              rev = "bfecf6658900f3b0f1939627ddf3514ad2e21d90";
+              hash = "sha256-uKvI3woYHzKQvl6ReWoHbuFv68n4rdXYpGmE4Gvnf7U=";
+              forceFetchGit = true;
+            };
+            buildPhase = ''
+              emacs -batch -Q -L lisp -l ../mk/org-fixup \
+                --eval '(progn (setq org-fake-release "${version}" org-fake-git-version "${version}-fake") (org-make-autoloads))'
+            '';
+            preInstall = "cd lisp";
+          })
+          org-contrib
+          ox-clip
+          org-modern
+          (trivialBuild rec {
+            pname = "org-modern-indent";
+            version = "0.5.1";
+            src = fetchFromGitHub {
+              owner = "jdtsmith";
+              repo = pname;
+              rev = "refs/tags/v${version}";
+              hash = "sha256-st3338Jk9kZ5BLEPRJZhjqdncMpLoWNwp60ZwKEObyU=";
+            };
+            packageRequires = [
+              org
+              compat
+            ];
+          })
+          org-pdftools
+          engrave-faces
+          (ox-hugo.overrideAttrs (prev: {
+            patchPhase = ''
+              for f in ./*.el; do
+                  echo ";; Local Variables:" >> $f
+                  echo ";; no-native-compile: t" >> $f
+                  echo ";; no-byte-compile: t" >> $f
+                  echo ";; End:" >> $f
+              done
+            '';
+          }))
+          (trivialBuild rec {
+            pname = "ob-mathematica";
+            version = "b358d4e55705a00162d7615ae7594235da7b2e4e";
+            src = fetchFromGitHub {
+              owner = "tririver";
+              repo = pname;
+              rev = version;
+              hash = "sha256-NvYFTMAeTTW/5Ti89LdXqdDf+ZaaH8tOBjtQlx5+dG4=";
+            };
+            patches = [ ./patches/ob-mathematica.diff ];
+          })
+          citar
+          citar-embark
+          # probably not keeping all of these...
+          org-roam
+          org-roam-bibtex
+          org-roam-ui
+          org-roam-timestamps
+          org-roam-ql
+          citar-org-roam
 
-      # prog-modes
-      python-mls pkgs.ruff pkgs.ty pkgs.basedpyright
-      haskell-mode
-      markdown-mode
-      sly paredit
-      (nix-mode.overrideAttrs (prev: {
-        patches = (prev.patches or []) ++ [ (fetchpatch {
-          name = "flake-shebangs.patch";
-          url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
-          hash = "sha256-7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
-        }) ];
-      })) pkgs.nixd
-      nix-ts-mode
-      (trivialBuild {
-        pname = "nix3";
-        version = "0.1-git";
-        src = fetchFromGitHub {
-          owner = "emacs-twist";
-          repo = "nix3.el";
-          rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
-          hash = "sha256-2rg5S/ElHfXFgomnkjkoPjd37jH6c52TsBhNCFvIE+4=";
-        };
-        packageRequires = [ promise compat magit-section s ];
-        preBuild = ''
-          mv ./extra/magit-nix3.el .
-        '';
-      })
-      nix-update pkgs.nix-prefetch-git
-      verilog-ts-mode
-      swift-mode pkgs.sourcekit-lsp
-      terraform-mode
-      zig-mode pkgs.zls
-      yaml-mode
-      wolfram-mode
-      sage-shell-mode ob-sagemath
-      ob-elixir
-      typst-ts-mode
-      julia-mode julia-ts-mode julia-vterm ob-julia-vterm eglot-jl
-      nasm-mode
-      vimrc-mode
-      meson-mode
-      # other LSPs
-      eglot
-      pkgs.clang-tools pkgs.ctags-lsp pkgs.rust-analyzer pkgs.gopls pkgs.shellcheck pkgs.tinymist
+          auctex
+          cdlatex
+          mathjax
+          pkgs.nodejs
+          yasnippet
+          yasnippet-capf
+          sis
+          package-lint-flymake
 
-      # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
-      (treesit-grammars.with-grammars (grammars: [
-      ] ++ (builtins.attrValues (pkgs.tree-sitter.builtGrammars // {
-        tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
-          language = "tree-sitter-verilog";
-          version = "0.0.0+rev=0dacb91";
-          src = fetchFromGitHub {
-            owner = "gmlarumbe";
-            repo = "tree-sitter-systemverilog";
-            rev = "0dacb911daa9614a7c7e79a594d4cb9f478e6554";
-            hash = "sha256-WATrVeP3c//tWLG8VibXZrYrChBs7d4V6LCcEGcofdg=";
-          };
-          meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
-        };
-      })))) treesit-fold
+          # prog-modes
+          python-mls
+          pkgs.ruff
+          pkgs.ty
+          pkgs.basedpyright
+          haskell-mode consult-hoogle pkgs.haskellPackages.hoogle
+          markdown-mode
+          sly
+          paredit
+          eros
+          parinfer-rust-mode
+          pkgs.parinfer-rust-emacs
+          (nix-mode.overrideAttrs (prev: {
+            patches = (prev.patches or [ ]) ++ [
+              (fetchpatch {
+                name = "flake-shebangs.patch";
+                url = "https://patch-diff.githubusercontent.com/raw/NixOS/nix-mode/pull/196.patch";
+                hash = "sha256-7APlOE23wxRG26XU2h4kUQn+jmg+PlV3/5bRuMdDnGQ=";
+              })
+            ];
+          }))
+          pkgs.nixd
+          nix-ts-mode
+          (trivialBuild {
+            pname = "nix3";
+            version = "0.1-git";
+            src = fetchFromGitHub {
+              owner = "emacs-twist";
+              repo = "nix3.el";
+              rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
+              hash = "sha256-2rg5S/ElHfXFgomnkjkoPjd37jH6c52TsBhNCFvIE+4=";
+            };
+            packageRequires = [
+              promise
+              compat
+              magit-section
+              s
+            ];
+            preBuild = ''
+              mv ./extra/magit-nix3.el .
+            '';
+          })
+          nix-update
+          pkgs.nix-prefetch-git
+          verilog-ts-mode
+          swift-mode
+          pkgs.sourcekit-lsp
+          terraform-mode
+          zig-mode
+          pkgs.zls
+          yaml-mode
+          wolfram-mode
+          sage-shell-mode
+          ob-sagemath
+          ob-elixir
+          typst-ts-mode
+          julia-mode
+          julia-ts-mode
+          julia-vterm
+          ob-julia-vterm
+          eglot-jl
+          nasm-mode
+          vimrc-mode
+          meson-mode
+          # other LSPs
+          eglot
+          pkgs.clang-tools
+          pkgs.ctags-lsp
+          pkgs.rust-analyzer
+          pkgs.gopls
+          pkgs.shellcheck
+          pkgs.tinymist
+          apheleia
+          editorconfig
 
-      eglot-booster pkgs.emacs-lsp-booster
-      (let
-        version = "0.3.3";
-       in
-        with pkgs; python3Packages.buildPythonApplication {
-          pname = "rassumfrassum";
-          inherit version;
-          pyproject = true;
+          # treesit-grammars.with-all-grammars seems to blow up the hm closure size... see NixOS/nix#4119
+          (treesit-grammars.with-grammars (
+            grammars:
+            [
+            ]
+            ++ (builtins.attrValues (
+              pkgs.tree-sitter.builtGrammars
+              // {
+                tree-sitter-verilog = pkgs.tree-sitter.buildGrammar {
+                  language = "tree-sitter-verilog";
+                  version = "0.0.0+rev=0dacb91";
+                  src = fetchFromGitHub {
+                    owner = "gmlarumbe";
+                    repo = "tree-sitter-systemverilog";
+                    rev = "0dacb911daa9614a7c7e79a594d4cb9f478e6554";
+                    hash = "sha256-WATrVeP3c//tWLG8VibXZrYrChBs7d4V6LCcEGcofdg=";
+                  };
+                  meta.homepage = "https://github.com/gmlarumbe/tree-sitter-systemverilog";
+                };
+              }
+            ))
+          ))
+          treesit-fold
 
-          src = pkgs.fetchFromGitHub {
-            owner = "joaotavora";
-            repo = "rassumfrassum";
-            tag = "v${version}";
-            hash = "sha256-3Hcews5f7o45GUmFdpLwkAHf0bthC1tUikkxau952Ec=";
-          };
+          eglot-booster
+          pkgs.emacs-lsp-booster
+          (
+            let
+              version = "0.3.3";
+            in
+            with pkgs;
+            python3Packages.buildPythonApplication {
+              pname = "rassumfrassum";
+              inherit version;
+              pyproject = true;
 
-          postPatch = ''
-            patchShebangs rass test/
-          '';
+              src = pkgs.fetchFromGitHub {
+                owner = "joaotavora";
+                repo = "rassumfrassum";
+                tag = "v${version}";
+                hash = "sha256-3Hcews5f7o45GUmFdpLwkAHf0bthC1tUikkxau952Ec=";
+              };
 
-          build-system = [ python3Packages.setuptools ];
-          doCheck = false;
+              postPatch = ''
+                patchShebangs rass test/
+              '';
 
-          meta = {
-            description = "Connect an LSP client to multiple LSP servers";
-            homepage = "https://github.com/joaotavora/rassumfrassum";
-            changelog = "https://github.com/joaotavora/rassumfrassum/releases/tag/v${version}";
-            license = lib.licenses.gpl3Plus;
-            maintainers = [ lib.maintainers.cmm ];
-          };
-      })
+              build-system = [ python3Packages.setuptools ];
+              doCheck = false;
 
-      nerd-icons nerd-icons-dired nerd-icons-ibuffer nerd-icons-corfu nerd-icons-completion
+              meta = {
+                description = "Connect an LSP client to multiple LSP servers";
+                homepage = "https://github.com/joaotavora/rassumfrassum";
+                changelog = "https://github.com/joaotavora/rassumfrassum/releases/tag/v${version}";
+                license = lib.licenses.gpl3Plus;
+                maintainers = [ lib.maintainers.cmm ];
+              };
+            }
+          )
+          tramp-rpc
 
-      marginalia
-      doom-themes solaire-mode doom-modeline
-      rainbow-mode
-      diff-hl difftastic
+          nerd-icons
+          nerd-icons-dired
+          nerd-icons-ibuffer
+          nerd-icons-corfu
+          nerd-icons-completion
 
-      ultra-scroll
-    ]);
+          marginalia
+          doom-themes
+          solaire-mode
+          doom-modeline
+          rainbow-mode
+          diff-hl
+          difftastic
+
+          ultra-scroll
+        ]
+      );
   };
 
   home.packages = [
@@ -338,24 +468,6 @@ in
   home.sessionVariables = {
     EDITOR = "emacsclient";
   };
-
-  # launchd.agents.pantalaimon = let
-  #   config = (pkgs.formats.ini {}).generate "pantalaimon.conf" {
-  #     "mozilla-matrix" = {
-  #       Homeserver = "https://mozilla.modular.im:443";
-  #       ListenAddress = "localhost";
-  #       ListenPort = 8009;
-  #     };
-  #   };
-  # in {
-  #   enable = true;
-  #   config = {
-  #     ProgramArguments = [
-  #       (lib.getExe' pkgs.pantalaimon-headless "pantalaimon") "-c" "${config}"
-  #     ];
-  #     RunAtLoad = true;
-  #   };
-  # };
 
   programs.fish = {
     interactiveShellInit = lib.mkAfter ''
@@ -395,7 +507,7 @@ in
             printf "\e]%s\e\\" "$argv"
         end
       '';
-      vterm_cmd =  {
+      vterm_cmd = {
         description = "Run an Emacs command among the ones been defined in vterm-eval-cmds.";
         body = ''
           set -l vterm_elisp ()

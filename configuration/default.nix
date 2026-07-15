@@ -6,6 +6,7 @@ in
   imports = [
     ./yabai
     ./dictd.nix
+    # ./restic.nix
     ./xquartz.nix
   ];
 
@@ -212,6 +213,23 @@ in
   services.dictd.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
+  # services.restic.backups.home = {
+  #   paths = [ home ];
+  #   repository = "s3:s3.us-east-005.backblazeb2.com/unpledged-prewar-irritable-surfboard-leggings-glacial";
+  #   passwordFile = "${home}/.restic/password";
+  #   backupPrepareCommand = "source ${home}/.restic/environment";
+  #   extraBackupArgs = [
+  #     "--dry-run"
+  #     "--exclude-caches"
+  #     "--exclude-file=${home}/.restic/excludes"
+  #   ];
+  #   timerConfig = {
+  #     # once a week on sunday
+  #     Minute = 0;
+  #     Hour = 0;
+  #     Weekday = 0;
+  #   };
+  # };
 
 
   system = {

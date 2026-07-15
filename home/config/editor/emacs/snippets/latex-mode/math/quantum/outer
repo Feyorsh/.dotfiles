@@ -2,4 +2,4 @@
 # key: outer
 # condition: (and (texmathp) 'auto)
 # --
-\\ket{$1}\\bra{${2:$1}}$0
+\\ket{$1} \\bra{${2:$1}}$0
