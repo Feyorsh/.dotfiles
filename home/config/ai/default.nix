@@ -15,7 +15,7 @@ let
 in
 {
   programs.claude-code = {
-    enable = true;
+    enable = false;
     marketplaces = {
       inherit caveman emacs-skills;
     };
@@ -126,10 +126,6 @@ in
       };
     };
     memory.source = ./CLAUDE.md;
-  };
-
-  programs.gemini-cli = {
-    enable = true;
   };
 
   programs.codex = {
