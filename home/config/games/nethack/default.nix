@@ -5,7 +5,7 @@
       postPatch = (prev.postPatch or "") + ''
         sed -e 's,-DNOMAIL ,,' \
             -e 's,/usr/bin/true,${coreutils}/bin/true,g' \
-            -i sys/unix/hints/macosx10.14
+            -i sys/unix/hints/macOS.500
       '';
     }))
 
