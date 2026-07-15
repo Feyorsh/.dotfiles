@@ -3,7 +3,7 @@
   # $ darwin-rebuild build --flake .#Opal
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     fyshpkgs.url = "github:Feyorsh/fyshpkgs";
     pwnypus.url = "github:Feyorsh/pwnypus/main";
 
@@ -26,6 +26,9 @@
         inherit system;
         config = {
           allowUnfree = true;
+          permittedInsecurePackages = [
+            "electron-39.8.10"
+          ];
         };
         overlays = [
           fyshpkgs.overlay.${system}
@@ -54,6 +57,16 @@
               preInstall = ''
                 cp $icon Spotify.app/Contents/Resources/Icon.icns
               '';
+            });
+          })
+
+          (final: prev: {
+            xquartz = prev.xquartz.overrideAttrs (prev': {
+              installPhase = builtins.replaceStrings ["--replace xrdb" "--replace xmodmap" "substituteInPlace $out/etc/X11/xinit/privileged_startx.d/20-font_cache \\${"\n"}"] [''--replace '"xrdb"'${""}'' ''--replace '"xmodmap"'${""}'' "#"] prev'.installPhase;
+            });
+            xorg-server = prev.xorg-server.overrideAttrs (prev': {
+              mesonFlags = (prev'.mesonFlags or []) ++ [ "-Dxcsecurity=true" ];
+              hardeningDisable = [ "strictflexarrays1" ];
             });
           })
         ];
