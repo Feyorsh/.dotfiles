@@ -7,7 +7,12 @@
   ];
 
   manual.manpages.enable = false;
-  programs.man.generateCaches = true;
+  programs.man = {
+    generateCaches = true;
+    # extraConfig = ''
+    #   MANDATORY_MANPATH /var/run/current-system/sw/share/man
+    # '';
+  };
   programs.info.enable = true;
 
   # (runCommand "nix-manuals" { nativeBuildInputs = [ docbook2x ]; } ''
