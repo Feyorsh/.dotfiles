@@ -1,12 +1,7 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    (manix.overrideAttrs (prev: {
-      patches = (prev.patches or []) ++ [ (fetchpatch {
-        url = "https://patch-diff.githubusercontent.com/raw/nix-community/manix/pull/27.patch";
-        hash = "sha256-d+gOQweIUBPJkXENTkIzYNH0iqDMW4CXuweI8wZDydU=";
-      }) ];
-    }))
+    manix
     nix-search-cli
 
     nix-output-monitor
