@@ -169,21 +169,9 @@ in
 
   time.timeZone = "America/Los_Angeles";
 
-  security.chmodbpf = {
-    enable = true;
-    members = [ username ];
-  };
   security.pam.services.sudo_local.touchIdAuth = true;
 
   services.xquartz.enable = true;
-
-  programs.ccache = {
-    enable = true;
-    packageNames = [
-      "emacs30-macport"
-      "llvm"
-    ];
-  };
 
   services.tailscale = {
     enable = true;

@@ -1,27 +1,41 @@
 {
   description = "doing it to spite the haters (RMS)";
-  # $ darwin-rebuild build --flake .#Opal
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    fyshpkgs.url = "github:Feyorsh/fyshpkgs";
-    pwnypus.url = "github:Feyorsh/pwnypus/main";
 
-    darwin.url = "github:LnL7/nix-darwin";
-    home-manager.url = "github:nix-community/home-manager";
-    mac-app-util.url = "github:hraban/mac-app-util";
+    darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    spicetify-nix.url = "github:Gerg-L/spicetify-nix";
-
-    elfeed-offline.url = "github:Feyorsh/elfeed-offline";
-    emacs-tramp-rpc.url = "github:Feyorsh/emacs-tramp-rpc";
+    mac-app-util = {
+      url = "github:hraban/mac-app-util";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    elfeed-offline = {
+      url = "github:Feyorsh/elfeed-offline";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    emacs-tramp-rpc = {
+      url = "github:Feyorsh/emacs-tramp-rpc";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs @ { self, darwin, nixpkgs, fyshpkgs, home-manager, ... }:
+  outputs = inputs @ { self, nixpkgs, darwin, home-manager, ... }:
     let
-      system = "aarch64-darwin";
       inherit (nixpkgs) lib;
       inherit (darwin.lib) darwinSystem;
+      system = "aarch64-darwin";
       pkgs = import nixpkgs {
         inherit system;
         config = {
@@ -31,8 +45,6 @@
           ];
         };
         overlays = [
-          fyshpkgs.overlay.${system}
-
           inputs.emacs-tramp-rpc.overlays.default
           (self: super: {
             emacsPackagesFor =
@@ -51,16 +63,6 @@
           })
 
           (final: prev: {
-            spotify = prev.spotify.overrideAttrs (prev': {
-              icon = ./assets/icons/spotify.icns;
-
-              preInstall = ''
-                cp $icon Spotify.app/Contents/Resources/Icon.icns
-              '';
-            });
-          })
-
-          (final: prev: {
             xquartz = prev.xquartz.overrideAttrs (prev': {
               installPhase = builtins.replaceStrings ["--replace xrdb" "--replace xmodmap" "substituteInPlace $out/etc/X11/xinit/privileged_startx.d/20-font_cache \\${"\n"}"] [''--replace '"xrdb"'${""}'' ''--replace '"xmodmap"'${""}'' "#"] prev'.installPhase;
             });
@@ -71,30 +73,21 @@
           })
         ];
       };
+      username = "ghuebner";
+      host = "Peridot";
     in
       {
-        darwinConfigurations."Opal" = let
-          username = "ghuebner";
-          specialArgs = { inherit inputs username; };
-        in darwinSystem {
-          system = "aarch64-darwin";
-          inherit specialArgs pkgs;
-	        modules = [ ./configuration
-		                  home-manager.darwinModules.home-manager
-		                  {
-                        home-manager.extraSpecialArgs = specialArgs;
-			                  home-manager.useGlobalPkgs = true;
-			                  home-manager.useUserPackages = true;
-			                  home-manager.users.${username} = import ./home;
-		                  }
-		                  home-manager.darwinModules.home-manager
-                      inputs.mac-app-util.darwinModules.default
-		                  inputs.pwnypus.darwinModules.chmodbpf
-		                  inputs.fyshpkgs.darwinModules.ccache
-	                  ];
+        homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home ];
+          extraSpecialArgs = { inherit inputs; };
         };
 
-        # Expose the package set, including overlays, for convenience.
-        darwinPackages = self.darwinConfigurations."Opal".pkgs;
+        darwinConfigurations."${host}" = let
+        in darwinSystem {
+          inherit pkgs system;
+	        modules = [ ./configuration ];
+          specialArgs = { inherit inputs username; };
+        };
       };
 }
