@@ -264,25 +264,6 @@ in
     defaults.hitoolbox.AppleFnUsageType = "Change Input Source";
   };
 
-
-  system.activationScripts.activateConfig.text = ''
-    # Following line should allow us to avoid a logout/login cycle
-    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-  '';
-
-  launchd.daemons = {
-    "fdLimitUp".serviceConfig = {
-      ProgramArguments = [
-        "/bin/launchctl"
-        "limit"
-        "maxfiles"
-        "10000"
-        "4611686018427387904" # can't set unlimited
-      ];
-      RunAtLoad = true;
-    };
-  };
-
   launchd.user.agents = {
     beorg-sync = {
       serviceConfig = {
@@ -298,7 +279,6 @@ in
     };
   };
 
-  ids.gids.nixbld = 350;
   system.stateVersion = 7;
 
   nixpkgs.hostPlatform = "aarch64-darwin";
