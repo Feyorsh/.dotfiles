@@ -10,7 +10,7 @@
     ./editor
     ./terminal
     ./finance
-    ./browser
+    ./firefox
     ./nix.nix
     ./backups.nix
     ./ai
