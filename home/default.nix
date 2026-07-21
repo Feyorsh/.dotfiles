@@ -4,16 +4,16 @@
     spicetify-nix.homeManagerModules.default
     mac-app-util.homeManagerModules.default
 
-    ./config/git
-    ./config/git/jujutsu.nix
-    ./config/games
-    ./config/editor
-    ./config/terminal
-    ./config/finance
-    ./config/browser
-    ./config/nix.nix
-    ./config/backups.nix
-    ./config/ai
+    ./git
+    ./git/jujutsu.nix
+    ./games
+    ./editor
+    ./terminal
+    ./finance
+    ./browser
+    ./nix.nix
+    ./backups.nix
+    ./ai
   ];
 
   home = {
