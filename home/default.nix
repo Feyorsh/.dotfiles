@@ -2,7 +2,7 @@
 {
   imports = with inputs; [
     spicetify-nix.homeManagerModules.default
-    mac-app-util.homeManagerModules.default
+    # mac-app-util.homeManagerModules.default
 
     ./git
     ./git/jujutsu.nix
@@ -34,15 +34,8 @@
 
       alt-tab-macos
       monitorcontrol
-      time-out-macos
-      keycastr
 
       bitwarden-desktop
-
-      (runCommandLocal "xcode" {} ''
-         mkdir -p $out/Applications/Xcode.app
-         ln -s ${pkgs.darwin.xcode_16_3}/* $out/Applications/Xcode.app/
-       '')
 
       (texlive.combine {
         inherit (texlive) scheme-medium
@@ -92,13 +85,6 @@
   };
 
   launchd.agents = {
-    time-out = {
-      enable = true;
-      config = {
-        Program = "${pkgs.time-out-macos}/Applications/Time Out.app/Contents/MacOS/Time Out";
-        RunAtLoad = true;
-      };
-    };
     monitorcontrol = {
       enable = true;
       config = {

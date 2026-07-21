@@ -15,19 +15,11 @@ let
       })
     ];
 
-    configureFlags = (prev.configureFlags or []) ++ [
-      "--with-xwidgets"
-      "--with-librsvg"
-    ];
     preConfigure = ''
       configureFlagsArray+=(
         "CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT"
       )
     '';
-
-    buildInputs = (prev.buildInputs or []) ++ [
-      pkgs.librsvg
-    ];
   });
 
   emacsWrapped = let
@@ -165,23 +157,7 @@ in
       helpful
       devdocs
 
-      (trivialBuild rec {
-        pname = "org";
-        version = "9.7.31-git";
-        src = fetchFromGitea {
-          domain = "code.tecosaur.net";
-          owner = "tec";
-          repo = "org-mode";
-          rev = "bfecf6658900f3b0f1939627ddf3514ad2e21d90";
-          hash = "sha256-uKvI3woYHzKQvl6ReWoHbuFv68n4rdXYpGmE4Gvnf7U=";
-          forceFetchGit = true;
-        };
-        buildPhase = ''
-          emacs -batch -Q -L lisp -l ../mk/org-fixup \
-            --eval '(progn (setq org-fake-release "${version}" org-fake-git-version "${version}-fake") (org-make-autoloads))'
-        '';
-        preInstall = "cd lisp";
-      })
+      org
       org-contrib ox-clip
       org-modern
       (trivialBuild rec {
