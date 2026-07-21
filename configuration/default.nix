@@ -4,7 +4,6 @@ let
 in
 {
   imports = [
-    ./yabai
     ./dictd.nix
     ./xquartz.nix
   ];
