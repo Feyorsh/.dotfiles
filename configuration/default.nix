@@ -139,16 +139,6 @@ in
         type = "path";
         path = inputs.home-manager.outPath;
       };
-      templates = {
-        from = {
-          id = "templates";
-          type = "indirect";
-        };
-        to = {
-          type = "path";
-          path = "${home}/.dotfiles/templates";
-        };
-      };
       fyshpkgs = {
         from = {
           id = "fyshpkgs";
