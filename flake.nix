@@ -17,9 +17,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    cl-nix-lite.url = "github:hraban/cl-nix-lite";
     mac-app-util = {
       url = "github:hraban/mac-app-util";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.cl-nix-lite.follows = "cl-nix-lite";
     };
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
