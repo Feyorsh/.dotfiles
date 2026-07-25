@@ -1560,9 +1560,15 @@ host smtp.gmail.com
 port 465
 auth on
 tls_starttls off
-from george@feyor.sh
+from ghubs25@gmail.com
 user ghubs25@gmail.com
 passwordeval pass show msmtp:gmail
+
+account personal-fysh : personal
+from george@feyor.sh
+
+account personal-sighacks : personal
+from george@sighacks.net
 
 account school
 host smtp.office365.com
@@ -1576,12 +1582,17 @@ passwordeval mutt_oauth2.py ~/.password-store/msmtp:outlook.gpg
 account default : personal
 #+end_src
 
-#+begin_src shell :results none :eval no
-mkdir -p ~/Mail/personal
-mkdir ~/Mail/school
+#+begin_src bash :results none :eval no
+mkdir -p ~/Mail/{personal,school}
 mbsync -a
+
+mu init --my-address "george@feyor.sh" --my-address "george@sighacks.net" --my-address "ghubs25@gmail.com" --my-address "georgeh3@illinois.edu" --maildir ~/Mail
+mu index
 #+end_src
-If you can't use an app password, use OAuth with something like [[https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py?inline=false][mutt_oauth2.py]]. I had difficulty getting the API scopes right for an AD app registration (I could request tokens but they didn't work for IMAP/SMTP), so I used Thunderbird's =client_id= instead with the device code auth mechanism (=localhostauthflow= did not work with requesting scopes for some reason).
+
+For Gmail, just use an app password.
+If you can't use an app password (e.g. Microsoft Enterprise), use OAuth with something like [[https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py?inline=false][mutt_oauth2.py]]. I had difficulty getting the API scopes right for an AD app registration (I could request tokens but they didn't work for IMAP/SMTP), so I used Thunderbird's =client_id= instead with the device code auth mechanism (=localhostauthflow= did not work with requesting scopes for some reason).
+
 #+begin_src shell :results none :eval no
 mutt_oauth2.py --authorize --verbose --authflow devicecode
 #+end_src
