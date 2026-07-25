@@ -4,7 +4,7 @@ let
     inherit pkgs;
     nurpkgs = pkgs;
   };
-  extensions = with nurPkgs.repos.rycee.firefox-addons; [
+  commonExtensions = with nurPkgs.repos.rycee.firefox-addons; [
     ublock-origin
     tridactyl
     kagi-search
@@ -20,11 +20,17 @@ in
     nativeMessagingHosts = [ pkgs.tridactyl-native ];
     profiles."Personal" = {
       id = 0;
-      extensions.packages = extensions;
+      extensions.packages = commonExtensions ++ (with nurPkgs.repos.rycee.firefox-addons; [
+        nurPkgs.repos.rycee.firefox-addons."10ten-ja-reader"
+        foxyproxy-standard
+        tampermonkey
+      ]);
     };
     profiles."School" = {
       id = 1;
-      extensions.packages = extensions;
+      extensions.packages = commonExtensions ++ (with nurPkgs.repos.rycee.firefox-addons; [
+        zotero-connector
+      ]);
     };
   };
 
