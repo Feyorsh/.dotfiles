@@ -14,6 +14,7 @@
     ./nix.nix
     ./backups.nix
     ./ai
+    ./wm.nix
   ];
 
   home = {

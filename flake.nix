@@ -35,6 +35,10 @@
       url = "github:Feyorsh/emacs-tramp-rpc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    paneru = {
+      url = "github:karinushka/paneru";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ { self, nixpkgs, darwin, home-manager, ... }:
