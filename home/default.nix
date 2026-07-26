@@ -26,13 +26,12 @@
       imagemagick
       ffmpeg
 
-      (python314.withPackages(ps: with ps; [ ipython requests numpy pwntools ]))
+      (python314.withPackages(ps: with ps; [ ipython requests numpy matplotlib pwntools ]))
       uv
       cargo
 
       hyperfine
 
-      alt-tab-macos
       monitorcontrol
 
       bitwarden-desktop

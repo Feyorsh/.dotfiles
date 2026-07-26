@@ -34,6 +34,7 @@ in
     ripgrep
     fd
     jq
+    btop
 
     openssh
   ];
