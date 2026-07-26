@@ -15,6 +15,10 @@ let
       })
     ];
 
+    postPatch = prev.postPatch + ''
+      substituteInPlace lisp/gnus/smime.el --replace-fail '(car (gnutls-trustfiles))' '"/etc/ssl/certs/ca-certificates.crt"'
+    '';
+
     preConfigure = ''
       configureFlagsArray+=(
         "CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT"
