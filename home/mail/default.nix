@@ -56,6 +56,8 @@ in {
     pass
   ];
 
+  programs.git.settings.sendemail.sendmailCmd = lib.getExe pkgs.msmtp;
+
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     mu4e
     org-msg
