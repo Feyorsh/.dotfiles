@@ -12,11 +12,19 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     cl-nix-lite.url = "github:hraban/cl-nix-lite";
     mac-app-util = {
@@ -41,10 +49,8 @@
     };
   };
 
-  outputs = inputs @ { self, nixpkgs, darwin, home-manager, ... }:
+  outputs = inputs @ { self, nixpkgs, darwin, home-manager, deploy-rs, ... }:
     let
-      inherit (nixpkgs) lib;
-      inherit (darwin.lib) darwinSystem;
       system = "aarch64-darwin";
       pkgs = import nixpkgs {
         inherit system;
@@ -85,6 +91,8 @@
       };
       username = "ghuebner";
       host = "Peridot";
+      vmHost = "pallasite";
+      vmUser = "fysh";
       bootstrap = false;
     in
       {
@@ -94,10 +102,49 @@
           extraSpecialArgs = { inherit inputs username bootstrap; };
         };
 
-        darwinConfigurations."${host}" = darwinSystem {
+        darwinConfigurations."${host}" = darwin.lib.darwinSystem {
           inherit pkgs system;
 	        modules = [ ./configuration ];
           specialArgs = { inherit inputs username bootstrap; };
+        };
+
+        nixosConfigurations."${vmHost}" = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+
+          modules = [
+            ./hosts/pallasite
+            ./hosts/pallasite/vm.nix
+
+            {
+              nixpkgs.overlays = [
+                (self: super: {
+                  # https://github.com/NixOS/nixpkgs/issues/392673
+                  neattle = super.neattle.overrideAttrs (p:
+                    self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
+                      env.CCPIC = "-fPIC";
+                    }
+                  );
+                  # https://github.com/NixOS/nixpkgs/issues/366902
+                  qemu-user = super.qemu-user.overrideAttrs (p:
+                    self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
+                      configureFlags = (p.configureFlags or []) ++ [ "--disable-pie" ];
+                    }
+                  );
+                })
+              ];
+            }
+          ];
+          specialArgs = { inherit (inputs) disko; hostname = vmHost; username = vmUser; };
+        };
+
+        deploy.nodes.vm = {
+          hostname = vmHost;
+          profiles.system = {
+            sshUser = vmUser;
+            user = "root";
+            path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."${vmHost}";
+          };
+          remoteBuild = true;
         };
       };
 }

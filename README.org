@@ -23,6 +23,48 @@ rinse # for home-manager
 lave  # for nix-darwin
 #+end_src
 
+*** NixOS VM setup
+If you have enough compute/disk space you may want to deploy a full-fledged NixOS VM with ~xenu~ instead of just the linux-builder remote builder.
+
+To do so, run the following _after_ the bootstrap stage but _before_ you rebuild your config with ~bootstrap~ disabled:
+#+begin_src shell
+sudo mkdir -p /var/lib/xenu
+sudo chown -R $USER:staff /var/lib/xenu
+cd /var/lib/xenu
+xenu init <path to NixOS iso>
+#+end_src
+Note the IP that is assigned to your VM (~ip addr~)---I prefer to hardcode this in my =~/.ssh/config= for simplicity.
+Set a temporary password for the =nixos= user with ~passwd~, then deploy the NixOS configuration like so:
+#+begin_src shell
+nix run github:nix-community/nixos-anywhere -- --flake ~/.dotfiles#pallasite --target-host nixos@<vm ip> --build-on-remote
+#+end_src
+Setup SSH:
+#+begin_src shell
+ssh-copy-id fysh@<vm ip> # password is 'hunter2'.
+rsync ~/.ssh/id_ed25519* fysh@<vm ip>:~/.ssh/
+#+end_src
+Now shutdown the VM and restart the ~xenu~ launchd service:
+#+begin_src shell
+/bin/launchctl unload ~/Library/LaunchAgents/org.nix-community.home.xenu.plist
+/bin/launchctl load -w ~/Library/LaunchAgents/org.nix-community.home.xenu.plist
+#+end_src
+For future NixOS configuration deployments I prefer using ~deploy-rs~ from the host, which is as simple as ~deploy ~/.dotfiles~.
+
+**** Growing the VM disk
+If you ever need to resize your VM disk image, here are the steps I follow:
+1. With the guest powered off, run the following on the host:
+   #+begin_src shell
+   nix shell nixpkgs#qemu-utils
+   qemu-img resize disk.img 600G
+   #+end_src
+2. Boot into the guest and run the following:
+   #+begin_src shell
+   nix shell nixpkgs#cloud-utils
+   lsblk
+   sudo growpart /dev/vda 2 # for target partition /dev/vda2
+   sudo btrfs filesystem resize max /
+   #+end_src
+
 ** Passwords/certs/keys
 The way I go about things, long-lived credentials (SSH/GPG keys, IRC CertFP certificates) should go in the password manager, and API keys (stuff that lives in ~password-store~ or =~/.authinfo=) should be regenerated when moving to a new machine.
 
