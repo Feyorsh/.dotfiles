@@ -1,7 +1,9 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 {
   programs.git = {
     enable = true;
+    package = pkgs.gitFull;
+
     lfs.enable = true;
     iniContent.delta.magit-delta = {
       line-numbers = false;
@@ -15,7 +17,7 @@
       }
       {
         path = ./config_school;
-        condition = "gitdir:~ghuebner/School/";
+        condition = "gitdir:${config.home.homeDirectory}/School/";
       }
     ];
     ignores = lib.splitString "\n" (builtins.readFile ./ignore);
@@ -23,6 +25,14 @@
       "*.pdf binary"
       "*.svg binary"
     ];
+
+    maintenance = {
+      enable = true;
+      repositories = [
+        "${config.home.homeDirectory}/Personal/feyor.sh"
+        "${config.home.homeDirectory}/Personal/oss/nixpkgs"
+      ];
+    };
   };
 
   programs.gh = {
