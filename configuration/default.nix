@@ -113,15 +113,8 @@ in
       ];
     }];
 
-   linux-builder = {
+   ${if bootstrap then "linux-builder" else null} = {
      enable = true;
-     config = lib.optionalAttrs (!bootstrap) {
-       virtualisation = {
-         darwin-builder = {
-           diskSize = 40 * 1024;
-         };
-       };
-     };
    };
 
    channel.enable = false;
