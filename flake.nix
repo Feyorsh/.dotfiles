@@ -81,19 +81,19 @@
       };
       username = "ghuebner";
       host = "Peridot";
+      bootstrap = false;
     in
       {
         homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./home ];
-          extraSpecialArgs = { inherit inputs; };
+          extraSpecialArgs = { inherit inputs username bootstrap; };
         };
 
-        darwinConfigurations."${host}" = let
-        in darwinSystem {
+        darwinConfigurations."${host}" = darwinSystem {
           inherit pkgs system;
 	        modules = [ ./configuration ];
-          specialArgs = { inherit inputs username; };
+          specialArgs = { inherit inputs username bootstrap; };
         };
       };
 }

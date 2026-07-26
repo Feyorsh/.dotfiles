@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, username, ... }:
+{ config, pkgs, lib, inputs, username, bootstrap, ... }:
 let
   home = config.users.users.${username}.home;
 in
@@ -115,7 +115,7 @@ in
 
    linux-builder = {
      enable = true;
-     config = {
+     config = lib.optionalAttrs (!bootstrap) {
        virtualisation = {
          darwin-builder = {
            diskSize = 40 * 1024;

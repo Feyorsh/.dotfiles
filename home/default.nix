@@ -1,4 +1,4 @@
-{ inputs, config, lib, pkgs, user, ... }:
+{ inputs, config, lib, pkgs, username, bootstrap, ... }:
 {
   imports = with inputs; [
     spicetify-nix.homeManagerModules.default
@@ -17,8 +17,8 @@
   ];
 
   home = {
-    username = "ghuebner";
-    homeDirectory = "/Users/ghuebner";
+    inherit username;
+    homeDirectory = "/Users/${username}";
 
     packages = with pkgs; [
       gimp2
@@ -58,6 +58,11 @@
       zotero
 
       adwaita-icon-theme
+    ] ++ lib.optionals (!bootstrap) [
+      (runCommandLocal "xcode" {} ''
+         mkdir -p $out/Applications/Xcode.app
+         ln -s ${pkgs.darwin.xcode_26_5_Apple_silicon}/* $out/Applications/Xcode.app/
+       '')
     ];
 
     stateVersion = "23.05";
