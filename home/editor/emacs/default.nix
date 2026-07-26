@@ -36,9 +36,6 @@ let
         rm $out/bin/emacsclient
         makeWrapper $out/bin/.emacsclient-wrapped $out/bin/emacsclient --set _c '-c' --add-flags ' ''${_c/''${INSIDE_EMACS:+*}/} ''${ [[ " $@ " != *" -e "* && " $@ " != *" --eval "* ]] && echo "-u"; } -a $out/Applications/Emacs.app/Contents/MacOS/Emacs'
 
-        rm $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
-        cp ${./emacs.icns} $out/Applications/Emacs.app/Contents/Resources/Emacs.icns
-
         rm $out/share/info
         mkdir -p $out/share/info
         ln -s ${final}/share/info/* $out/share/info/
