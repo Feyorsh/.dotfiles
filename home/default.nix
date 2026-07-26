@@ -15,6 +15,7 @@
     ./backups.nix
     ./ai
     ./wm.nix
+    ./xenu
   ];
 
   home = {
