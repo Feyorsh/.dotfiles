@@ -1,5 +1,6 @@
-#+TITLE: macOS Rice
+#+TITLE: dotfiles
 #+AUTHOR: Shorden
+
 #+begin_quote
 It's just so easy, it's so simple! I don't- I don't see why most people don't run Linux. Thank god they don't, because then they'd all be supervillains, wouldn't they? -- Steve the Super Villain
 #+end_quote
@@ -7,10 +8,48 @@ It's just so easy, it's so simple! I don't- I don't see why most people don't ru
 If words like "declarative", "generational", and "immutable" don't put your sexuality in jeopardy, you're considering NixOS for the wrong reasons. -- hlissner
 #+end_quote
 
-* Nix
-Make sure to run
-#+begin_src shell :noeval
-cd ~/.dotfiles/.nix-gc-roots
-nix-store --add-root <link-name> --indirect --realise /nix/store/...
+My Emacs config is located at [[file:home/editor/emacs/config.org]]; if you use Nix(OS), you might also be interested in my Emacs package/patch management config at [[file:home/editor/emacs/default.nix]].
+
+* Bringup
+** Bootstrapping
+First, set ~bootstrap = true~ in [[file:flake.nix]]---this removes proprietary software from the system closures to allow for quickly establishing a mostly complete config and also bootstraps the linux-builder.
+#+begin_src shell
+nix run --extra-experimental-features "flakes nix-command" github:nix-community/home-manager -- switch --flake ~/.dotfiles#ghuebner
+sudo nix run --extra-experimental-features "flakes nix-command" github:nix-darwin/nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles#Peridot
 #+end_src
-Although supposedly Nix 18 has deprecated this in favor of ~nix store~...
+Once you've done that, you should disable ~bootstrap~, rebuild, and ~nix-prefetch-url~ any files into the Nix store that are causing the build to fail.
+#+begin_src shell
+rinse # for home-manager
+lave  # for nix-darwin
+#+end_src
+
+** Passwords/certs/keys
+The way I go about things, long-lived credentials (SSH/GPG keys, IRC CertFP certificates) should go in the password manager, and API keys (stuff that lives in ~password-store~ or =~/.authinfo=) should be regenerated when moving to a new machine.
+
+** Firefox
+I experienced a bit of a headache with using my backed up browser data with the old and new profile systems in Firefox; hopefully this process is made smoother in a future update but for posterity here's what I did:
+1. Starting with a completely empty Firefox user data directory (=rm -rf "~/Library/Application Support/Firefox"=), open up Firefox normally and create two profiles A and B using the _new_ profile system (in addition to the default one that is created on startup).
+2. Completely close Firefox, then modify =~/Library/Application Support/Firefox/profiles.ini= to assosciate the two profiles A and B with the _old_ profile system. Open up =about:profiles= in Firefox to verify that your changes worked.
+3. Completely close Firefox and make a note of which "profile group" is associated with your profiles (~StoreID~ in =profiles.ini=). Open up the corresponding SQLite database (=~/Library/Application Support/Firefox/Profile Groups/*.sqlite=) and make the following edits:
+   #+begin_src sqlite
+   UPDATE Profiles SET path = 'Profiles/A' WHERE id = 2;
+   UPDATE Profiles SET path = 'Profiles/B' WHERE id = 3;
+   UPDATE Profiles SET themeId = 'default-theme@mozilla.org', themeFg = 'rgb(255,255,255)', themeBg = 'rgb(28,27,34)', WHERE id = 2;
+   UPDATE Profiles SET themeId = 'default-theme@mozilla.org', themeFg = 'rgb(255,255,255)', themeBg = 'rgb(28,27,34)', WHERE id = 3;
+   -- optional
+   UPDATE Profiles SET avatar = 'flower' WHERE id = 2;
+   UPDATE Profiles SET avatar = 'book' WHERE id = 3;
+   -- delete original profile
+   DELETE FROM profiles WHERE id=1;
+   #+end_src
+4. Open up Firefox and ensure =about:profiles= (old profile system) and the profile switcher (new profile system) are still working as expected.
+   Close Firefox, then =rm -rf "~/Library/Application Support/Firefox/Profiles/*/extension*"=, =mv "~/Library/Application Support/Firefox/profiles.ini{,.bak}"=, and then =home-manager switch= to deploy your HM-managed Firefox config.
+   Open Firefox and verify things are still working and that the extensions you expect to be present are.
+5. Completely close Firefox, then copy over the following files from your Firefox profile backups: =places.sqlite=, =favicons.sqlite=, =key4.db=, =logins.json=, =formhistory.sqlite=, and =cookies.sqlite= (see [[https://support.mozilla.org/en-US/kb/about-your-important-data-and-their-files][About your important data and their files]] for more info).
+
+* Nix-fu
+** Prevent store paths from being GCed (GC roots)
+#+begin_src shell :noeval
+nix-store --add-root ~/.dotfiles/.nix-gc-roots/<link-name> --indirect --realise /nix/store/...
+#+end_src
+
