@@ -3832,12 +3832,6 @@ pass add Feyorsh^forge@api.github.com
     :hook (find-file . fysh/vc-off-if-remote))
 #+end_src
 
-#+begin_src elisp
-(use-package vc-jj
-    :init
-    (add-to-list 'vc-handled-backends 'jj))
-#+end_src
-
 **** Ediff
 #+begin_src elisp
 (use-package ediff
