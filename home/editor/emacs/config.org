@@ -2707,7 +2707,7 @@ Taken from Doom Emacs."
             (cl-letf (((symbol-function #'org-latex-preview) #'identity))
               (apply fn args))
             (when (and (not org-inhibit-startup) org-startup-with-latex-preview) (org-latex-preview 'buffer)))
-    :hook (org-mode . org-latex-preview-auto-mode)
+    :hook (org-mode . org-latex-preview-mode)
     :config
     (setq org-latex-preview-appearance-options (progn (plist-put org-format-latex-options :background "Transparent")
                                                       ;; (plist-put org-latex-preview-appearance-options :foreground 'default)

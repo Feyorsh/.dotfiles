@@ -220,13 +220,13 @@ in
 
           (trivialBuild rec {
             pname = "org";
-            version = "9.7.31-git";
+            version = "9.7.39-git";
             src = fetchFromGitea {
               domain = "code.tecosaur.net";
               owner = "tec";
               repo = "org-mode";
-              rev = "bfecf6658900f3b0f1939627ddf3514ad2e21d90";
-              hash = "sha256-uKvI3woYHzKQvl6ReWoHbuFv68n4rdXYpGmE4Gvnf7U=";
+              rev = "1ef59f0aa02e3cff40bae68b756a29bc2001739e";
+              hash = "sha256-kPVFT2fgoOO5aCCAifzlSwDhMR2RqhhT1akOKfRyalw=";
               forceFetchGit = true;
             };
             buildPhase = ''
