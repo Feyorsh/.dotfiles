@@ -141,6 +141,51 @@ in
           nov
           # for doc-view
           pkgs.libreoffice-bin pkgs.mupdf-headless pkgs.ghostscript_headless
+          (
+            let
+              version = "0.3.2";
+              src = fetchFromGitea {
+                domain = "codeberg.org";
+                owner = "MonadicSheep";
+                repo = "emacs-reader";
+                rev = "87b193d6996093530ab01cb0314c4d23b9777057";
+                hash = "sha256-fpmcVO7IS0oop2zOWzMngC6nSTmYoi1vRUbhV3PQMGk=";
+              };
+              render-core = with pkgs; stdenv.mkDerivation {
+                inherit version src;
+                pname = "render-core";
+
+                nativeBuildInputs = [ pkg-config ];
+                buildInputs = [ mupdf-headless ];
+                buildFlags = [
+                  "CC=cc"
+                  "EMACS=:"
+                  "USE_PKGCONFIG=yes"
+                ];
+
+                installPhase = ''
+                  runHook preInstall
+                  install -Dm444 -t $out/lib/ render-core${stdenv.targetPlatform.extensions.sharedLibrary}
+                  runHook postInstall
+                '';
+
+                strictDeps = true;
+              };
+            in
+              with pkgs; melpaBuild {
+                pname = "reader";
+                inherit src version;
+
+                files = ''(:defaults "${lib.getLib render-core}/lib/render-core.*"))'';
+                passthru = { inherit render-core; };
+
+                meta = {
+                  homepage = "https://codeberg.org/divyaranjan/emacs-reader";
+                  description = "An all-in-one document reader for all formats in Emacs, backed by MuPDF";
+                  license = lib.licenses.gpl3Plus;
+                };
+              }
+          )
           (envrc.overrideAttrs (prev: {
             patches = (prev.patches or [ ]) ++ [
               (fetchpatch {
