@@ -139,6 +139,8 @@ in
           })
           pdf-tools
           nov
+          # for doc-view
+          pkgs.libreoffice-bin pkgs.mupdf-headless pkgs.ghostscript_headless
           (envrc.overrideAttrs (prev: {
             patches = (prev.patches or [ ]) ++ [
               (fetchpatch {
