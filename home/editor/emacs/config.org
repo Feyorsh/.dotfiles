@@ -807,7 +807,7 @@ Oldest trick in the book! (Not really.)
          :new-shell (length= (agent-shell-buffers) 0))))
     :config
     (setq agent-shell-preferred-agent-config 'codex)
-    (setq agent-shell-openai-default-model-id "gpt-5.5/low")
+    (setq agent-shell-openai-default-model-id "gpt-5.5/xhigh")
     (setq agent-shell-openai-codex-environment (agent-shell-make-environment-variables "INSIDE_EMACS" "codex"
                                                                                        "CODEX_HOME" (expand-file-name "~/.config/codex/")))
     (setq agent-shell-pi-environment (agent-shell-make-environment-variables "PI_ACP_ENABLE_EMBEDDED_CONTEXT" "true"))
