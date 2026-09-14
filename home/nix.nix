@@ -1,14 +1,29 @@
-{ pkgs, lib, ... }:
+{ inputs, pkgs, ... }:
+let
+  rinse = "nh home switch ~/.dotfiles";
+  lave = "nh darwin switch ~/.dotfiles";
+  powerwash = "deploy ~/.dotfiles --skip-checks";
+  nix-unfetter = "nix-store --option sandbox false --realise";
+  nixc = pkgs.writeShellScriptBin "nixc" ''
+    if ! [ "$#" -gt 0 ] && [ "$#" -lt 4 ]; then
+      echo "usage: $0 [host] <path:result> <jump-host>" >&2
+      exit 1
+    fi
+
+    if [ -n "$3" ]; then
+      local -x NIX_SSHOPTS="-J $3"
+    fi
+    nix copy --to "ssh://$1" $(readlink "''${2:-result}" | tee /dev/tty)
+  '';
+in
 {
   home.packages = with pkgs; [
-    nh
-    manix
-    nix-search-cli
-
     nix-output-monitor
+    nh
     nixpkgs-review
-    nixfmt
+    nixfmt-rs
     nix-prefetch
+    inputs.deploy-rs.packages.${pkgs.stdenv.system}.deploy-rs
   ];
 
   programs.nix-index = {
@@ -17,8 +32,7 @@
   };
 
   home.shellAliases = {
-    rinse = "${lib.getExe pkgs.nh} home switch ~/.dotfiles";
-    lave = "${lib.getExe pkgs.nh} darwin switch ~/.dotfiles";
+    inherit rinse lave powerwash nix-unfetter;
   };
 
   programs.fish.functions = {
