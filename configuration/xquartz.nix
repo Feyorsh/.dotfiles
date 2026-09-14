@@ -1,61 +1,60 @@
-{ lib, pkgs, config, ... }:
-with lib;
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+
 let
   cfg = config.services.xquartz;
-in {
-  meta.maintainers = [ lib.maintainers.feyorsh or "feyorsh" ];
-
+in
+{
   options.services.xquartz = {
-    enable = mkEnableOption "XQuartz";
-    package = mkOption {
-      type = types.package;
-      default = pkgs.xquartz;
-      description = "The XQuartz package to use.";
-    };
+    enable = lib.mkEnableOption "XQuartz";
+
+    package = lib.mkPackageOption pkgs "xquartz" { };
+
+    configureSsh = lib.mkEnableOption "OpenSSH client integration for X11 forwarding";
   };
 
-  config = mkIf cfg.enable {
-    environment = let
-      daemon = "org.nixos.xquartz.privileged_startx.plist";
-      agent = "org.nixos.xquartz.startx.plist";
-      plistLocation = name: builtins.head (builtins.match ".*cp ([^[:space:]]+-${name}) .*" (builtins.readFile "${cfg.package}/bin/xquartz-install"));
-    in {
-      systemPackages = [ cfg.package ];
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        environment.systemPackages = [ cfg.package ];
 
-      launchDaemons.${daemon}.source =
-        (pkgs.substitute {
-          src = plistLocation daemon;
-          substitutions = [
-            "--replace-fail"
-            "@PRIVILEGED_STARTX@"
-            "${cfg.package}/libexec/privileged_startx"
-
-            "--replace-fail"
-            "@PRIVILEGED_STARTX_D@"
-            "${cfg.package}/etc/X11/xinit/privileged_startx.d"
-          ];
-        }).outPath;
-
-      launchAgents.${agent}.source =
-        (pkgs.substitute {
-          src = plistLocation agent;
-          substitutions = [
-            "--replace-fail"
-            "@LAUNCHD_STARTX@"
+        launchd.agents.xquartz-startx = {
+          command = lib.escapeShellArgs [
             "${cfg.package}/libexec/launchd_startx"
-
-            "--replace-fail"
-            "@STARTX@"
             "${cfg.package}/bin/startx"
-
-            "--replace-fail"
-            "@XQUARTZ@"
+            "--"
             "${cfg.package}/bin/Xquartz"
           ];
-        }).outPath;
-        etc."ssh/ssh_config.d/70-xquartz.conf".text = ''
-          XAuthLocation ${pkgs.xauth}/bin/xauth
+          serviceConfig = {
+            Label = "org.nixos.xquartz.startx";
+            Sockets."org.nixos.xquartz:0".SecureSocketWithKey = "DISPLAY";
+            # xinit uses vproc_transaction_begin while the X11 session runs.
+            EnableTransactions = true;
+          };
+        };
+
+        launchd.daemons.xquartz-privileged-startx = {
+          command = lib.escapeShellArgs [
+            "${cfg.package}/libexec/privileged_startx"
+            "-d"
+            "${cfg.package}/etc/X11/xinit/privileged_startx.d"
+          ];
+          serviceConfig = {
+            Label = "org.nixos.xquartz.privileged_startx";
+            MachServices."org.nixos.xquartz.privileged_startx" = true;
+          };
+        };
+      }
+
+      (lib.mkIf cfg.configureSsh {
+        programs.ssh.extraConfig = lib.mkAfter ''
+          XAuthLocation ${lib.getExe pkgs.xauth}
         '';
-    };
-  };
+      })
+    ]
+  );
 }
