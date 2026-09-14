@@ -6,12 +6,6 @@
 These are your father's parentheses. Elegant weapons for a more... civilized age. --- xkcd
 #+end_quote
 Oh yeah baby, time to use a scuffed editor on a scuffed operating system. Nothing will go wrong. I still don't really know wtf I'm doing, but there's a few items that need to be taken care of to download Emacs on +NixOS+.
-Emacs installation can be found in [[../../flake.nix]], but only thing of note is we're using a custom icon (squared Emacs china) and transparent title bars from railwaycat's Homebrew port.
-Run these:
-#+begin_src shell :eval no
-defaults write org.gnu.Emacs HideDocumentIcon YES
-defaults write org.gnu.Emacs TransparentTitleBar YES
-#+end_src
 
 Good .emacs.ds:
 - [[https://github.com/kaz-yos/emacs/blob/master/init.d/500_org-mode-related.el][Kazuki Yoshida]]
@@ -2573,8 +2567,7 @@ Agenda stuff
   (setq org-agenda-custom-commands
         '(("d" "Daily agenda and TODOs"
            ((todo "TODO" ((org-agenda-overriding-header "Reminders")
-                          (org-agenda-remove-tags t)
-                          (org-agenda-files '("reminders-beorg.org"))))
+                          (org-agenda-remove-tags t)))
             (todo "TODO" ((org-agenda-overriding-header "Inbox")
                           (org-agenda-files '("inbox.org"))))
             (agenda "" ((org-agenda-span 3)
@@ -3449,6 +3442,7 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
         (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
                 "-o ControlMaster=auto -o ControlPersist=yes"))
   (add-to-list 'tramp-remote-path "/nix/var/nix/profiles/default/bin")
+  (add-to-list 'tramp-remote-path "~/.nix-profile/bin")
   (setq tramp-remote-process-environment (delete "LC_CTYPE=''" tramp-remote-process-environment))
   ;; (setq tramp-histfile-override nil)
 )
