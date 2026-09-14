@@ -160,7 +160,7 @@ in
   networking.computerName = host;
   networking.applicationFirewall.enableStealthMode = true;
 
-  time.timeZone = "America/Los_Angeles";
+  time.timeZone = "America/Chicago";
 
   security.pam.services.sudo_local.touchIdAuth = true;
 
