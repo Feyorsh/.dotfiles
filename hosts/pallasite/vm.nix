@@ -46,9 +46,8 @@
 
   fileSystems = {
     "/home/${username}" = {
-      device = "/dev/hda2";
-      fsType = "ext3";
-      options = [ "data=journal" ];
+      device = "shared";
+      fsType = "virtiofs";
     };
   };
 
