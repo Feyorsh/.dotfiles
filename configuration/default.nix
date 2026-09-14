@@ -91,31 +91,28 @@ in
       warn-dirty = false;
     };
 
-    # I only want to use an x86 machine when I need to build x86 artifacts
-    # extraOptions = ''
-    #   builders-use-substitutes = true
-    # '';
-    # distributedBuilds = true;
+    extraOptions = ''
+      builders-use-substitutes = true
+    '';
+    distributedBuilds = true;
 
     buildMachines = [{
-      hostName = "emerald";
+      # hostName = "unix:///var/lib/xenu/store.sock";
+      # protocol = null;
+      hostName = "pallasite";
       protocol = "ssh-ng";
-      speedFactor = 3;
-      sshUser = "nixremote";
-      sshKey = "/var/root/.ssh/nixremote";
+      sshUser = "fysh";
+      sshKey = "${home}/.ssh/id_ed25519";
       supportedFeatures = [
         "kvm"
         "big-parallel"
         "benchmark"
       ];
       systems = [
+        "aarch64-linux"
         "x86_64-linux"
       ];
     }];
-
-   ${if bootstrap then "linux-builder" else null} = {
-     enable = true;
-   };
 
    channel.enable = false;
    nixPath = [
