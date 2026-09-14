@@ -5,9 +5,6 @@
     enable = true;
     enableDefaultConfig = false;
     includes = [ "temp.conf" ];
-    extraOptionOverrides = {
-      XAuthLocation = "${lib.getExe pkgs.xauth}";
-    };
     settings = {
       "*" = {
         ForwardAgent = false;
