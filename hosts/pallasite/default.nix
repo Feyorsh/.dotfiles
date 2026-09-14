@@ -30,7 +30,7 @@
   users.users."${username}" = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    initialHashedPassword = "";
+    initialHashedPassword = "$y$j9T$EJRSxi9TtW770X2KsUFPB.$a7h0ok45aMvuYaYGz5ZKayy5niuTpFlVBwKsJoHnOu/";
   };
   security.sudo.wheelNeedsPassword = false;
 
