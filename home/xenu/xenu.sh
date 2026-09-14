@@ -10,9 +10,9 @@ usage() {
 read -ra _t <<< "${XENU_ARGS:-}"
 XENU_ARGS=("${_t[@]}")
 
-XENU_DISK=$(realpath "${XENU_DISK:-disk.img}"
+XENU_DISK=$(realpath "${XENU_DISK:-disk.img}")
 
-if [ -t 0 ];
+if [ -t 0 ]; then
   # setup console if launched interactively
   XENU_ARGS+=("--device" "virtio-serial,stdio")
 fi
@@ -27,20 +27,24 @@ if [ "${1:-}" = "init" ]; then
   qemu-img create -f raw "$XENU_DISK" "${XENU_DISK_SIZE:-@diskSize@}M"
 
   # generate random mac address and store as xattr
-  xattr -w -s vm.mac $(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/:$//') "$XENU_DISK"
+  xattr -w -s vm.mac "02:$(openssl rand -hex 5 | sed 's/\(..\)/\1:/g; s/:$//')" "$XENU_DISK"
 fi
 
 XENU_MAC_ADDR=$(xattr -p vm.mac "$XENU_DISK")
-: ${XENU_MAC_ADDR:?could not read mac address from "$XENU_DISK"}
+: "${XENU_MAC_ADDR:?could not read mac address from "$XENU_DISK"}"
 
+#shellcheck disable=SC2206
 XENU_VSOCK_PORTS=(${XENU_VSOCK_PORTS[@]:-$(seq 1337 $((1337+9)))})
 for n in "${XENU_VSOCK_PORTS[@]}"; do
-  XENU_ARGS+=("--device" "virtio-vsock,port=$n,socketURL=$n.sock,connect")
+  XENU_ARGS+=("--device" "virtio-vsock,port=$n,socketURL=$(realpath "$n.sock"),connect")
 done
+XENU_ARGS+=("--device" "virtio-vsock,port=1336,socketURL=$(realpath store.sock),connect")
+
+[ -n "${XENU_GUI:-}" ] && XENU_ARGS+=("--gui")
 
 vfkit \
   --log-level "error" \
-  --cpus "'{XENU_CORES:-@cores@}" \
+  --cpus "${XENU_CORES:-@cores@}" \
   --memory "${XENU_MEMORY:-@memory@}" \
   --bootloader efi,variable-store=efi-variable-store,create \
   --device rosetta,mountTag=rosetta \

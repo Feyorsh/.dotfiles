@@ -2,13 +2,14 @@
 let
   xenu = pkgs.writeShellApplication {
     name = "xenu";
-    text = pkgs.replaceVars ./xenu.sh {
+    text = builtins.readFile (pkgs.replaceVars ./xenu.sh {
       cores = 8;
       memory = 1024 * 16; # 16 GiB
       diskSize = 1000 * 500; # 500 GB
-      sharedDir = config.home.homeDirectory;
-    };
+      sharedDir = "${config.home.homeDirectory}/Personal";
+    });
     runtimeInputs = with pkgs; [
+      coreutils
       qemu-utils
       darwin.xattr
       openssl
