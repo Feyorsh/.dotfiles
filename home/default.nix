@@ -16,6 +16,7 @@
     ./ai
     ./wm.nix
     ./xenu
+    ./ssh.nix
   ];
 
   home = {
