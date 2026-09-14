@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, username, bootstrap, ... }:
+{ config, pkgs, lib, inputs, username, host, bootstrap, ... }:
 let
   home = config.users.users.${username}.home;
 in
@@ -158,8 +158,8 @@ in
   programs.fish.enable = true;
   programs.zsh.enable = true;
 
-  networking.hostName = "Opal";
-  networking.computerName = "Opal";
+  networking.hostName = host;
+  networking.computerName = host;
   networking.applicationFirewall.enableStealthMode = true;
 
   time.timeZone = "America/Los_Angeles";

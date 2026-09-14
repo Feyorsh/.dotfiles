@@ -105,7 +105,7 @@
         darwinConfigurations."${host}" = darwin.lib.darwinSystem {
           inherit pkgs system;
 	        modules = [ ./configuration ];
-          specialArgs = { inherit inputs username bootstrap; };
+          specialArgs = { inherit inputs username host bootstrap; };
         };
 
         nixosConfigurations."${vmHost}" = nixpkgs.lib.nixosSystem {
