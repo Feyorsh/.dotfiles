@@ -2,3 +2,8 @@
 .direnv
 .envrc
 .zig-cache
+zig-out
+.agent-shell
+.claude
+result
+/scratch

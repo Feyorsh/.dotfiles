@@ -5,7 +5,6 @@
     mac-app-util.homeManagerModules.default
 
     ./git
-    ./git/jujutsu.nix
     ./games
     ./editor
     ./terminal

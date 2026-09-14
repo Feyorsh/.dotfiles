@@ -1,34 +1,34 @@
 [user]
-	email = george@feyor.sh
-	name = George Huebner
-	signingkey = ~/.ssh/id_ed25519
+    email = george@feyor.sh
+    name = George Huebner
+    signingkey = ~/.ssh/id_ed25519
 [github]
-	user = Feyorsh
+    user = Feyorsh
 [gpg]
-	format = ssh
+    format = ssh
 [core]
     fsmonitor = true
     untrackedCache = true
 [commit]
-	gpgsign = true
+    gpgsign = true
 [status]
-	showUntrackedFiles = all
+    showUntrackedFiles = all
 [init]
-	defaultBranch = main
+    defaultBranch = main
 [column]
     ui = auto
 [pull]
-	rebase = true
+    rebase = true
 [rebase]
-	autoStash = true
-	updateRefs = true
+    autoStash = true
+    updateRefs = true
 [branch]
     sort = -committerdate
 [tag]
     sort = version:refname
 [diff]
-	algorithm = histogram
-	colorMoved = plain
+    algorithm = histogram
+    colorMoved = plain
 	mnemonicPrefix = true
 	renames = true
 [merge]
@@ -41,10 +41,14 @@
     showForcedUpdates = false
 [commit]
     verbose = true
+[worktree]
+    useRelativePaths = true
 [help]
 	autoCorrect = prompt
 [advice]
-  detachedHead = false
+    detachedHead = false
+    fetchShowForcedUpdates = false
+    skippedCherryPicks = false
 [alias]
     lg = lg2
     lg1 = lg1-specific --all
