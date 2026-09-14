@@ -12,7 +12,12 @@ My Emacs config is located at [[file:home/editor/emacs/config.org]]; if you use 
 
 * Bringup
 ** Bootstrapping
-First, set ~bootstrap = true~ in [[file:flake.nix]]---this removes proprietary software from the system closures to allow for quickly establishing a mostly complete config and also bootstraps the linux-builder.
+Before you do anything else, it's a good idea to enable Rosetta 2:
+#+begin_src shell
+softwareupdate --install-rosetta --agree-to-license
+#+end_src
+
+To start building the Nix config, set ~bootstrap = true~ in [[file:flake.nix]]---this removes proprietary software from the system closures to allow for quickly establishing a mostly complete config and also bootstraps the linux-builder.
 #+begin_src shell
 nix run --extra-experimental-features "flakes nix-command" github:nix-community/home-manager -- switch --flake ~/.dotfiles#ghuebner
 sudo nix run --extra-experimental-features "flakes nix-command" github:nix-darwin/nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles#Peridot
@@ -95,3 +100,8 @@ I experienced a bit of a headache with using my backed up browser data with the 
 nix-store --add-root ~/.dotfiles/.nix-gc-roots/<link-name> --indirect --realise /nix/store/...
 #+end_src
 
+** Pop a rescue shell on rootless NixOS
+Run ~xenu~ with =XENU_GUI=1= and append the following to the kernel cmdline:
+#+begin_example
+... rescue systemd.setenv=SYSTEMD_SULOGIN_FORCE=1
+#+end_example
