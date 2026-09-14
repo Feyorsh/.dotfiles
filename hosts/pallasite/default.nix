@@ -71,6 +71,8 @@
   };
   services.xserver.enable = true;
 
+  virtualisation.podman.enable = true;
+
   nixpkgs = {
     config.allowUnfree = true;
   };
