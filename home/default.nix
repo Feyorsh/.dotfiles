@@ -39,6 +39,8 @@
 
       bitwarden-desktop
 
+      openconnect
+
       (texlive.combine {
         inherit (texlive) scheme-medium
 
