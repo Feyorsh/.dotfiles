@@ -1968,16 +1968,22 @@ Use Zone as a true screen saver that prevents sleep.
 						 :client-certificate ,(expand-file-name "erc/libera.pem" user-emacs-directory))
 		  ,`("OFTC" :server "irc.oftc.net"
 					:port 6697
-					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))))
+					:client-certificate ,(expand-file-name "erc/oftc.pem" user-emacs-directory))
+		  ,`("HACKInt" :server "irc.hackint.org"
+					:port 6697
+					:client-certificate ,(expand-file-name "erc/hackint.pem" user-emacs-directory))
+		  ,`("Rizon" :server "irc.rizon.net"
+					:port 6697
+					:client-certificate ,(expand-file-name "erc/rizon.pem" user-emacs-directory))))
     (defun fysh/erc-join-server (server)
       "Join a server from 'erc-server-list'."
       (interactive (list (completing-read "Server: " (mapcar (lambda (s) (car s)) erc-server-list))))
       (let* ((server-args (flatten-tree (mapcar (lambda (s) (cdr (member server s))) erc-server-list)))
              (certs (plist-get server-args :client-certificate)))
         (if-let ((erc-buffer (get-buffer server)))
-            (with-current-buffer erc-buffer
+            (progn
+              (switch-to-buffer erc-buffer)
               (unless erc-server-connected (erc-server-reconnect)))
-          (switch-to-buffer erc-buffer)
           (progn
             (unless (and (eq (type-of certs) 'cons) (eq (length certs) '2))
               (plist-put server-args :client-certificate (list certs certs)))
@@ -2084,7 +2090,11 @@ Instead of gnarsty password-based auth, we can use a certificate to authenticate
 openssl req -x509 -new -newkey ed25519 -sha256 -subj "/" -days 730 -nodes -out libera.pem -keyout libera.pem
 openssl x509 -in libera.pem -noout -fingerprint -sha256 | awk -F= '{printf "Libera: "; gsub(":",""); print tolower ($2)}'
 openssl req -x509 -new -newkey ed25519 -sha1 -subj "/" -days 730 -nodes -out oftc.pem -keyout oftc.pem
-openssl x509 -in libera.pem -noout -fingerprint -sha1 | awk -F= '{printf "OFTC: "; gsub(":",""); print tolower ($2)}'
+openssl x509 -in oftc.pem -noout -fingerprint -sha1 | awk -F= '{printf "OFTC: "; gsub(":",""); print tolower ($2)}'
+openssl req -x509 -new -newkey rsa:4096 -sha256 -subj "/" -days 730 -nodes -out rizon.pem -keyout rizon.pem
+openssl x509 -in rizon.pem -noout -fingerprint -sha256 | awk -F= '{printf "Rizon: "; gsub(":",""); print tolower ($2)}'
+openssl req -x509 -new -newkey ed25519 -subj "/" -days 730 -nodes -out hackint.pem -keyout hackint.pem
+openssl x509 -in hackint.pem -noout -fingerprint -sha256 | awk -F= '{printf "HACKInt: "; gsub(":",""); print tolower ($2)}'
 chmod 400 *.pem
 #+end_src
 And then once connected, run
