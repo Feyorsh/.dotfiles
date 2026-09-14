@@ -7,6 +7,7 @@ in
     ./dictd.nix
     # ./restic.nix
     ./xquartz.nix
+    ./xcode-shims.nix
   ];
 
   # essential packages; my perl-less swiss army chainsaw
