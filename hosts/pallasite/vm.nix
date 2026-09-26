@@ -45,7 +45,7 @@
   boot.extraModulePackages = lib.mkDefault [ ];
 
   fileSystems = {
-    "/home/${username}" = {
+    "/home/${username}/Personal" = {
       device = "shared";
       fsType = "virtiofs";
     };
