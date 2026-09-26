@@ -76,6 +76,7 @@
     reset = pkgs.writeShellScript "reset" ''
       /bin/launchctl stop com.github.karinushka.paneru
       /bin/launchctl stop org.nix-community.home.skhd
+      sleep 1
       /bin/launchctl start com.github.karinushka.paneru
       /bin/launchctl start org.nix-community.home.skhd
     '';
