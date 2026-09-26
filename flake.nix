@@ -25,12 +25,6 @@
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    cl-nix-lite.url = "github:hraban/cl-nix-lite";
-    mac-app-util = {
-      url = "github:hraban/mac-app-util";
-      inputs.cl-nix-lite.follows = "cl-nix-lite";
-    };
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -56,37 +50,9 @@
         inherit system;
         config = {
           allowUnfree = true;
-          permittedInsecurePackages = [
-            "electron-39.8.10"
-          ];
         };
         overlays = [
           inputs.emacs-tramp-rpc.overlays.default
-          (self: super: {
-            emacsPackagesFor =
-              emacs:
-              ((super.emacsPackagesFor emacs).overrideScope (
-                _: esuper: {
-                  tramp = esuper.tramp.overrideAttrs (_: rec {
-                    version = "2.8.2";
-                    src = pkgs.fetchurl {
-                      url = "https://elpa.gnu.org/packages/tramp-${version}.tar";
-                      hash = "sha256-FquL+QnjoTpLXQ3vFEF1VGE1kpt/HixDQpOhGUOcNbU=";
-                    };
-                  });
-                }
-              ));
-          })
-
-          (final: prev: {
-            xquartz = prev.xquartz.overrideAttrs (prev': {
-              installPhase = builtins.replaceStrings ["--replace xrdb" "--replace xmodmap" "substituteInPlace $out/etc/X11/xinit/privileged_startx.d/20-font_cache \\${"\n"}"] [''--replace '"xrdb"'${""}'' ''--replace '"xmodmap"'${""}'' "#"] prev'.installPhase;
-            });
-            xorg-server = prev.xorg-server.overrideAttrs (prev': {
-              mesonFlags = (prev'.mesonFlags or []) ++ [ "-Dxcsecurity=true" ];
-              hardeningDisable = [ "strictflexarrays1" ];
-            });
-          })
         ];
       };
       username = "ghuebner";

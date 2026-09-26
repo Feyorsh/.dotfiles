@@ -2,7 +2,6 @@
 {
   imports = with inputs; [
     spicetify-nix.homeManagerModules.default
-    mac-app-util.homeManagerModules.default
 
     ./git
     ./games
