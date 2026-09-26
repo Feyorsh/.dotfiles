@@ -84,7 +84,6 @@ in
           (elfeed.overrideAttrs (prev: {
             patches = (prev.patches or [ ]) ++ [
               ./patches/elfeed-collide-links.patch
-              ./patches/elfeed-shr.patch
             ];
           }))
           (melpaBuild rec {
@@ -115,15 +114,7 @@ in
           dired-subtree
           dired-preview
           dirvish
-          (vterm.overrideAttrs (prev: {
-            patches = (prev.patches or [ ]) ++ [
-              (fetchpatch {
-                name = "tramp-rpc.patch";
-                url = "https://github.com/akermu/emacs-libvterm/commit/9495966d9124ac32c307aee5c0aeb4a06be37519.patch";
-                hash = "sha256-CmLrFrFVo7XRARIwS1U7xF19CGoX4pCMBYXE+59n6qw=";
-              })
-            ];
-          }))
+          vterm
 
           eat
           shx
@@ -186,15 +177,7 @@ in
                 };
               }
           )
-          (envrc.overrideAttrs (prev: {
-            patches = (prev.patches or [ ]) ++ [
-              (fetchpatch {
-                name = "ephemeral-buffers.patch";
-                url = "https://github.com/purcell/envrc/commit/77e9dec1563bc204cc9e086cd8a7d3622196224c.patch";
-                hash = "sha256-oxCPj/dmDUsGcMYKh6y2Pp6yoeCua6w6CtjxXFoA5/4=";
-              })
-            ];
-          }))
+          envrc
           restclient
           elpher
           disaster
