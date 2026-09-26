@@ -94,7 +94,7 @@
 
   boot.binfmt = {
     preferStaticEmulators = true;
-    emulatedSystems = [ "i386-linux" ]; # x86_64-linux is handled by rosetta
+    emulatedSystems = [ "i386-linux" "i686-linux" ]; # x86_64-linux is handled by rosetta
   };
 
   zramSwap.enable = true;
