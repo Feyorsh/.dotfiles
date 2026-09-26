@@ -19,7 +19,7 @@ let
     "xctrace" "xed" "xml2man" "yacc"
   ];
   gen-fake-shim = prog: {
-    name = "xcode-tool-shims/bin/${prog}";
+    name = "bin/${prog}";
     path = (pkgs.writeScript "fake-xcode-tool-shim-${prog}" "exit 127").out;
   };
   fake-shims = pkgs.linkFarm "hide-xcode-tool-shim" (map gen-fake-shim shim-programs);
