@@ -25,12 +25,15 @@
         Port = 6969;
         SendEnv = "DGLAUTH";
       };
-      "nixkingdom" = {
-        HostName = "nixkingdom.feyor.sh";
-        Port = 1338;
+      "vermillion" = {
+        User = "fysh";
+        Port = 6969;
       };
       "router" = {
         HostName = "192.168.1.1";
+        User = "root";
+      };
+      "steamlink" = {
         User = "root";
       };
     } // (lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
@@ -40,7 +43,7 @@
         ForwardX11 = true;
       };
       "cs425-b2??" = {
-        User = "georgeh3";
+        User = "cs425";
         HostName = "fa26-%h.cs.illinois.edu";
       };
       "pluto" = {
