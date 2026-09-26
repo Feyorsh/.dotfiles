@@ -164,7 +164,10 @@ in
 
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  services.xquartz.enable = true;
+  services.xquartz = {
+    enable = true;
+    configureSsh = true;
+  };
 
   services.tailscale = {
     enable = true;
