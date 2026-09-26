@@ -1,7 +1,7 @@
 { pkgs, lib, config, ... }:
 {
   imports = [
-    ./git/jujutsu.nix
+    ./jujutsu.nix
   ];
 
   programs.git = {
