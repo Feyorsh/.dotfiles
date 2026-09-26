@@ -3,135 +3,21 @@ let
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    tag = "v1.6.0";
-    hash = "sha256-m7HhCW4fXU5pIYRWVP6cvSYUkDHt8R90D9UI3tT7euk=";
+    tag = "v2.7.0";
+    hash = "sha256-dsGzPscjy7FfaovfYML2q+RmuBJwwEJ9sjeHi+Niv6Y=";
   };
   emacs-skills = pkgs.fetchFromGitHub {
     owner = "xenodium";
     repo = "emacs-skills";
-    rev = "de7adccbc4aef5f4e1e7ebc7a487bdcd7f95509a";
-    hash = "sha256-ilgWnb3w+6mkeLwy5xkU5iX0NRbguur7iTLVqCu27TA=";
+    rev = "a158238bd630ebe68f57fb9caf99e984e757ca4f";
+    hash = "sha256-ZWikhVPlgTw5TqgXU8pCZSRPvnSAxHCqnqgiZvAuV+8=";
   };
 in
 {
-  programs.claude-code = {
-    enable = false;
-    marketplaces = {
-      inherit caveman emacs-skills;
-    };
-    lspServers = {
-      python = {
-        package = pkgs.basedpyright;
-        args = [
-          "--stdio"
-        ];
-        command = "basedpyright-langserver";
-        extensionToLanguage = {
-          ".py" = "python";
-        };
-      };
-      go = {
-        package = pkgs.gopls;
-        args = [ "serve" ];
-        command = "gopls";
-        extensionToLanguage = {
-          ".go" = "go";
-        };
-      };
-      rust = {
-        package = pkgs.rust-analyzer;
-        command = "rust-analyzer";
-        extensionToLanguage = {
-          ".rs" = "rust";
-        };
-      };
-      cxx = {
-        package = pkgs.clang-tools;
-        args = [ "--stdio" ];
-        command = "clangd";
-        extensionToLanguage = {
-          ".c" = "c";
-          ".h" = "c";
-          ".hpp" = "c++";
-          ".cpp" = "c++";
-          ".cxx" = "c++";
-          ".hxx" = "c++";
-          ".cc" = "c++";
-        };
-      };
-      zig = {
-        package = pkgs.zls;
-        command = "zls";
-        extensionToLanguage = {
-          ".zig" = "zig";
-        };
-      };
-      typst = {
-        package = pkgs.tinymist;
-        command = "tinymist";
-        extensionToLanguage = {
-          ".typ" = "typst";
-        };
-      };
-      nix = {
-        package = pkgs.nixd;
-        command = "nixd";
-        extensionToLanguage = {
-          ".nix" = "nix";
-        };
-      };
-    };
-    settings = {
-      hooks = {
-        SessionStart = [
-          {
-            matcher = "startup";
-            hooks = [
-              {
-                command = "echo 'caveman mode'";
-                type = "command";
-              }
-            ];
-          }
-        ];
-      };
-      enabledPlugins = {
-        "emacs-skills@emacs-skills" = true;
-        "caveman@caveman" = true;
-      };
-      permissions = {
-        additionalDirectories = [
-          "/nix/store/"
-        ];
-        allow = [
-          "Read"
-          "Glob"
-          "Grep"
-          "Bash(ls:*)"
-          "Bash(git status:*)"
-          "Bash(git log:*)"
-          "Bash(git diff:*)"
-          "Bash(git show:*)"
-        ];
-        deny = [
-          "Read(~/Library/**)"
-          "Read(~/Mail/**)"
-          "Read(~/Personal/Finance/**)"
-          "Read(~/Personal/paperwork/**)"
-          "Read(~/.ssh/**)"
-          "Read(~/.gnupg/**)"
-          "Read(~/.password-store/**)"
-          "Read(~/.restic/**)"
-        ];
-      };
-    };
-    memory.source = ./CLAUDE.md;
-  };
-
   programs.codex = {
     enable = true;
 
-    custom-instructions = builtins.readFile ./CLAUDE.md;
+    context = builtins.readFile ./AGENTS.md;
 
     # hack to workaround this option requiring an overly restrictive filesystem.path type
     skills =
@@ -145,10 +31,10 @@ in
             ];
           }
         }/skills";
-      in
-      lib.mapAttrs (name: _: builtins.readFile (skillsDir + "/${name}/SKILL.md")) (
-        builtins.readDir skillsDir
-      );
+      in lib.pipe (builtins.readDir skillsDir) [
+        (lib.filterAttrs (name: fileType: fileType == "directory" && builtins.pathExists (skillsDir + "/${name}/SKILL.md")))
+        (lib.mapAttrs (name: _: builtins.readFile (skillsDir + "/${name}/SKILL.md")))
+      ];
 
     rules = {
       # deny
@@ -167,7 +53,8 @@ in
     };
     settings = {
       sandbox_mode = "workspace-write";
-      approval_policy = "untrusted";
+      approval_policy = "on-request";
+      approvals_reviewer = "auto_review";
 
       model_reasoning_summary = "detailed";
       hide_agent_reasoning = false;
@@ -190,66 +77,6 @@ in
       gptel-agent
       agent-shell
 
-      pkgs.claude-agent-acp
       pkgs.codex-acp
-      (pkgs.callPackage ./pi-coding-agent.nix { })
-      (pkgs.callPackage ./pi-acp.nix { })
     ]);
-
-  home.file.".pi/agent/models.json".text = builtins.toJSON {
-    providers."llama-cpp" = {
-      baseUrl = "http://vermillion:16111/v1";
-      api = "openai-completions";
-      apiKey = "none";
-      models = [
-        { id = "Qwen3.6-35B-A3B"; }
-        { id = "Qwen3.5-9B"; }
-      ];
-    };
-  };
-  home.file.".pi/agent/settings.json".text = builtins.toJSON {
-    compaction.enabled = true;
-    defaultProvider = "llama-cpp";
-    defaultModel = "Qwen3.6-35B-A3B";
-  };
-  home.file.".pi/agent/extensions/sandbox.json".text = builtins.toJSON {
-    enabled = true;
-    network = {
-      allowedDomains = [ ];
-    };
-    filesystem = {
-      denyRead = [
-        "~/Library"
-        "~/Mail"
-        "~/Personal/Finance"
-        "~/Personal/paperwork"
-        "~/.ssh"
-        "~/.gnupg"
-        "~/.password-store"
-        "~/.restic"
-      ];
-    };
-  };
-
-  home.file.".pi/agent/extensions/sandbox" = {
-    recursive = true;
-    source = pkgs.buildNpmPackage {
-      name = "pi-extension-sandbox";
-      src = pkgs.fetchFromGitHub {
-        owner = "badlogic";
-        repo = "pi-mono";
-        tag = "v0.67.68";
-        hash = "sha256-JNeLyRV62nI0QBcZEjb0/xfmD+SUBKYYQ4BhGrfzbGI=";
-        rootDir = "packages/coding-agent/examples/extensions/sandbox";
-      };
-
-      npmDepsHash = "sha256-eJbT63DS557JrRE/dLLVITtZIHYsCxlowRJHIkSGKTc=";
-
-      postInstall = ''
-        mv $out/lib/node_modules/pi-extension-sandbox _out
-        rm -rf $out
-        mv _out $out
-      '';
-    };
-  };
 }
