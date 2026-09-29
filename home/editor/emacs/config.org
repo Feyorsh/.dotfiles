@@ -3453,6 +3453,10 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
   (setq tramp-remote-process-environment (delete "LC_CTYPE=''" tramp-remote-process-environment))
   ;; (setq tramp-histfile-override nil)
 )
+
+(use-package tramp-rpc
+  :config
+  (setq tramp-rpc-direnv-cache-timeout 10))
 #+end_src
 
 *** PDF Viewer
