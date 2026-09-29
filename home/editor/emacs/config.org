@@ -65,6 +65,7 @@ Forgot where I sourced all this, but basically take a rather conservative approa
     (auto-save-visited-mode 1)
     (setq-default auto-save-visited-mode nil)
     (setq auto-save-visited-interval 15)
+    (setq auto-revert-remote-files t)
 
     (add-to-list 'safe-local-variable-values '(eval auto-revert-mode 1))
     (add-to-list 'safe-local-variable-values '(auto-save-visited-mode . t))
