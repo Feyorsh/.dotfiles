@@ -3693,7 +3693,9 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
 		 (eval . (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream))
 		 ))
 	 ))
-  (dir-locals-set-directory-class (expand-file-name "~/Personal/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class (expand-file-name "~/Personal/oss/nixpkgs") 'huge-git-repository)
+  (dir-locals-set-directory-class (expand-file-name "~/Personal/oss/linux") 'huge-git-repository)
+  (dir-locals-set-directory-class (expand-file-name "~/Personal/oss/qemu") 'huge-git-repository)
   (dir-locals-set-directory-class (expand-file-name "~/Personal/feyor.sh") 'huge-git-repository)
   :custom-face
   (magit-diff-revision-summary-highlight ((t (:weight bold :inherit magit-section-secondary-heading))))
