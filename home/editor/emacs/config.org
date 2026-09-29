@@ -2922,6 +2922,7 @@ Remove zero width spaces
     :config
     (add-to-list 'org-src-block-faces '("python" (:background "#18314c" :extend t)))
     (setq python-indent-guess-indent-offset-verbose nil)
+    (setq python-shell-completion-native-enable nil)
     (setq python-flymake-command '("ruff" "--quiet" "--stdin-filename=stdin" "-")))
 
 (use-package python-mls
