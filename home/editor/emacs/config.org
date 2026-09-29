@@ -3478,28 +3478,7 @@ I'd like to change the cursor blink behaviour.
 I am too dumb to be trusted with enabling /all/ of the disabled commands
 #+begin_src elisp
 (use-package dired
-  :general-config
-  ('dired-mode-map "<tab>" #'dired-subtree-toggle)
   :config
-  (use-package dired-collapse
-    :demand t
-    :config
-    (global-dired-collapse-mode +1))
-  (use-package dired-preview
-    :config
-    (setq dired-preview-delay 0.7)
-    (setq dired-preview-max-size (expt 2 20))
-    (setq dired-preview-ignored-extensions-regexp (concat "\\."
-                                                          "\\(gz\\|"
-                                                          "zst\\|"
-                                                          "tar\\|"
-                                                          "xz\\|"
-                                                          "rar\\|"
-                                                          "zip\\|"
-                                                          "iso\\|"
-                                                          "epub"
-                                                          "\\)")))
-
   (setq dired-kill-when-opening-new-dired-buffer t
         dired-auto-revert-buffer t
         dired-recursive-copies 'always
@@ -3511,29 +3490,6 @@ I am too dumb to be trusted with enabling /all/ of the disabled commands
         dired-vc-rename-file t)
   (setq dired-listing-switches "-lAh --group-directories-first")
   (put 'dired-find-alternate-file 'disabled nil))
-#+end_src
-
-#+begin_src elisp :tangle no
-(use-package dirvish
-    :init
-  (dirvish-override-dired-mode)
-  :custom
-  (dirvish-quick-access-entries
-   '(("h" "~/" "Home")
-     ("d" "~/Downloads/" "Downloads")
-     ("m" "/Volumes/" "Drives")
-     ("s" "/ssh:Vermillion" "Vermillion")
-     ("e" "/sudo:root@localhost:/etc" "Modify program settings")
-     ("t" "~/.Trash/" "Trash")))
-  :config
-  (setq dired-kill-when-opening-new-dired-buffer t)
-  (setq dirvish-mode-line-format
-        '(:left (sort symlink) :right (omit yank index)))
-  (setq dirvish-attributes
-        '(vc-state subtree-state nerd-icons collapse git-msg file-time file-size)
-        dirvish-side-attributes
-        '(vc-state nerd-icons collapse file-size))
-  )
 #+end_src
 
 *** Ibuffer
