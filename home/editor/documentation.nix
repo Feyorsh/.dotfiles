@@ -1,4 +1,5 @@
 { pkgs, ... }:
+
 {
   home.packages = with pkgs; [
     man-pages
@@ -8,6 +9,7 @@
 
   manual.manpages.enable = false;
   programs.man = {
+    package = pkgs.man;
     generateCaches = true;
     man-db.extraConfig = ''
       MANDATORY_MANPATH /run/current-system/sw/share/man

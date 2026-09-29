@@ -48,8 +48,6 @@ let
     };
 in
 {
-  imports = [ ../../mail ];
-
   programs.emacs = {
     enable = false; # intentional
     package = emacs';
@@ -86,38 +84,18 @@ in
               ./patches/elfeed-collide-links.patch
             ];
           }))
-          (melpaBuild rec {
-            pname = "elfeed-web";
-            version = "3.4.2";
-            src = fetchFromGitHub {
-              owner = "skeeto";
-              repo = "elfeed";
-              tag = version;
-              hash = "sha256-PxFM9sb5Xi85ePCKT2Fr6UmSGTcgXkAaq/k35ZcaCXs=";
-            };
-            files = ''("web/*")'';
-
-            packageRequires = [
-              simple-httpd
-              elfeed
-            ];
-          })
+          elfeed-web
           elfeed-org
 
           emms
           pkgs.mpv
           pkgs.imagemagick
-          pkgs.python312Packages.tinytag
+          pkgs.python315Packages.tinytag
 
           persistent-scratch
-          dired-collapse
-          dired-subtree
-          dired-preview
-          dirvish
           vterm
+          tramp-rpc
 
-          eat
-          shx
           (trivialBuild rec {
             pname = "comint-fold";
             version = "0.1.0";
@@ -128,55 +106,12 @@ in
               hash = "sha256-PCI5pLbIConHaOehMmfgZAnEXM1jLS+Rjs8TPKe5wuw=";
             };
           })
+
           pdf-tools
           nov
           # for doc-view
           pkgs.libreoffice-bin pkgs.mupdf-headless pkgs.ghostscript_headless
-          (
-            let
-              version = "0.3.2";
-              src = fetchFromGitea {
-                domain = "codeberg.org";
-                owner = "MonadicSheep";
-                repo = "emacs-reader";
-                rev = "87b193d6996093530ab01cb0314c4d23b9777057";
-                hash = "sha256-fpmcVO7IS0oop2zOWzMngC6nSTmYoi1vRUbhV3PQMGk=";
-              };
-              render-core = with pkgs; stdenv.mkDerivation {
-                inherit version src;
-                pname = "render-core";
 
-                nativeBuildInputs = [ pkg-config ];
-                buildInputs = [ mupdf-headless ];
-                buildFlags = [
-                  "CC=cc"
-                  "EMACS=:"
-                  "USE_PKGCONFIG=yes"
-                ];
-
-                installPhase = ''
-                  runHook preInstall
-                  install -Dm444 -t $out/lib/ render-core${stdenv.targetPlatform.extensions.sharedLibrary}
-                  runHook postInstall
-                '';
-
-                strictDeps = true;
-              };
-            in
-              with pkgs; melpaBuild {
-                pname = "reader";
-                inherit src version;
-
-                files = ''(:defaults "${lib.getLib render-core}/lib/render-core.*"))'';
-                passthru = { inherit render-core; };
-
-                meta = {
-                  homepage = "https://codeberg.org/divyaranjan/emacs-reader";
-                  description = "An all-in-one document reader for all formats in Emacs, backed by MuPDF";
-                  license = lib.licenses.gpl3Plus;
-                };
-              }
-          )
           envrc
           restclient
           elpher
@@ -188,8 +123,7 @@ in
           pkgs.docker
           pkgs.docker-compose
           deadgrep
-          wgrep
-          wgrep-deadgrep
+          wgrep wgrep-deadgrep
           dumb-jump
           casual
 
@@ -224,29 +158,7 @@ in
           embark
           embark-consult
           prescient
-        ]
-        ++ (
-          let
-            withEmbark = true;
-            consult-omni = trivialBuild rec {
-              pname = "consult-omni";
-              version = "0.3-unstable-2025-08-01";
-              src = fetchFromGitHub {
-                owner = "armindarvish";
-                repo = pname;
-                rev = "d0a24058bf0dda823e5f1efcae5da7dc0efe6bda";
-                hash = "sha256-dzKkJ+3lMRkHRuwe43wpzqnFvF8Tl6j+6XHUsDhMX4o=";
-              };
-              postPatch = lib.optionalString (!withEmbark) ''
-                rm consult-omni-embark.el
-              '';
-              postInstall = "cp -r sources $LISPDIR/sources";
-              packageRequires = [ consult ] ++ lib.optionals withEmbark [ embark-consult ];
-            };
-          in
-          [ consult-omni ]
-        )
-        ++ [
+
           gcmh
           vlf
           helpful
@@ -330,16 +242,9 @@ in
 
           # prog-modes
           python-mls
-          pkgs.ruff
-          pkgs.ty
-          pkgs.basedpyright
-          haskell-mode consult-hoogle pkgs.haskellPackages.hoogle pkgs.haskellPackages.fourmolu pkgs.haskellPackages.cabal-fmt
+          haskell-mode consult-hoogle
+          dhall-mode
           markdown-mode
-          sly
-          paredit
-          eros
-          parinfer-rust-mode
-          pkgs.parinfer-rust-emacs
           (nix-mode.overrideAttrs (prev: {
             patches = (prev.patches or [ ]) ++ [
               (fetchpatch {
@@ -349,35 +254,11 @@ in
               })
             ];
           }))
-          pkgs.nixd
-          nix-ts-mode
-          (trivialBuild {
-            pname = "nix3";
-            version = "0.1-git";
-            src = fetchFromGitHub {
-              owner = "emacs-twist";
-              repo = "nix3.el";
-              rev = "6e8a7c3b2683a0fdae2a968e211c3585580fbca5";
-              hash = "sha256-2rg5S/ElHfXFgomnkjkoPjd37jH6c52TsBhNCFvIE+4=";
-            };
-            packageRequires = [
-              promise
-              compat
-              magit-section
-              s
-            ];
-            preBuild = ''
-              mv ./extra/magit-nix3.el .
-            '';
-          })
-          nix-update
-          pkgs.nix-prefetch-git
+          nix-update pkgs.nix-prefetch-git
           verilog-ts-mode
           swift-mode
-          pkgs.sourcekit-lsp
           terraform-mode
           zig-mode
-          pkgs.zls
           yaml-mode
           wolfram-mode
           sage-shell-mode
@@ -392,14 +273,9 @@ in
           nasm-mode
           vimrc-mode
           meson-mode
-          # other LSPs
+
           eglot
-          pkgs.clang-tools
-          pkgs.ctags-lsp
-          pkgs.rust-analyzer
-          pkgs.gopls
-          pkgs.shellcheck
-          pkgs.tinymist
+          eldoc-mouse
           apheleia
           editorconfig
 
@@ -427,43 +303,6 @@ in
           ))
           treesit-fold
 
-          eglot-booster
-          pkgs.emacs-lsp-booster
-          (
-            let
-              version = "0.3.3";
-            in
-            with pkgs;
-            python3Packages.buildPythonApplication {
-              pname = "rassumfrassum";
-              inherit version;
-              pyproject = true;
-
-              src = pkgs.fetchFromGitHub {
-                owner = "joaotavora";
-                repo = "rassumfrassum";
-                tag = "v${version}";
-                hash = "sha256-3Hcews5f7o45GUmFdpLwkAHf0bthC1tUikkxau952Ec=";
-              };
-
-              postPatch = ''
-                patchShebangs rass test/
-              '';
-
-              build-system = [ python3Packages.setuptools ];
-              doCheck = false;
-
-              meta = {
-                description = "Connect an LSP client to multiple LSP servers";
-                homepage = "https://github.com/joaotavora/rassumfrassum";
-                changelog = "https://github.com/joaotavora/rassumfrassum/releases/tag/v${version}";
-                license = lib.licenses.gpl3Plus;
-                maintainers = [ lib.maintainers.cmm ];
-              };
-            }
-          )
-          tramp-rpc
-
           nerd-icons
           nerd-icons-dired
           nerd-icons-ibuffer
@@ -471,12 +310,9 @@ in
           nerd-icons-completion
 
           marginalia
-          doom-themes
-          solaire-mode
-          doom-modeline
+          doom-themes solaire-mode doom-modeline
           rainbow-mode
-          diff-hl
-          difftastic
+          diff-hl difftastic
 
           ultra-scroll
         ]
@@ -494,17 +330,21 @@ in
 
   programs.fish = {
     interactiveShellInit = lib.mkAfter ''
-      functions --copy fish_prompt vterm_old_fish_prompt
-      function fish_prompt --description 'Write out the prompt; do not replace this. Instead, put this at end of your file.'
-          # Remove the trailing newline from the original prompt. This is done
-          # using the string builtin from fish, but to make sure any escape codes
-          # are correctly interpreted, use %b for printf.
-          printf "%b" (string join "\n" (vterm_old_fish_prompt))
-          vterm_prompt_end
-      end
-
+      # for stuff that needs to work in other terminal emulators too, not just vterm
       if begin; [ -n "$INSIDE_EMACS" ]; end
          fish_default_key_bindings
+      end
+
+      if string match -qr "vterm" $INSIDE_EMACS
+         source ${pkgs.emacsPackages.vterm}/**/emacs-vterm.fish
+
+         function emacs
+             vterm_find_file "$argv"
+         end
+         function man
+             vterm_cmd man (string join " " -- "-l" (command man -w "$argv" 2>/dev/null))
+         end
+         alias ff='vterm_find_file'
       end
     '';
     shellAliases = {
@@ -519,43 +359,7 @@ in
       '';
     };
     functions = {
-      vterm_printf = ''
-        if begin; [ -n "$TMUX" ]; and string match -q -r "screen|tmux" "$TERM"; end
-            # tell tmux to pass the escape sequences through
-            printf "\ePtmux;\e\e]%s\007\e\\" "$argv"
-        else if string match -q -- "screen*" "$TERM"
-            # GNU screen (screen, screen-256color, screen-256color-bce)
-            printf "\eP\e]%s\007\e\\" "$argv"
-        else
-            printf "\e]%s\e\\" "$argv"
-        end
-      '';
-      vterm_cmd = {
-        description = "Run an Emacs command among the ones been defined in vterm-eval-cmds.";
-        body = ''
-          set -l vterm_elisp ()
-          for arg in $argv
-              set -a vterm_elisp (printf '"%s" ' (string replace -a -r -- '([\\\\"])' '\\\\\\\\$1' $arg))
-          end
-          vterm_printf '51;E'(string join ''' $vterm_elisp)
-        '';
-      };
-      vterm_find_file = ''
-        set -q argv[1]; or set argv[1] "."
-        for arg in $argv
-            vterm_cmd find-file (realpath "$arg")
-        end
-      '';
-      man = ''
-        if begin; [ -n "$INSIDE_EMACS" ]; end
-            vterm_cmd man (string join " " -- "-l" (command man -w "$argv" 2>/dev/null))
-        else
-            command man "$argv"
-        end
-      '';
-      vterm_prompt_end = ''
-        vterm_printf '51;A'(whoami)'@'(hostname)':'(pwd)
-      '';
+      ee = "open -a ${emacsWrapped}/Applications/Emacs.app";
     };
   };
 }

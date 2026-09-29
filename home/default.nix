@@ -9,6 +9,7 @@
     ./editor
     ./terminal
     ./finance
+    ./mail
     ./firefox
     ./nix.nix
     ./backups.nix
