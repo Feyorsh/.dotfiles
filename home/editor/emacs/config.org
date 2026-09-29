@@ -3536,7 +3536,9 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
     (defun project-try-haskell (dir)
       (when-let ((root (locate-dominating-file
                         dir
-                        (lambda (d) (directory-files d nil "\\(stack\\.yaml\\|cabal\\.project\\|\\.cabal\\)\\'" t)))))
+                        (lambda (d)
+                          (unless (string= d "/nix/store/")
+                            (directory-files d nil "\\(stack\\.yaml\\|cabal\\.project\\|\\.cabal\\)\\'" t))))))
           (cons 'transient root)))
     (defun project-vterm ()
       "Start Vterm in the current project's root."
