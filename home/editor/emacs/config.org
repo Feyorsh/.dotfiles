@@ -2992,6 +2992,13 @@ Add a setting such that ~zig run~ creates an exe in the expected place, not the 
     :mode "\\.hs\\'")
 #+end_src
 
+**** Dhall
+#+begin_src elisp :noweb-ref org-async-init
+(use-package dhall-mode
+  :config
+  (setq dhall-use-header-line nil))
+#+end_src
+
 *** TODO C/C++
 I realized I don't actually use an "official" style; I think functions should be formatted like statements.
 #+begin_src elisp :noweb-ref org-async-init
@@ -3868,6 +3875,7 @@ Eglot!
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
   (add-to-list 'eglot-server-programs '((typst-ts-mode) . ("tinymist")))
   (add-to-list 'eglot-server-programs '((haskell-mode haskell-cabal-mode) . ("haskell-language-server-wrapper" "--lsp")))
+  (add-to-list 'eglot-server-programs '((dhall-mode) . ("dhall-lsp-server")))
 
   (setq-default eglot-workspace-configuration (lambda (server)
                                                 (when (cl-some (lambda (lang) (string-match-p "haskell" (cdr lang))) (eglot--languages server))
