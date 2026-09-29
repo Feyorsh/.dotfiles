@@ -70,13 +70,11 @@ in
     };
   };
 
-  programs.emacs.extraPackages =
-    epkgs:
-    (with epkgs; [
-      gptel
-      gptel-agent
-      agent-shell
+  programs.emacs.extraPackages = epkgs: (with epkgs; [
+    gptel
+    gptel-agent
+    agent-shell
 
-      pkgs.codex-acp
-    ]);
+    pkgs.codex-acp
+  ]);
 }
