@@ -3841,15 +3841,11 @@ Eglot!
                                              (remove #'flymake-eldoc-function eldoc-documentation-functions)))
                                  ;; Show all eldoc feedback.
                                  (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
-         ((sage-shell-mode
-           python-mode python-ts-mode
+         ((python-mode python-ts-mode
            nix-mode nix-ts-mode
-           rust-ts-mode
            zig-mode
            typst-ts-mode
-           haskell-mode
-           go-mode go-ts-mode
-           c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode)
+           go-mode go-ts-mode)
           . (lambda () (unless (or (not eglot-enabled)
                                    buffer-read-only
                                    (not buffer-file-name)
