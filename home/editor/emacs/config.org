@@ -3435,18 +3435,9 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
   (defun sudo-find-file (file)
     "Open FILE as root."
     (interactive "FOpen file as root: ")
-    (when (file-writable-p file)
-      (user-error "File is user writeable, aborting sudo"))
-    (find-file (if (file-remote-p file)
-                   (concat "/" (file-remote-p file 'method) ":"
-                           (file-remote-p file 'user) "@" (file-remote-p file 'host)
-                           "|sudo:root@"
-                           (file-remote-p file 'host) ":" (file-remote-p file 'localname))
-                 (concat "/sudo:root@localhost:" file))))
-  (defun sudo-this-file ()
-    "Open the current file as root."
-    (interactive)
-    (sudo-find-file (file-truename buffer-file-name)))
+    (with-tramp-file-name-with-method
+        (find-alternate-file (tramp-file-name-with-sudo file))))
+  (defalias 'sudo-this-file 'tramp-revert-buffer-with-sudo)
 
   ;; supposedly this allows reuse of ssh connections
   (setq tramp-ssh-controlmaster-options
