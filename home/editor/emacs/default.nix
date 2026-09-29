@@ -333,7 +333,7 @@ in
           pkgs.ruff
           pkgs.ty
           pkgs.basedpyright
-          haskell-mode consult-hoogle pkgs.haskellPackages.hoogle
+          haskell-mode consult-hoogle pkgs.haskellPackages.hoogle pkgs.haskellPackages.fourmolu pkgs.haskellPackages.cabal-fmt
           markdown-mode
           sly
           paredit

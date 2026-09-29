@@ -3920,6 +3920,11 @@ Eglot!
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
   (add-to-list 'eglot-server-programs '((typst-ts-mode) . ("tinymist")))
   (add-to-list 'eglot-server-programs '((haskell-mode haskell-cabal-mode) . ("haskell-language-server-wrapper" "--lsp")))
+
+  (setq-default eglot-workspace-configuration (lambda (server)
+                                                (when (cl-some (lambda (lang) (string-match-p "haskell" (cdr lang))) (eglot--languages server))
+                                                  '(:haskell (:formattingProvider "fourmolu"
+                                                              :cabalFormattingProvider "cabal-fmt")))))
   (setq eldoc-echo-area-prefer-doc-buffer t
         eldoc-echo-area-use-multiline-p nil
         eglot-events-buffer-size 0
