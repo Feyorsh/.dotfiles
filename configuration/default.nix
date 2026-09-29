@@ -247,6 +247,9 @@ in
         UpdatePeriod = 2;
         IconType = 2; # show network usage
       };
+      "com.apple.AppleMultitouchTrackpad" = {
+        TrackpadThreeFingerHorizSwipeGesture = 0;
+      };
     };
     defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
     defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode = true;
