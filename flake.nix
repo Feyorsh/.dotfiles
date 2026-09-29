@@ -45,6 +45,7 @@
       url = "github:4evy/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    debuginfod-zig.url = "github:pwndbg/debuginfod-zig";
   };
 
   outputs = inputs @ { self, nixpkgs, darwin, home-manager, deploy-rs, ... }:
