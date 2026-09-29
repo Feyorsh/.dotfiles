@@ -3599,6 +3599,7 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
     :config
     (advice-add 'org-export-to-file :around #'envrc-propagate-environment)
     (add-to-list 'global-mode-string envrc-lighter)
+    (add-to-list 'display-buffer-alist '("\\*envrc\\(?:-.*\\)?\\*" (display-buffer-no-window) (allow-no-window . t)))
     (setq envrc-show-summary-in-minibuffer nil)
     (setq envrc-error-lighter '(" envrc[" (:propertize "blocked" face envrc-mode-line-error-face) "]"))
     (setq envrc-remote t))
