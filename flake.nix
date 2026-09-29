@@ -49,8 +49,7 @@
 
   outputs = inputs @ { self, nixpkgs, darwin, home-manager, deploy-rs, ... }:
     let
-      system = "aarch64-darwin";
-      pkgs = import nixpkgs {
+      pkgsFor = system: import nixpkgs {
         inherit system;
         config = {
           allowUnfree = true;
@@ -66,14 +65,24 @@
       bootstrap = false;
     in
       {
-        homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./home ];
-          extraSpecialArgs = { inherit inputs username bootstrap; };
+        homeConfigurations = {
+          "${username}" = home-manager.lib.homeManagerConfiguration {
+            pkgs = pkgsFor "aarch64-darwin";
+            modules = [ ./home ];
+            extraSpecialArgs = { inherit inputs username bootstrap; };
+          };
+          "${vmUser}" = home-manager.lib.homeManagerConfiguration {
+            pkgs = pkgsFor "aarch64-linux";
+            modules = [ ./home/fysh ];
+            extraSpecialArgs = {
+              inherit inputs;
+              username = vmUser;
+            };
+          };
         };
 
         darwinConfigurations."${host}" = darwin.lib.darwinSystem {
-          inherit pkgs system;
+          pkgs = pkgsFor "aarch64-darwin";
 	        modules = [ ./configuration ];
           specialArgs = { inherit inputs username host bootstrap; };
         };
