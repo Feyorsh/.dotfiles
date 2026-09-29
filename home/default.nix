@@ -2,6 +2,7 @@
 {
   imports = with inputs; [
     spicetify-nix.homeManagerModules.default
+    inputs.nixcord.homeModules.nixcord
 
     ./git
     ./games
@@ -89,6 +90,11 @@
     alwaysEnableDevTools = true;
     theme = spicePkgs.themes.text;
     colorScheme = "RosePineMoon";
+  };
+
+  programs.nixcord = {
+    enable = true;
+    silenceNoModClientWarning = true;
   };
 
   launchd.agents = {
