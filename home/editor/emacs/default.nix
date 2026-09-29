@@ -13,12 +13,6 @@ let
         url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/61d588ce80fb4282e107f5ab97914e32451c3da1/patches/emacs-28/fix-window-role.patch";
         hash = "sha256-+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
       })
-      # (fetchpatch {
-      #   name = "canvas-api.patch";
-      #   url = "https://raw.githubusercontent.com/minad/emacs-canvas-patch/97a1e75d2a2afab3b607ec9021bf73dd6cdc53fb/canvas-31.patch";
-      #   hash = "sha256-RcnF7kbMfpBEYqKMu1JmOBKMql+jDnwllHj40Q1opTM=";
-      # })
-      ./patches/canvas.patch
     ];
 
     postPatch = prev.postPatch + ''
@@ -153,56 +147,6 @@ in
               echo ";; End:" >> evil-org.el
             '';
           }))
-
-          (
-            let
-              version = "0.1";
-              src = fetchFromGitHub {
-                owner = "minad";
-                repo = "doom-on-emacs";
-                rev = "9228d3c47e68fdc9dca5c9e6f972467fed0780b7";
-                hash = "sha256-SoISeerX/xI2Ei6n3/LpxmgAKGiJEZy7rSgK85ihudk=";
-              };
-              doom-library = "doomgeneric_emacs";
-              doom-emacs = with pkgs; stdenv.mkDerivation {
-                pname = "doom-emacs";
-                inherit version src;
-
-                sourceRoot = "${src.name}/doomgeneric";
-                postPatch = ''
-                  substituteInPlace Makefile.emacs --replace-fail ' -Wl,-Map,$(OUTPUT).map' ""
-                '';
-
-                buildInputs = [ emacs' ];
-                makefile = "Makefile.emacs";
-                makeFlags = [ "CC=cc" ];
-
-                installPhase = ''
-                  runHook preInstall
-                  mkdir -p $out/lib
-                  mv ${doom-library}.so $out/lib/${doom-library}${stdenv.targetPlatform.extensions.sharedLibrary}
-                  runHook postInstall
-                '';
-
-                strictDeps = true;
-              };
-            in melpaBuild {
-              pname = "doom";
-              inherit version src;
-
-              postPatch = ''
-                substituteInPlace doom.el --replace-fail ';;; Code:' "(require 'cl-lib)" \
-                                          --replace-fail 'incf' 'cl-incf' \
-                                          --replace-fail '(expand-file-name "~/")' '(let ((doom-dir (expand-file-name "doom" user-emacs-directory))) (files--ensure-directory doom-dir) doom-dir)'
-              '';
-
-              files = ''(:defaults ("doomgeneric" "${lib.getLib doom-emacs}/lib/${doom-library}.*"))'';
-
-              meta = {
-                description = "DOOM, Emacs";
-                license = lib.licenses.gpl2Only;
-              };
-          })
 
           general
           corfu
