@@ -28,7 +28,7 @@
       imagemagick
       ffmpeg
 
-      (python314.withPackages(ps: with ps; [ ipython requests numpy matplotlib pwntools ]))
+      (python314.withPackages(ps: with ps; [ ipython requests numpy matplotlib ]))
       uv
       cargo
 
@@ -94,7 +94,7 @@
 
   programs.nixcord = {
     enable = true;
-    silenceNoModClientWarning = true;
+    discord.silenceNoModClientWarning = true;
   };
 
   launchd.agents = {

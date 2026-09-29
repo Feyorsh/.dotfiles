@@ -1,4 +1,5 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
+
 {
   programs.fish = {
     enable = true;
@@ -39,4 +40,6 @@
       { name = "fishplugin-async-prompt"; src = pkgs.fishPlugins.async-prompt.src; }
     ];
   };
+
+  programs.direnv.enableFishIntegration = true;
 }
