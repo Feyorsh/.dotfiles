@@ -3315,6 +3315,11 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
           (error "%s does not exist" FILENAME)
         (let ((default-directory (file-name-directory FILENAME)))
           (vterm '(4)))))
+    ;; x forwarding does not work properly with controlmaster; see section 5.6.1 of the TRAMP manual
+    (defun fysh/vterm-with-x ()
+      (interactive)
+      (let ((tramp-use-connection-share nil))
+        (funcall-interactively #'vterm t)))
     (setq vterm-max-scrollback 5000)
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
