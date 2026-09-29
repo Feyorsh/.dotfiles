@@ -4006,6 +4006,7 @@ It's 2024; man is significantly better than woman. /s
   :general
   (leader-def "m" #'consult-man)
   :config
+  (setq Man-support-remote-systems t)
   (define-advice Man-bgproc-sentinel (:around (fn &rest args) silence-logs)
     (let ((inhibit-message t))
       (apply fn args)))
