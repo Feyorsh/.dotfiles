@@ -27,11 +27,17 @@ in
     unixtools.wall
     unixtools.watch
     iproute2mac
+    darwin.ps
+    psutils
+    cctools
 
     vim
     wget
     curl
+    rsync
+    netcat
     socat
+    file
     ripgrep
     fd
     jq
