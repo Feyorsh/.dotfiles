@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, lib, ... }:
 let
   rinse = "nh home switch ~/.dotfiles";
   lave = "nh darwin switch ~/.dotfiles";
