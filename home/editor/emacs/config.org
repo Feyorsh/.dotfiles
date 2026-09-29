@@ -3890,6 +3890,27 @@ Eglot!
         eglot-autoreconnect nil))
 #+end_src
 
+**** Eldoc
+#+begin_src elisp
+(use-package eldoc-mouse
+  :general
+  ('eldoc-mouse-mode-map
+   "<f1> <f1>" #'eldoc-mouse-pop-doc-at-cursor
+   "C-h ." #'eldoc-mouse-pop-doc-at-cursor)
+  :general-config
+  ('eldoc-mouse-mode-map
+   "C-j" #'fysh/eldoc-mouse-next-line
+   "C-k" #'fysh/eldoc-mouse-previous-line)
+  :config
+  (defun fysh/eldoc-mouse-next-line (&optional arg)
+    (interactive)
+    (posframe-funcall eldoc-mouse-posframe-buffer-name #'scroll-up-line arg))
+  (defun fysh/eldoc-mouse-previous-line (&optional arg)
+    (interactive)
+    (posframe-funcall eldoc-mouse-posframe-buffer-name #'scroll-down-line arg))
+  :hook eldoc-mode)
+#+end_src
+
 *** Treesitter
 Emacs 29 has tree sitter built in, which adds ts specific major modes (for backward compatibility).
 Looks like I'll have to major mode remap those because [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter][Mickey said so]]; that being said, this is /really/ hacky and ugly.
