@@ -16,7 +16,7 @@
     gopls
     rust-analyzer
     nixd
-    ruff ty basedpyright
+    ruff ty
     matlab-language-server
     zls
     dhall-lsp-server

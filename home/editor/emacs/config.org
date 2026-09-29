@@ -2918,12 +2918,10 @@ Remove zero width spaces
 (use-package python
     :mode ("\\.py\\'" . python-ts-mode)
     :interpreter ("python" . python-ts-mode)
-    :hook (python-ts-mode . flymake-mode)
     :config
     (add-to-list 'org-src-block-faces '("python" (:background "#18314c" :extend t)))
     (setq python-indent-guess-indent-offset-verbose nil)
-    (setq python-shell-completion-native-enable nil)
-    (setq python-flymake-command '("ruff" "--quiet" "--stdin-filename=stdin" "-")))
+    (setq python-shell-completion-native-enable nil))
 
 (use-package python-mls
     :hook (inferior-python-mode . python-mls-mode)
@@ -3868,7 +3866,7 @@ Eglot!
       :config
       (setq eglot-booster-io-only t)
       (eglot-booster-mode))
-  (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("rass" "tyruff")))
   (add-to-list 'eglot-server-programs '((swift-mode) . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
   (add-to-list 'eglot-server-programs '((typst-ts-mode) . ("tinymist")))
