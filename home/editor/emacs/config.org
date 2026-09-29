@@ -3874,11 +3874,6 @@ Eglot!
       :demand t
       :config
       (eglot-jl-init))
-  (use-package eglot-booster
-      :demand t
-      :config
-      (setq eglot-booster-io-only t)
-      (eglot-booster-mode))
   (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("rass" "tyruff")))
   (add-to-list 'eglot-server-programs '((swift-mode) . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((nix-mode nix-ts-mode) . ("nixd")))
