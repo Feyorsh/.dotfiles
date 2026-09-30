@@ -5,6 +5,7 @@
     ../git
     ../editor/remote.nix
     ../terminal/common.nix
+    ../terminal/shell/default.nix
     ../nix.nix
     ../ssh.nix
   ];

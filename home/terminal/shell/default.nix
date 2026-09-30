@@ -1,6 +1,6 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 {
-  imports = [ ./fish.nix ];
+  imports = [ ./bash.nix ];
 
   programs.direnv = {
     enable = true;
@@ -27,13 +27,4 @@
 
   programs.zoxide.enable = true;
   home.sessionVariables._ZO_DATA_DIR = config.xdg.dataHome;
-
-  home.packages = with pkgs; [
-    (writeShellApplication {
-      name = "hydrate";
-      runtimeInputs = [ restic pass ];
-      text = builtins.readFile ./hydrate;
-    })
-    cheat
-  ];
 }
