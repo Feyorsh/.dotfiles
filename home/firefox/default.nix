@@ -17,6 +17,7 @@ in
   programs.firefox = {
     enable = true;
     package = pkgs.firefox;
+    configPath = "Library/Application Support/org.nixos.firefox";
     nativeMessagingHosts = [ pkgs.tridactyl-native ];
     profiles."Personal" = {
       id = 0;
