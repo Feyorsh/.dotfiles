@@ -11,6 +11,7 @@ let
     kagi-translate
     web-archives
     bitwarden
+    dearrow
   ];
 in
 {
