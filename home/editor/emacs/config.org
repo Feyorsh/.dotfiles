@@ -3450,6 +3450,17 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
         (find-alternate-file (tramp-file-name-with-sudo file))))
   (defalias 'sudo-this-file 'tramp-revert-buffer-with-sudo)
 
+  (defun fysh/maybe-local-file (file)
+    "Return the local path of a (possibly TRAMP) file, or nil if it doesn't exist."
+    (when-let* ((f (abbreviate-file-name file))
+                ((file-remote-p f)))
+       (tramp-file-local-name f)))
+  (defun fysh/find-file-local ()
+    "Try to open the local version of this file"
+    (interactive)
+    (when-let* ((file (fysh/maybe-local-file (or buffer-file-name default-directory))))
+       (find-file file)))
+
   ;; supposedly this allows reuse of ssh connections
   (setq tramp-ssh-controlmaster-options
         (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
@@ -3542,12 +3553,13 @@ For example, I bookmarked the RISV-V Instruction Decoder to open up in WebKit, a
       (if-let ((root (locate-dominating-file dir "flake.lock")))
           (cons 'transient root)))
     (defun project-try-haskell (dir)
-      (when-let ((root (locate-dominating-file
-                        dir
-                        (lambda (d)
-                          (unless (string= d "/nix/store/")
-                            (directory-files d nil "\\(stack\\.yaml\\|cabal\\.project\\|\\.cabal\\)\\'" t))))))
-          (cons 'transient root)))
+      (when-let* (((file-exists-p dir))
+                  (root (locate-dominating-file
+                         dir
+                         (lambda (d)
+                           (unless (string= d "/nix/store/")
+                             (directory-files d nil "\\(stack\\.yaml\\|cabal\\.project\\|\\.cabal\\)\\'" t))))))
+        (cons 'transient root)))
     (defun project-vterm ()
       "Start Vterm in the current project's root."
       (interactive)
@@ -3663,6 +3675,12 @@ Make ~ledger-reports~ programmatic to reflect the current billing cycle
   :hook
   (magit-mode . (lambda () (setq evil-ex-hl-update-delay 0.25)))
   :config
+  (defun fysh/--maybe-localify-directory (directory)
+    (let ((dir (or (car directory) default-directory)))
+      (list (or (fysh/maybe-local-file dir) dir))))
+  (advice-add #'magit-toplevel :filter-args #'fysh/--maybe-localify-directory)
+  (advice-add #'magit-status-setup-buffer :filter-args #'fysh/--maybe-localify-directory)
+
   (setq magit-diff-refine-hunk t)
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-delete-by-moving-to-trash nil)
