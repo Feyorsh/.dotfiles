@@ -148,6 +148,11 @@ in
           url = "file://${home}/Personal/fyshpkgs";
         };
       };
+      sixpkgs.to = {
+        type = "git";
+        ref = "main";
+        url = "ssh://git@github.com/sighacks/sixpkgs";
+      };
     };
   };
 
