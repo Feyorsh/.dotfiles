@@ -2203,8 +2203,6 @@ This isn't /strictly/ IRC related, but...
 Formatting
 #+begin_src elisp
 (use-package apheleia
-  :init
-  (apheleia-global-mode +1)
   :custom
   (apheleia-inhibit-functions (list (lambda () (derived-mode-p #'nix-mode)) (lambda () (require 'magit) (when (and (derived-mode-p #'prog-mode) (magit-toplevel)) (or (length> (magit-list-remotes) 1) (not (string-match-p "Feyorsh" (or (magit-get "remote" (magit-get-remote) "url") "")))))))))
 #+end_src
