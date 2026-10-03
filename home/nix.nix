@@ -4,7 +4,9 @@ let
   lave = "nh darwin switch ~/.dotfiles";
   powerwash = "deploy ~/.dotfiles --skip-checks";
   nix-unfetter = "nix-store --option sandbox false --realise";
-  nixc = pkgs.writeShellScriptBin "nixc" ''
+  nixc = pkgs.writeShellScriptBin "nixc" (nixc' true);
+  nixcf = pkgs.writeShellScriptBin "nixcf" (nixc' false);
+  nixc' = tofrom: ''
     if ! [ "$#" -gt 0 ] && [ "$#" -lt 4 ]; then
       echo "usage: $0 [host] <path:result> <jump-host>" >&2
       exit 1
@@ -13,7 +15,7 @@ let
     if [ -n "$3" ]; then
       local -x NIX_SSHOPTS="-J $3"
     fi
-    nix copy --to "ssh://$1" $(readlink "''${2:-result}" | tee /dev/tty)
+    nix copy ${if tofrom then "--to" else "--from"} "ssh://$1" $(readlink "''${2:-result}" | tee /dev/tty)
   '';
 in
 {
@@ -24,6 +26,9 @@ in
     nixfmt-rs
     nix-prefetch
     inputs.deploy-rs.packages.${pkgs.stdenv.system}.deploy-rs
+
+    nixc
+    nixcf
   ];
 
   programs.nix-index = {
