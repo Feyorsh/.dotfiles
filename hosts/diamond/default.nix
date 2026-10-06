@@ -1,0 +1,239 @@
+{ config, pkgs, lib, inputs, username, host, bootstrap, ... }:
+let
+  home = config.users.users.${username}.home;
+in
+{
+  imports = [
+    # ./xquartz.nix
+    ./xcode-shims.nix
+  ];
+
+  environment.systemPackages = with pkgs; [
+    coreutils
+    findutils
+    diffutils
+    inetutils
+    gawk
+    gnused
+    gnugrep
+    gnutar
+    gzip
+    xz
+    zstd
+    unixtools.wall
+    unixtools.watch
+    iproute2mac
+    darwin.ps
+    psutils
+    cctools
+
+    vim
+    wget
+    curl
+    rsync
+    netcat
+    socat
+    file
+    ripgrep
+    fd
+    jq
+    btop
+
+    openssh
+  ];
+
+  services.openssh.enable = true;
+
+  nix = {
+    enable = true;
+    package = pkgs.nixVersions.latest;
+
+    # gc = {
+    #   automatic = true;
+    #   options = "--delete-older-than 14d";
+    # };
+
+    optimise.automatic = true;
+
+    settings = {
+      keep-outputs = true;
+      keep-derivations = true;
+
+      # trusted-public-keys = [
+      #   "emerald:LhXXSgNg+TeXbAvO348YuoRzQRStC84kAHA0LWBDzns="
+      # ];
+      # trusted-substituters = [
+      #   "ssh-ng://emerald"
+      # ];
+
+      experimental-features = "nix-command flakes";
+
+      # more like pwn-me-mommy
+      accept-flake-config = true;
+      trusted-users = [ "root" "@admin" ];
+
+      sandbox = true;
+
+      fallback = true;
+      warn-dirty = false;
+    };
+
+    extraOptions = ''
+      builders-use-substitutes = true
+    '';
+    distributedBuilds = true;
+
+    # TODO setup linux builder
+    # buildMachines = [{
+    #   # hostName = "unix:///var/lib/xenu/store.sock";
+    #   # protocol = null;
+    #   hostName = "pallasite";
+    #   protocol = "ssh-ng";
+    #   sshUser = "fysh";
+    #   sshKey = "${home}/.ssh/id_ed25519";
+    #   supportedFeatures = [
+    #     "kvm"
+    #     "big-parallel"
+    #     "benchmark"
+    #   ];
+    #   systems = [
+    #     "aarch64-linux"
+    #     "x86_64-linux"
+    #   ];
+    # }];
+
+   channel.enable = false;
+   nixPath = [
+     "nixpkgs=flake:nixpkgs"
+     "darwin=flake:darwin"
+     "home-manager=flake:home-manager"
+   ];
+
+    registry = {
+      darwin.to = {
+        type = "path";
+        path = inputs.darwin.outPath;
+      };
+      home-manager.to = {
+        type = "path";
+        path = inputs.home-manager.outPath;
+      };
+      sixpkgs.to = {
+        type = "git";
+        ref = "main";
+        url = "ssh://git@github.com/sighacks/sixpkgs";
+      };
+    };
+  };
+
+  users.knownUsers = [ username ];
+  users.users.${username} = {
+    name = username;
+    uid = 501;
+    home = "/Users/${username}";
+    shell = pkgs.fish;
+  };
+  system.primaryUser = username;
+  programs.fish.enable = true;
+  programs.zsh.enable = true;
+
+  networking.hostName = host;
+  networking.computerName = host;
+  networking.applicationFirewall.enableStealthMode = true;
+
+  time.timeZone = "America/Chicago";
+
+  services.tailscale = {
+    enable = true;
+    package = pkgs.tailscale.overrideAttrs (prev: {
+      # use builtin ifconfig (BSD) instead of inetutils ifconfig
+      postPatch = (prev.postPatch or "") + ''
+        sed -e 's,"ifconfig","/sbin/ifconfig",' \
+            -i wgengine/router/osrouter/router_userspace_bsd.go
+      '';
+      doCheck = false;
+    });
+  };
+  environment.etc."resolver/tails.cale".text = "nameserver 100.100.100.100";
+
+  system = {
+    # misc aesthetics
+    startup.chime = false;
+    defaults.screencapture.location = "${home}/Images/Screenshots";
+    defaults.screencapture.target = "clipboard";
+    defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
+    defaults.menuExtraClock.Show24Hour = true;
+    defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
+    defaults.NSGlobalDomain.NSTextShowsControlCharacters = true;
+
+    # finder/files
+    defaults.finder.CreateDesktop = true;
+    defaults.finder.AppleShowAllFiles = true;
+    defaults.finder.AppleShowAllExtensions = true;
+    defaults.finder.FXPreferredViewStyle = "icnv";
+    defaults.finder._FXShowPosixPathInTitle = true;
+    defaults.finder.ShowExternalHardDrivesOnDesktop = false;
+    defaults.finder.ShowRemovableMediaOnDesktop = false;
+    defaults.finder.NewWindowTarget = "Other";
+    defaults.finder.NewWindowTargetPath = "file://${home}/Downloads";
+    defaults.CustomUserPreferences = {
+      "com.apple.desktopservices" = {
+        # Avoid creating .DS_Store files on external drives
+        DSDontWriteNetworkStores = true;
+        DSDontWriteUSBStores = true;
+      };
+      "com.apple.Safari" = {
+        "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
+        HomePage = "about:blank";
+      };
+      "com.apple.DiskUtility" = {
+        advanced-image-options = true;
+      };
+      "com.apple.ActivityMonitor" = {
+        UpdatePeriod = 2;
+        IconType = 2; # show network usage
+      };
+      "com.apple.AppleMultitouchTrackpad" = {
+        TrackpadThreeFingerHorizSwipeGesture = 0;
+      };
+    };
+    defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
+    defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode = true;
+    defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode2 = true;
+    defaults.NSGlobalDomain.AppleShowAllFiles = true;
+    defaults.NSGlobalDomain."com.apple.springing.delay" = 0.2;
+
+    # dock
+    defaults.dock.autohide = true;
+    defaults.dock.autohide-delay = 0.0;
+    defaults.dock.autohide-time-modifier = 0.3;
+    defaults.dock.tilesize = 64;
+    defaults.dock.show-recents = false;
+    defaults.dock.mru-spaces = false;
+    defaults.dock.minimize-to-application = true;
+    defaults.dock.mineffect = "scale";
+    defaults.dock.launchanim = false;
+    defaults.dock.wvous-br-corner = 1; # disabled
+    defaults.universalaccess.reduceMotion = true;
+    defaults.WindowManager.EnableStandardClickToShowDesktop = false;
+    defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
+    defaults.NSGlobalDomain.AppleScrollerPagingBehavior = true;
+
+    # system/security
+    defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
+    defaults.loginwindow.GuestEnabled = false;
+
+    # keyboard
+    keyboard.enableKeyMapping = true;
+    keyboard.remapCapsLockToControl = true;
+    defaults.NSGlobalDomain.InitialKeyRepeat = 20;
+    defaults.NSGlobalDomain.KeyRepeat = 2;
+    defaults.NSGlobalDomain."com.apple.trackpad.forceClick" = true;
+    defaults.hitoolbox.AppleFnUsageType = "Change Input Source";
+  };
+
+  system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
+  # system.stateVersion = 7;
+
+  # nixpkgs.hostPlatform = "aarch64-darwin";
+}

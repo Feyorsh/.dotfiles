@@ -82,10 +82,20 @@
           };
         };
 
-        darwinConfigurations."${host}" = darwin.lib.darwinSystem {
-          pkgs = pkgsFor "aarch64-darwin";
-	        modules = [ ./configuration ];
-          specialArgs = { inherit inputs username host bootstrap; };
+        darwinConfigurations = {
+          "${host}" = darwin.lib.darwinSystem {
+            pkgs = pkgsFor "aarch64-darwin";
+            modules = [ ./configuration ];
+            specialArgs = { inherit inputs username host bootstrap; };
+          };
+          "diamond" = darwin.lib.darwinSystem {
+            pkgs = pkgsFor "aarch64-darwin";
+            modules = [ ./hosts/diamond ];
+            specialArgs = {
+              inherit inputs username bootstrap;
+              host = "diamond";
+            };
+          };
         };
 
         nixosConfigurations."${vmHost}" = nixpkgs.lib.nixosSystem {
