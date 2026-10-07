@@ -59,80 +59,98 @@
           inputs.emacs-tramp-rpc.overlays.default
         ];
       };
-      username = "ghuebner";
-      host = "Peridot";
-      vmHost = "pallasite";
-      vmUser = "fysh";
       bootstrap = false;
     in
       {
         homeConfigurations = {
-          "${username}" = home-manager.lib.homeManagerConfiguration {
+          "peridot" = home-manager.lib.homeManagerConfiguration {
             pkgs = pkgsFor "aarch64-darwin";
-            modules = [ ./home ];
-            extraSpecialArgs = { inherit inputs username bootstrap; };
+            modules = [ ./hosts/peridot/home.nix ];
+            extraSpecialArgs = {
+              inherit inputs bootstrap;
+              username = "ghuebner";
+            };
           };
-          "${vmUser}" = home-manager.lib.homeManagerConfiguration {
+          "diamond" = home-manager.lib.homeManagerConfiguration {
+            pkgs = pkgsFor "aarch64-darwin";
+            modules = [ ./hosts/diamond/home.nix ];
+            specialArgs = {
+              inherit inputs bootstrap;
+              username = "ghuebner";
+            };
+          };
+          "pallasite" = home-manager.lib.homeManagerConfiguration {
             pkgs = pkgsFor "aarch64-linux";
-            modules = [ ./home/fysh ];
+            modules = [ ./hosts/pallasite/home.nix ];
             extraSpecialArgs = {
               inherit inputs;
-              username = vmUser;
+              username = "fysh";
             };
           };
         };
 
         darwinConfigurations = {
-          "${host}" = darwin.lib.darwinSystem {
+          "peridot" = darwin.lib.darwinSystem {
             pkgs = pkgsFor "aarch64-darwin";
-            modules = [ ./configuration ];
-            specialArgs = { inherit inputs username host bootstrap; };
+            modules = [ ./hosts/peridot ];
+            specialArgs = {
+              inherit inputs;
+              username = "ghuebner";
+              host = "peridot";
+            };
           };
           "diamond" = darwin.lib.darwinSystem {
             pkgs = pkgsFor "aarch64-darwin";
             modules = [ ./hosts/diamond ];
             specialArgs = {
-              inherit inputs username bootstrap;
+              inherit inputs;
+              username = "ghuebner";
               host = "diamond";
             };
           };
         };
 
-        nixosConfigurations."${vmHost}" = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
+        nixosConfigurations = {
+          "pallasite" = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
 
-          modules = [
-            ./hosts/pallasite
-            ./hosts/pallasite/vm.nix
+            modules = [
+              ./hosts/pallasite
+              ./hosts/pallasite/vm.nix
 
-            {
-              nixpkgs.overlays = [
-                (self: super: {
-                  # https://github.com/NixOS/nixpkgs/issues/392673
-                  neattle = super.neattle.overrideAttrs (p:
-                    self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
-                      env.CCPIC = "-fPIC";
-                    }
-                  );
-                  # https://github.com/NixOS/nixpkgs/issues/366902
-                  qemu-user = super.qemu-user.overrideAttrs (p:
-                    self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
-                      configureFlags = (p.configureFlags or []) ++ [ "--disable-pie" ];
-                    }
-                  );
-                })
-              ];
-            }
-          ];
-          specialArgs = { inherit (inputs) disko; hostname = vmHost; username = vmUser; };
+              {
+                nixpkgs.overlays = [
+                  (self: super: {
+                    # https://github.com/NixOS/nixpkgs/issues/392673
+                    neattle = super.neattle.overrideAttrs (p:
+                      self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
+                        env.CCPIC = "-fPIC";
+                      }
+                    );
+                    # https://github.com/NixOS/nixpkgs/issues/366902
+                    qemu-user = super.qemu-user.overrideAttrs (p:
+                      self.lib.optionalAttrs self.stdenv.hostPlatform.isStatic {
+                        configureFlags = (p.configureFlags or []) ++ [ "--disable-pie" ];
+                      }
+                    );
+                  })
+                ];
+              }
+            ];
+            specialArgs = {
+              inherit (inputs) disko;
+              hostname = "pallasite";
+              username = "fysh";
+            };
+          };
         };
 
         deploy.nodes.vm = {
-          hostname = vmHost;
+          hostname = "pallasite";
           profiles.system = {
-            sshUser = vmUser;
+            sshUser = "fysh";
             user = "root";
-            path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."${vmHost}";
+            path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."pallasite";
           };
           remoteBuild = true;
         };

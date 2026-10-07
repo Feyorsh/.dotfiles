@@ -1,239 +1,76 @@
-{ config, pkgs, lib, inputs, username, host, bootstrap, ... }:
-let
-  home = config.users.users.${username}.home;
-in
+{ inputs, username, pkgs, ... }:
+
 {
   imports = [
-    # ./xquartz.nix
-    ./xcode-shims.nix
+    ../../darwin
+    ../../darwin/tailscale.nix
   ];
 
-  environment.systemPackages = with pkgs; [
-    coreutils
-    findutils
-    diffutils
-    inetutils
-    gawk
-    gnused
-    gnugrep
-    gnutar
-    gzip
-    xz
-    zstd
-    unixtools.wall
-    unixtools.watch
-    iproute2mac
-    darwin.ps
-    psutils
-    cctools
-
-    vim
-    wget
-    curl
-    rsync
-    netcat
-    socat
-    file
-    ripgrep
-    fd
-    jq
-    btop
-
-    openssh
-  ];
-
-  services.openssh.enable = true;
-
-  nix = {
-    enable = true;
-    package = pkgs.nixVersions.latest;
-
-    # gc = {
-    #   automatic = true;
-    #   options = "--delete-older-than 14d";
-    # };
-
-    optimise.automatic = true;
-
-    settings = {
-      keep-outputs = true;
-      keep-derivations = true;
-
-      # trusted-public-keys = [
-      #   "emerald:LhXXSgNg+TeXbAvO348YuoRzQRStC84kAHA0LWBDzns="
-      # ];
-      # trusted-substituters = [
-      #   "ssh-ng://emerald"
-      # ];
-
-      experimental-features = "nix-command flakes";
-
-      # more like pwn-me-mommy
-      accept-flake-config = true;
-      trusted-users = [ "root" "@admin" ];
-
-      sandbox = true;
-
-      fallback = true;
-      warn-dirty = false;
+  users = let
+    default = name: {
+      inherit name;
+      home = "/Users/${name}";
+      createHome = true;
+      shell = pkgs.zsh;
     };
-
-    extraOptions = ''
-      builders-use-substitutes = true
-    '';
-    distributedBuilds = true;
-
-    # TODO setup linux builder
-    # buildMachines = [{
-    #   # hostName = "unix:///var/lib/xenu/store.sock";
-    #   # protocol = null;
-    #   hostName = "pallasite";
-    #   protocol = "ssh-ng";
-    #   sshUser = "fysh";
-    #   sshKey = "${home}/.ssh/id_ed25519";
-    #   supportedFeatures = [
-    #     "kvm"
-    #     "big-parallel"
-    #     "benchmark"
-    #   ];
-    #   systems = [
-    #     "aarch64-linux"
-    #     "x86_64-linux"
-    #   ];
-    # }];
-
-   channel.enable = false;
-   nixPath = [
-     "nixpkgs=flake:nixpkgs"
-     "darwin=flake:darwin"
-     "home-manager=flake:home-manager"
-   ];
-
-    registry = {
-      darwin.to = {
-        type = "path";
-        path = inputs.darwin.outPath;
+    users' = {
+      "${username}" = {
+        uid = 501;
+        shell = pkgs.fish;
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB1ej2V2ZEk8Ov54C/VqjfXFIM1hnFwsj6J0PDa6SeQK ghuebner@Peridot"
+        ];
       };
-      home-manager.to = {
-        type = "path";
-        path = inputs.home-manager.outPath;
+      "nixremote" = {
+        isHidden = true;
+        shell = null;
+        home = "/Users/.nixremote";
+        createHome = false;
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpjzyHan4fXSPGv/hVPNvB5cz9QQDqXwB2VQPAWNWRj cameron@anon"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhHZMelKxeQcVkrbbVwi9+7oxMHaqK/ujO63aRXhtyw cameron@anon"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBkHe7782D0jiVt9mOHzpQq0c9aWCJmzpzcMPuK/0txJ cameron@anon"
+        ];
       };
-      sixpkgs.to = {
-        type = "git";
-        ref = "main";
-        url = "ssh://git@github.com/sighacks/sixpkgs";
+      "quincy" = {
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOVY5KiP8XkUU8rybBTNXEhwmDyDDe6Z3bZEKhAkFKSh KathySpitzer@MacBook-Pro-15.local"
+        ];
+      };
+      "sruggerio" = {
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMirOM34/c6bpCTa8GWAA2M623QP0kYNnH4JRo7udldE"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEHuQ28b8IAhFUA1bEIfjEvyIaoYJILvZVj6QjKTFc4Z"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOfJOfvvzU+yvipBSb/VE4Cvpz2m4tK2xlEstKemWR2g"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIT1rXz5BNggTC7gxZ/0ZHjtosaW0fYfm6Yqz0PtIj/w"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPuTZGemlptv4gCBnZEpQMjgWNN83IditOUn4hf3u96P"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID+YeKwyxzv1UuGzGjgI8szH9exgLDFUz/Jr+iJSYiYl"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfb80DeTY3N67/RTWZ3LqctHLtJrdG+Aqjt92ZL1KcV"
+        ];
+      };
+      "cchurchwell" = {
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpjzyHan4fXSPGv/hVPNvB5cz9QQDqXwB2VQPAWNWRj cameron@anon"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhHZMelKxeQcVkrbbVwi9+7oxMHaqK/ujO63aRXhtyw cameron@anon"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBkHe7782D0jiVt9mOHzpQq0c9aWCJmzpzcMPuK/0txJ cameron@anon"
+        ];
       };
     };
-  };
-
-  users.knownUsers = [ username ];
-  users.users.${username} = {
-    name = username;
-    uid = 501;
-    home = "/Users/${username}";
-    shell = pkgs.fish;
+  in {
+    knownUsers = builtins.attrNames users';
+    users = builtins.mapAttrs (user: settings: (default user) // settings) users';
   };
   system.primaryUser = username;
+
+  nix.settings = {
+    trusted-users = [ "nixremote" ];
+  };
+
   programs.fish.enable = true;
   programs.zsh.enable = true;
 
-  networking.hostName = host;
-  networking.computerName = host;
-  networking.applicationFirewall.enableStealthMode = true;
-
-  time.timeZone = "America/Chicago";
-
-  services.tailscale = {
-    enable = true;
-    package = pkgs.tailscale.overrideAttrs (prev: {
-      # use builtin ifconfig (BSD) instead of inetutils ifconfig
-      postPatch = (prev.postPatch or "") + ''
-        sed -e 's,"ifconfig","/sbin/ifconfig",' \
-            -i wgengine/router/osrouter/router_userspace_bsd.go
-      '';
-      doCheck = false;
-    });
-  };
-  environment.etc."resolver/tails.cale".text = "nameserver 100.100.100.100";
-
-  system = {
-    # misc aesthetics
-    startup.chime = false;
-    defaults.screencapture.location = "${home}/Images/Screenshots";
-    defaults.screencapture.target = "clipboard";
-    defaults.NSGlobalDomain.AppleInterfaceStyle = "Dark";
-    defaults.menuExtraClock.Show24Hour = true;
-    defaults.NSGlobalDomain.AppleICUForce24HourTime = true;
-    defaults.NSGlobalDomain.NSTextShowsControlCharacters = true;
-
-    # finder/files
-    defaults.finder.CreateDesktop = true;
-    defaults.finder.AppleShowAllFiles = true;
-    defaults.finder.AppleShowAllExtensions = true;
-    defaults.finder.FXPreferredViewStyle = "icnv";
-    defaults.finder._FXShowPosixPathInTitle = true;
-    defaults.finder.ShowExternalHardDrivesOnDesktop = false;
-    defaults.finder.ShowRemovableMediaOnDesktop = false;
-    defaults.finder.NewWindowTarget = "Other";
-    defaults.finder.NewWindowTargetPath = "file://${home}/Downloads";
-    defaults.CustomUserPreferences = {
-      "com.apple.desktopservices" = {
-        # Avoid creating .DS_Store files on external drives
-        DSDontWriteNetworkStores = true;
-        DSDontWriteUSBStores = true;
-      };
-      "com.apple.Safari" = {
-        "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
-        HomePage = "about:blank";
-      };
-      "com.apple.DiskUtility" = {
-        advanced-image-options = true;
-      };
-      "com.apple.ActivityMonitor" = {
-        UpdatePeriod = 2;
-        IconType = 2; # show network usage
-      };
-      "com.apple.AppleMultitouchTrackpad" = {
-        TrackpadThreeFingerHorizSwipeGesture = 0;
-      };
-    };
-    defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
-    defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode = true;
-    defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode2 = true;
-    defaults.NSGlobalDomain.AppleShowAllFiles = true;
-    defaults.NSGlobalDomain."com.apple.springing.delay" = 0.2;
-
-    # dock
-    defaults.dock.autohide = true;
-    defaults.dock.autohide-delay = 0.0;
-    defaults.dock.autohide-time-modifier = 0.3;
-    defaults.dock.tilesize = 64;
-    defaults.dock.show-recents = false;
-    defaults.dock.mru-spaces = false;
-    defaults.dock.minimize-to-application = true;
-    defaults.dock.mineffect = "scale";
-    defaults.dock.launchanim = false;
-    defaults.dock.wvous-br-corner = 1; # disabled
-    defaults.universalaccess.reduceMotion = true;
-    defaults.WindowManager.EnableStandardClickToShowDesktop = false;
-    defaults.NSGlobalDomain.AppleShowScrollBars = "WhenScrolling";
-    defaults.NSGlobalDomain.AppleScrollerPagingBehavior = true;
-
-    # system/security
-    defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
-    defaults.loginwindow.GuestEnabled = false;
-
-    # keyboard
-    keyboard.enableKeyMapping = true;
-    keyboard.remapCapsLockToControl = true;
-    defaults.NSGlobalDomain.InitialKeyRepeat = 20;
-    defaults.NSGlobalDomain.KeyRepeat = 2;
-    defaults.NSGlobalDomain."com.apple.trackpad.forceClick" = true;
-    defaults.hitoolbox.AppleFnUsageType = "Change Input Source";
-  };
+  services.openssh.enable = true;
 
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
-  # system.stateVersion = 7;
-
-  # nixpkgs.hostPlatform = "aarch64-darwin";
+  system.stateVersion = 7;
 }

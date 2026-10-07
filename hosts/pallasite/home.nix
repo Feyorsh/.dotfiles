@@ -1,21 +1,17 @@
-{ username, config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [
-    ../git
-    ../editor/remote.nix
-    ../terminal/common.nix
-    ../terminal/shell/default.nix
-    ../nix.nix
-    ../ssh.nix
+    ../../home
+    ../../home/git
+    ../../home/editor/remote.nix
+    ../../home/terminal/common.nix
+    ../../home/terminal/shell/default.nix
+    ../../home/nix.nix
+    ../../home/ssh.nix
   ];
 
-  home = {
-    inherit username;
-    homeDirectory = "/home/${username}";
-
-    stateVersion = "26.05";
-  };
+  home.stateVersion = "26.05";
 
   gtk = {
     enable = true;
@@ -34,6 +30,4 @@
   };
 
   home.sessionVariables.LM_LICENSE_FILE = "${config.home.homeDirectory}/Personal/sighacks/licenses/qpro.dat";
-
-  programs.home-manager.enable = true;
 }
