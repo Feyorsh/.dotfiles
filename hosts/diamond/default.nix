@@ -41,7 +41,7 @@
         ];
       };
       "cchurchwell" = {
-        uid = 504;
+        uid = 505;
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpjzyHan4fXSPGv/hVPNvB5cz9QQDqXwB2VQPAWNWRj cameron@anon"
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhHZMelKxeQcVkrbbVwi9+7oxMHaqK/ujO63aRXhtyw cameron@anon"

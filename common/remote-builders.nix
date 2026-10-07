@@ -58,6 +58,6 @@ let
 in
 {
   trusted-public-keys = map (m: "${m.hostName}:${m.publicKey}") (builtins.filter (m: m ? publicKey) machines);
-  substituters = map (m: "${m.protocol}://${m.hostName}") machines;
+  trusted-substituters = map (m: "${m.protocol}://${m.hostName}") machines;
   buildMachines = map (m: removeAttrs m [ "publicKey" ]) machines;
 }
