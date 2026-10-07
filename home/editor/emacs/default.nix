@@ -277,6 +277,7 @@ in
           meson-mode
 
           eglot
+          eglot-booster
           eldoc-mouse
           apheleia
           editorconfig
