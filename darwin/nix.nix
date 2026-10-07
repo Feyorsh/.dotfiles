@@ -7,9 +7,9 @@
     optimise.automatic = true;
 
     settings = {
-      auto-optimise-store = lib.mkOverride 500 false;
+      auto-optimise-store = lib.mkForce false;
 
-      trusted-users = lib.mkOverride 500 [ "root" "@admin" ];
+      trusted-users = lib.mkForce [ "root" "@admin" ];
     };
     nixPath = [
       "darwin=flake:darwin"
