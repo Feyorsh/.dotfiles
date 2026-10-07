@@ -69,6 +69,7 @@
             extraSpecialArgs = {
               inherit inputs bootstrap;
               username = "ghuebner";
+              host = "peridot";
             };
           };
           "diamond" = home-manager.lib.homeManagerConfiguration {
@@ -77,6 +78,7 @@
             specialArgs = {
               inherit inputs bootstrap;
               username = "ghuebner";
+              host = "diamond";
             };
           };
           "pallasite" = home-manager.lib.homeManagerConfiguration {
@@ -85,6 +87,7 @@
             extraSpecialArgs = {
               inherit inputs;
               username = "fysh";
+              host = "pallasite";
             };
           };
         };

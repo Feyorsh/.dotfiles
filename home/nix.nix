@@ -1,7 +1,7 @@
-{ inputs, pkgs, lib, ... }:
+{ inputs, pkgs, lib, host, ... }:
 let
-  rinse = "nh home switch ~/.dotfiles";
-  lave = "nh darwin switch ~/.dotfiles";
+  rinse = "nh home switch ~/.dotfiles#homeConfigurations.${host}";
+  lave = "nh darwin switch ~/.dotfiles#darwinConfigurations${host}";
   powerwash = "deploy ~/.dotfiles --skip-checks";
   nix-unfetter = "nix-store --option sandbox false --realise";
   nixc = pkgs.writeShellScriptBin "nixc" (nixc' true);
