@@ -29,6 +29,9 @@
         User = "fysh";
         Port = 6969;
       };
+      "diamond" = {
+        User = "ghuebner";
+      };
       "router" = {
         HostName = "192.168.1.1";
         User = "root";
