@@ -75,7 +75,7 @@
           "diamond" = home-manager.lib.homeManagerConfiguration {
             pkgs = pkgsFor "aarch64-darwin";
             modules = [ ./hosts/diamond/home.nix ];
-            specialArgs = {
+            extraSpecialArgs = {
               inherit inputs bootstrap;
               username = "ghuebner";
               host = "diamond";
