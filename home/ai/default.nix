@@ -73,7 +73,7 @@ in
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     gptel
     gptel-agent
-    agent-shell
+    agent-shell agent-shell-math-renderer
 
     pkgs.codex-acp
   ]);
