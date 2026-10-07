@@ -23,11 +23,13 @@
         ];
       };
       "quincy" = {
+        uid = 502;
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOVY5KiP8XkUU8rybBTNXEhwmDyDDe6Z3bZEKhAkFKSh KathySpitzer@MacBook-Pro-15.local"
         ];
       };
       "sruggerio" = {
+        uid = 503;
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMirOM34/c6bpCTa8GWAA2M623QP0kYNnH4JRo7udldE"
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEHuQ28b8IAhFUA1bEIfjEvyIaoYJILvZVj6QjKTFc4Z"
@@ -39,6 +41,7 @@
         ];
       };
       "cchurchwell" = {
+        uid = 504;
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpjzyHan4fXSPGv/hVPNvB5cz9QQDqXwB2VQPAWNWRj cameron@anon"
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhHZMelKxeQcVkrbbVwi9+7oxMHaqK/ujO63aRXhtyw cameron@anon"
