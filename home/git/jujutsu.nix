@@ -116,7 +116,7 @@ in
   };
 
   # home.packages = with pkgs; [ watchman ];
-  programs.emacs.extraPackages = epkgs: (with epkgs; [ ]);
+  programs.emacs.extraPackages = epkgs: (with epkgs; [ majutsu ]);
 
   programs.fish.functions = {
     fish_jj_prompt = {
