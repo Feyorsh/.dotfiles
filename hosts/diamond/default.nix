@@ -3,6 +3,7 @@
 {
   imports = [
     ../../darwin
+    ../../darwin/headless.nix
     ../../darwin/tailscale.nix
     (import ../../darwin/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPWbZKbs/e4yXYkXBpzwkRxYXOHDl3OHOjpMze0nw5O5 nixremote@diamond")
   ];
@@ -52,6 +53,10 @@
   in {
     knownUsers = builtins.attrNames users';
     users = builtins.listToAttrs (lib.imap (i: user: { name = user.name; value = { uid = users'."${username}".uid + i; } // (default user.name) // user.value; }) (lib.attrsToList users'));
+    groups."ssh" = {};
+    # extra setup required:
+    # sudo dseditgroup -o edit -a ssh -t group com.apple.access_ssh
+    # sudo dseditgroup -o edit -a ... -t user ssh
   };
   system.primaryUser = username;
 
