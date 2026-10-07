@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 let
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
@@ -69,6 +69,44 @@ in
       # history.persistence = "none"; # agent-shell does not support resuming from transcript
     };
   };
+
+  programs.pi-coding-agent = {
+    enable = true;
+    context = ./AGENTS.md;
+    extraPackages = with pkgs; [ nodejs bun ];
+    configDir = "${config.xdg.configHome}/pi/agent";
+
+    models = {
+      providers = {
+        mtplx = {
+          api = "openai-completions";
+          baseUrl = "http://diamond:8000/v1";
+          models = [
+            {
+              id = "qwen3.8-flash";
+            }
+          ];
+        };
+      };
+    };
+
+    settings = {
+      defaultModel = "qwen3.8-flash";
+      defaultProvider = "mtplx";
+      defaultThinkingLevel = "medium";
+
+      packages = [
+        "npm:pi-acp"
+      ];
+
+      compaction = {
+        enabled = true;
+        keepRecentTokens = 20000;
+        reserveTokens = 16384;
+      };
+    };
+  };
+  home.file."${config.xdg.configHome}/pi/agent/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/codex/skills";
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     gptel
