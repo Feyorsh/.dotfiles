@@ -95,10 +95,6 @@ in
       defaultProvider = "mtplx";
       defaultThinkingLevel = "medium";
 
-      packages = [
-        "npm:pi-acp"
-      ];
-
       compaction = {
         enabled = true;
         keepRecentTokens = 20000;
@@ -114,5 +110,6 @@ in
     agent-shell agent-shell-math-renderer
 
     pkgs.codex-acp
+    (pkgs.callPackage ./pi-acp.nix { })
   ]);
 }
