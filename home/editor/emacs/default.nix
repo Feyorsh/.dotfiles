@@ -48,6 +48,8 @@ let
     };
 in
 {
+  imports = [ ./vterm.nix ];
+
   programs.emacs = {
     enable = false; # intentional
     package = emacs';
@@ -94,13 +96,7 @@ in
 
           persistent-scratch
           vterm
-          (tramp-rpc.override {
-            archs = with pkgs.pkgsCross; [
-              musl64
-              aarch64-multiplatform-musl
-              aarch64-darwin
-            ];
-          })
+          tramp-rpc
 
           (trivialBuild rec {
             pname = "comint-fold";
@@ -335,26 +331,7 @@ in
   };
 
   programs.fish = {
-    interactiveShellInit = lib.mkAfter ''
-      # for stuff that needs to work in other terminal emulators too, not just vterm
-      if begin; [ -n "$INSIDE_EMACS" ]; end
-         fish_default_key_bindings
-      end
-
-      if string match -qr "vterm" $INSIDE_EMACS
-         source ${pkgs.emacsPackages.vterm}/**/emacs-vterm.fish
-
-         function emacs
-             vterm_find_file "$argv"
-         end
-         function man
-             vterm_cmd man (string join " " -- "-l" (command man -w "$argv" 2>/dev/null))
-         end
-         alias ff='vterm_find_file'
-      end
-    '';
     shellAliases = {
-      ff = "vterm_find_file";
       ee = "open -a ${emacsWrapped}/Applications/Emacs.app";
       emacs = ''
         if begin; [ -n "$INSIDE_EMACS" ]; end

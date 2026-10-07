@@ -1,28 +1,21 @@
 { pkgs, lib, ... }:
-
+let
+  inherit (pkgs.stdenv.hostPlatform) isLinux system;
+  tramp-rpc = pkgs.emacsPackages.tramp-rpc.override { archs = [ pkgs ]; };
+in
 {
   imports = [
     ./common.nix
+    ./emacs/vterm.nix
   ];
 
-  home.packages = with pkgs; [
+  home.packages = with pkgs; lib.mkIf isLinux [
     inotify-tools # for tramp
   ];
 
-  programs.bash = {
-    bashrcExtra = lib.mkAfter ''
-      if [[ "$INSIDE_EMACS" == *"vterm"* ]]; then
-        shopt -s globstar nullglob
-        source ${pkgs.emacsPackages.vterm}/**/emacs-vterm-bash.sh
-        shopt -u globstar nullglob
-        man() {
-          vterm_cmd man "-l $(command man -w "$@" 2>/dev/null)"
-        }
-        emacs() {
-          vterm_find_file "''${@:-.}"
-        }
-        alias ff='vterm_find_file'
-      fi
-    '';
+  xdg.cacheFile."emacs/tramp-rpc/tramp-rpc-server-${tramp-rpc.version}" = {
+    enable = true;
+    executable = true;
+    source = lib.findFirst (lib.hasSuffix "binaries/${system}/tramp-rpc-server") null (lib.filesystem.listFilesRecursive tramp-rpc);
   };
 }

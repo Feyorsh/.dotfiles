@@ -3324,6 +3324,16 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
     (add-to-list 'vterm-tramp-shells '("rpc" login-shell))
+    (connection-local-set-profile-variables 'remote-fish
+       '((shell-file-name . "fish")))
+    (connection-local-set-profile-variables 'remote-openwrt
+       '((shell-file-name . "/bin/ash")))
+    (connection-local-set-profiles
+       '(:application tramp :machine "diamond")
+       'remote-fish)
+    (connection-local-set-profiles
+       '(:application tramp :machine "router")
+       'remote-openwrt)
 	(setq vterm-eval-cmds (append vterm-eval-cmds '(("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
 
@@ -3466,7 +3476,9 @@ hi-lock-mode is really finicky in vterm buffers for some reason, so I wrote my o
         (concat "-o ControlPath=/tmp/tramp-%%r@%%h:%%p "
                 "-o ControlMaster=auto -o ControlPersist=yes"))
   (add-to-list 'tramp-remote-path "/nix/var/nix/profiles/default/bin")
-  (add-to-list 'tramp-remote-path "~/.nix-profile/bin")
+  ;; goddammit
+  (add-to-list 'tramp-remote-path "/Users/ghuebner/.nix-profile/bin")
+  (add-to-list 'tramp-remote-path "/home/fysh/.nix-profile/bin")
   (setq tramp-remote-process-environment (delete "LC_CTYPE=''" tramp-remote-process-environment))
   ;; (setq tramp-histfile-override nil)
 )
