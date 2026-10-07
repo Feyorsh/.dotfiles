@@ -11,14 +11,12 @@ in
   nix = {
     settings.trusted-users = [ user ];
     extraOptions = ''
-      secret-key-files = /Users/.${user}/cache-priv-key.pem
+      secret-key-files = /Users/${user}/cache-priv-key.pem
     '';
   };
 
   users.users."${user}" = {
-    isHidden = true;
-    shell = null;
-    home = "/Users/.${user}";
+    home = "/Users/${user}";
     createHome = false;
     openssh.authorizedKeys.keys = [ key ];
   };

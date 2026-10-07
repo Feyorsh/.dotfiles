@@ -16,7 +16,7 @@ in
   };
 
   users.users."${user}" = {
-    isSystemUser = true;
+    isNormalUser = true;
     home = "/home/.${user}";
     createHome = true;
     homeMode = "500";
