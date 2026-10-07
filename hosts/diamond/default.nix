@@ -1,9 +1,10 @@
-{ inputs, username, pkgs, ... }:
+{ inputs, username, lib, pkgs, ... }:
 
 {
   imports = [
     ../../darwin
     ../../darwin/tailscale.nix
+    (import ../../darwin/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPWbZKbs/e4yXYkXBpzwkRxYXOHDl3OHOjpMze0nw5O5 nixremote@diamond")
   ];
 
   users = let
@@ -19,17 +20,6 @@
         shell = pkgs.fish;
         openssh.authorizedKeys.keys = [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB1ej2V2ZEk8Ov54C/VqjfXFIM1hnFwsj6J0PDa6SeQK ghuebner@Peridot"
-        ];
-      };
-      "nixremote" = {
-        isHidden = true;
-        shell = null;
-        home = "/Users/.nixremote";
-        createHome = false;
-        openssh.authorizedKeys.keys = [
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpjzyHan4fXSPGv/hVPNvB5cz9QQDqXwB2VQPAWNWRj cameron@anon"
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhHZMelKxeQcVkrbbVwi9+7oxMHaqK/ujO63aRXhtyw cameron@anon"
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBkHe7782D0jiVt9mOHzpQq0c9aWCJmzpzcMPuK/0txJ cameron@anon"
         ];
       };
       "quincy" = {
@@ -58,13 +48,9 @@
     };
   in {
     knownUsers = builtins.attrNames users';
-    users = builtins.mapAttrs (user: settings: (default user) // settings) users';
+    users = builtins.listToAttrs (lib.imap (i: user: { name = user.name; value = { uid = users'."${username}".uid + i; } // (default user.name) // user.value; }) (lib.attrsToList users'));
   };
   system.primaryUser = username;
-
-  nix.settings = {
-    trusted-users = [ "nixremote" ];
-  };
 
   programs.fish.enable = true;
   programs.zsh.enable = true;

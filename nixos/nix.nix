@@ -17,7 +17,7 @@ in
     settings = {
       inherit (remoteBuilders)
         trusted-public-keys
-        trusted-substituters
+        substituters
       ;
 
       auto-optimise-store = true;
