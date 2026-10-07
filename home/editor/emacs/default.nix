@@ -94,7 +94,13 @@ in
 
           persistent-scratch
           vterm
-          tramp-rpc
+          (tramp-rpc.override {
+            archs = with pkgs.pkgsCross; [
+              musl64
+              aarch64-multiplatform-musl
+              aarch64-darwin
+            ];
+          })
 
           (trivialBuild rec {
             pname = "comint-fold";
