@@ -764,9 +764,9 @@ Oldest trick in the book! (Not really.)
                         :endpoint "/v1/chat/completions"
                         :stream t
                         :key (lambda () (gptel-api-key-from-auth-source "gptel:diamond"))
-                        :models '(qwen/qwen3.8-flash-next
-                                  qwen/qwen3.8-27b)))
-  (setq gptel-model 'qwen/qwen3.8-flash-next)
+                        :models '(qwen3.8-flash-next
+                                  qwen3.8-27b)))
+  (setq gptel-model 'qwen3.8-flash-next)
   (setq gptel-expert-commands t)
   (setq gptel-display-buffer-action
 		`(,(lambda (buffer &optional action norecord)

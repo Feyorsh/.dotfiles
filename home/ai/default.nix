@@ -83,10 +83,10 @@ in
           baseUrl = "http://diamond:8000/v1";
           models = [
             {
-              id = "qwen/qwen3.8-flash-next";
+              id = "qwen3.8-flash-next";
             }
             {
-              id = "qwen/qwen3.8-27b";
+              id = "qwen3.8-27b";
             }
           ];
         };
@@ -94,7 +94,7 @@ in
     };
 
     settings = {
-      defaultModel = "qwen/qwen3.8-flash-next";
+      defaultModel = "qwen3.8-flash-next";
       defaultProvider = "mtplx";
       defaultThinkingLevel = "medium";
 

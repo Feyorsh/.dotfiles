@@ -10,6 +10,7 @@ If a prompt _does not_ begin with "Question:", you should behave like an agent a
 You are running on a macOS system using Nix as a package manager and nix-darwin/home-manager as the system configurator.
 Consequently, things are different from a traditional macOS install.
 In particular, you should value reproducability and you should never modify files outside the user's home directory without explicit permission.
+Another way this system is different from most macOS installs is that most system utilities are the GNU counterparts, not the BSD versions that ship with macOS (with the exception of utilities that are only present in macOS and not BSD, e.g. `diskutil`).
 
 ### Common workflows
 The user splits doing work on the host `aarch64-darwin` machine and a local `aarch64-linux` NixOS VM that they access over SSH.
@@ -60,6 +61,10 @@ If a binary you need is not in `$PATH`, try spinning up a Nix shell: `nix shell 
 - `ruff` - A fast Python linter and formatter, use this to format any nontrivial Python code that you write
 
 ### Anti-patterns
+
+#### "Yap"
+If the user says "yap", it means you are too verbose and need to say less.
+While it is good to spend time in thinking, this slows down responses for the user and furthermore verbose responses reek of the clanker-stink.
 
 #### Formatting and linting
 NEVER run an auto-formatter or linter on a file that has ever been edited by the user or another human.
