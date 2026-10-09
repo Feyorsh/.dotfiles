@@ -93,6 +93,7 @@ in
           pkgs.mpv
           pkgs.imagemagick
           pkgs.python315Packages.tinytag
+          subed
 
           persistent-scratch
           vterm
