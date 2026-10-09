@@ -148,14 +148,24 @@
           };
         };
 
-        deploy.nodes.vm = {
-          hostname = "pallasite";
-          profiles.system = {
-            sshUser = "fysh";
-            user = "root";
-            path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."pallasite";
+        deploy = {
+          nodes.pallasite = {
+            hostname = "pallasite";
+            profiles.system = {
+              sshUser = "fysh";
+              user = "root";
+              path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."pallasite";
+            };
+            remoteBuild = true;
           };
-          remoteBuild = true;
+          nodes.diamond = {
+            hostname = "diamond";
+            profiles.system = {
+              sshUser = "ghuebner";
+              path = deploy-rs.lib.aarch64-darwin.activate.darwin self.darwinConfigurations."diamond";
+            };
+            interactiveSudo = true;
+          };
         };
       };
 }
