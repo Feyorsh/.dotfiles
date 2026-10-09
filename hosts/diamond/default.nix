@@ -61,6 +61,7 @@
     # sudo dseditgroup -o edit -a ... -t user ssh
   };
   system.primaryUser = username;
+  system.defaults.loginwindow.autoLoginUser = username; # necessary for LaunchAgents to work
 
   programs.fish.enable = true;
   programs.zsh.enable = true;
