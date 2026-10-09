@@ -76,6 +76,9 @@
     stateVersion = "23.05";
   };
 
+  targets.darwin.copyApps.enable = true;
+  targets.darwin.linkApps.enable = false;
+
   fonts.fontconfig.enable = true;
 
   programs.spicetify = let
