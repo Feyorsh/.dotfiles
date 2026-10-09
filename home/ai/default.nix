@@ -83,7 +83,10 @@ in
           baseUrl = "http://diamond:8000/v1";
           models = [
             {
-              id = "qwen3.8-flash";
+              id = "qwen/qwen3.8-flash-next";
+            }
+            {
+              id = "qwen/qwen3.8-27b";
             }
           ];
         };
@@ -91,18 +94,66 @@ in
     };
 
     settings = {
-      defaultModel = "qwen3.8-flash";
+      defaultModel = "qwen/qwen3.8-flash-next";
       defaultProvider = "mtplx";
       defaultThinkingLevel = "medium";
+
+      packages = [
+        "npm:pi-sandbox"
+      ];
 
       compaction = {
         enabled = true;
         keepRecentTokens = 20000;
         reserveTokens = 16384;
       };
+
+      enableInstallTelemetry = false;
     };
   };
   home.file."${config.xdg.configHome}/pi/agent/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/codex/skills";
+  home.file."${config.xdg.configHome}/pi/agent/sandbox.json".text = builtins.toJSON {
+    enabled = true;
+    sandboxUserShell = true;
+    allowBrowserProcess = false;
+    network = {
+      disabled = false;
+      allowLocalBinding = true;
+      allowAllUnixSockets = true;
+      allowUnauthenticatedSocksProxy = false;
+      allowSSHAgentSocket = false;
+      allowedDomains = [];
+    };
+    filesystem = {
+      denyRead = [
+        "/Users"
+        "~/Library"
+        "~/Mail"
+        "~/.ssh"
+        "id_ed25519*"
+        "~/.gnupg"
+        "~/.restic"
+        "~/.password-store"
+      ];
+      allowRead = [
+        "."
+        "${config.xdg.configHome}/pi"
+        "~/.dotfiles"
+        "~/Personal/oss"
+        "~/School"
+      ];
+
+      allowWrite = [
+        "."
+        "/tmp"
+      ];
+      denyWrite = [
+        ".env"
+        "*.pem"
+        "*.key"
+      ];
+    };
+  };
 
   programs.emacs.extraPackages = epkgs: (with epkgs; [
     gptel

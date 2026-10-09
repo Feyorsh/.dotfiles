@@ -21,7 +21,7 @@ However, the directory ~/Personal is shared between the guest and the host, so y
 Feel free to still use utilities like `sed`, `rg`, `fd` or others for the purposes of browsing and editing code, but do not attempt to use a LSP, `nix-shell` (spawning a shell with packages from nixpkgs is fine), run `cabal build`, etc
 
 ### Where things are
-- Most projects are in ~/Personal/oss
+- Most projects are in ~/Personal/oss, including nixpkgs, Linux, QEMU, Zig, Wine, Emacs, NetHack, home-manager, and nix-darwin. You should use the source from ~/Personal/oss instead of fetching it from the internet (although you may `git fetch` in these repos to get the latest but DO NOT modify the working tree).
 - Dotfiles are at ~/.dotfiles and Emacs config is at ~/.dotfiles/home/config/editor/emacs/config.org
 - Emacs packages are not downloaded in ~/.emacs.d, but rather in /nix/store. If you need to find an Emacs package, prefer using something like `emacsclient -e '(find-library-name (or (cdr (find-function-library SYMBOL)) (symbol-file SYMBOL 'defvar)))'` or a _very_ targeted `fd` search through the Nix store
 - DO NOT start a very broad `rg` or `fd` process targeting `/nix/store`; the Nix store is several hundreds of gigabytes and if you're not careful you will drown in millions of results and may hang the process for the user. Avoid at all costs

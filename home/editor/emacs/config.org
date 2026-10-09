@@ -457,6 +457,9 @@ See [[https://github.com/emacs-evil/evil-collection/issues/637][here]] for issue
 	:demand t
 	:config
     (setq evil-collection-setup-minibuffer t)
+    (setq evil-collection-binding-overrides
+          '((repl-submit  :state insert)
+            (repl-newline :state normal)))
 	(evil-collection-init))
 #+end_src
 
@@ -755,19 +758,15 @@ Oldest trick in the book! (Not really.)
   (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
 
   (setq gptel-default-mode 'org-mode)
-  (setq gptel-backend (gptel-make-openai "GitHub Models"
-                        :host "models.inference.ai.azure.com"
-                        :endpoint "/chat/completions"
+  (setq gptel-backend (gptel-make-openai "Diamond"
+                        :host "diamond:8000"
+                        :protocol "http"
+                        :endpoint "/v1/chat/completions"
                         :stream t
-                        :key (lambda () (gptel-api-key-from-auth-source "gptel:github-models"))
-                        :models '(gpt-4o
-                                  gpt-4o-mini
-                                  gpt-4.1
-                                  gpt-4.1-mini
-                                  meta-llama-3.1-405b-instruct
-                                  llama-3.2-90B-vision-instruct
-                                  DeepSeek-R1)))
-  (setq gptel-model 'gpt-4.1)
+                        :key (lambda () (gptel-api-key-from-auth-source "gptel:diamond"))
+                        :models '(qwen/qwen3.8-flash-next
+                                  qwen/qwen3.8-27b)))
+  (setq gptel-model 'qwen/qwen3.8-flash-next)
   (setq gptel-expert-commands t)
   (setq gptel-display-buffer-action
 		`(,(lambda (buffer &optional action norecord)
