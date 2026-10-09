@@ -17,7 +17,7 @@ in
   programs.codex = {
     enable = true;
 
-    context = builtins.readFile ./AGENTS.md;
+    context = ./AGENTS.md;
 
     # hack to workaround this option requiring an overly restrictive filesystem.path type
     skills =
@@ -78,16 +78,12 @@ in
 
     models = {
       providers = {
-        mtplx = {
+        diamond = {
           api = "openai-completions";
-          baseUrl = "http://diamond:8000/v1";
+          baseUrl = "http://diamond:4141/v1";
           models = [
-            {
-              id = "qwen3.8-flash-next";
-            }
-            {
-              id = "qwen3.8-27b";
-            }
+            { id = "qwen3.8-flash-next"; }
+            { id = "qwen3.8-27b"; }
           ];
         };
       };
@@ -95,8 +91,8 @@ in
 
     settings = {
       defaultModel = "qwen3.8-flash-next";
-      defaultProvider = "mtplx";
-      defaultThinkingLevel = "medium";
+      defaultProvider = "diamond";
+      defaultThinkingLevel = "xhigh";
 
       packages = [
         "npm:pi-sandbox"
