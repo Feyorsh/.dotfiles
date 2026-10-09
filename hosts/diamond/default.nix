@@ -8,6 +8,8 @@
     (import ../../darwin/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPWbZKbs/e4yXYkXBpzwkRxYXOHDl3OHOjpMze0nw5O5 nixremote@diamond")
   ];
 
+  networking.knownNetworkServices = [ "Ethernet" ];
+
   users = let
     default = name: {
       inherit name;
