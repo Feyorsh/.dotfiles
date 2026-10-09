@@ -34,7 +34,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     emacs-tramp-rpc = {
-      url = "github:Feyorsh/emacs-tramp-rpc";
+      url = "github:ArthurHeymans/emacs-tramp-rpc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     paneru = {
