@@ -14,7 +14,6 @@ in
   networking.computerName = lib.toSentenceCase host;
 
   networking.knownNetworkServices = [ "Wi-Fi" "Thunderbolt Bridge" ];
-  networking.dns = [ "192.168.1.1" ];
 
   time.timeZone = lib.mkDefault "America/Chicago";
 

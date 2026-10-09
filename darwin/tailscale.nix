@@ -12,5 +12,14 @@
     doCheck = false;
   });
 
-  environment.etc."resolver/tails.cale".text = "nameserver 100.100.100.100";
+  # prioritize DNS from router over MagicDNS
+  networking.search = [ "lan" "tails.cale" ];
+  environment.etc."resolver/lan".text = ''
+    nameserver 192.168.1.1
+    timeout 1
+  '';
+  environment.etc."resolver/tails.cale".text = ''
+    nameserver 100.100.100.100
+    timeout 2
+  '';
 }
