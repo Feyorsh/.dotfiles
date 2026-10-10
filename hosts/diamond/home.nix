@@ -28,6 +28,7 @@
       globalConcurrencyLimit = 10;
 
       sendLoadingState = true;
+      includeAliasesInList = true;
 
       models = let
         mtplxCmd = id: modelName: "${lib.getExe' pkgs.uv "uvx"} mtplx serve ${
