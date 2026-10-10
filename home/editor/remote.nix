@@ -1,7 +1,6 @@
 { pkgs, lib, ... }:
 let
-  inherit (pkgs.stdenv.hostPlatform) isLinux system;
-  tramp-rpc = pkgs.emacsPackages.tramp-rpc.override { archs = [ pkgs ]; };
+  inherit (pkgs.stdenv.hostPlatform) isLinux;
 in
 {
   imports = [
@@ -13,9 +12,9 @@ in
     inotify-tools # for tramp
   ];
 
-  xdg.cacheFile."emacs/tramp-rpc/tramp-rpc-server-${tramp-rpc.version}" = {
+  xdg.cacheFile."emacs/tramp-rpc/tramp-rpc-server-${pkgs.emacs-tramp-rpc-server.version}" = {
     enable = true;
     executable = true;
-    source = lib.findFirst (lib.hasSuffix "binaries/${system}/tramp-rpc-server") null (lib.filesystem.listFilesRecursive tramp-rpc);
+    source = "${pkgs.emacs-tramp-rpc-server}/bin/tramp-rpc-server";
   };
 }
