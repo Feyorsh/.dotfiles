@@ -759,7 +759,7 @@ Oldest trick in the book! (Not really.)
 
   (setq gptel-default-mode 'org-mode)
   (setq gptel-backend (gptel-make-openai "Diamond"
-                        :host "diamond:8000"
+                        :host "diamond:4141"
                         :protocol "http"
                         :endpoint "/v1/chat/completions"
                         :stream t
