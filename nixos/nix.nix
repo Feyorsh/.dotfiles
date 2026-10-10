@@ -20,14 +20,14 @@ in
         trusted-substituters
       ;
 
-      auto-optimise-store = true;
+      auto-optimise-store = lib.mkDefault true;
 
       experimental-features = "nix-command flakes";
 
       keep-outputs = true;
       keep-derivations = true;
 
-      trusted-users = [ "root" "@wheel" ];
+      trusted-users = lib.mkDefault (lib.mkBefore [ "root" "@wheel" ]);
 
       sandbox = true;
 

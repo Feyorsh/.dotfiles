@@ -1,5 +1,3 @@
-{ lib, pkgs, ... }:
-
 {
   imports = [ ../nixos/nix.nix ];
 
@@ -7,9 +5,9 @@
     optimise.automatic = true;
 
     settings = {
-      auto-optimise-store = lib.mkForce false;
+      auto-optimise-store = false;
 
-      trusted-users = lib.mkForce [ "root" "@admin" ];
+      trusted-users = [ "@admin" ];
     };
     nixPath = [
       "darwin=flake:darwin"
