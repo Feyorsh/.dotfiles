@@ -51,7 +51,7 @@
         );
         models = {
           "qwen3.8-flash-next" = {
-            cmd = mtplxCmd "qwen3.8-flash-next" "Youssofal/Qwen3.8-Flash-Next-MTPLX-Optimized-Speed";
+            cmd = mtplxCmd "qwen3.8-flash-next" "UkisAI/Swift1.5-Qwen3.8-Flash-Next-MTPLX-Optimized-Speed";
             setParamsByID = mtplxEffort // { "\${MODEL_ID}" = mtplxEffort."\${MODEL_ID}:xhigh"; };
             metadata.port = "\${PORT}";
             capabilities = {
@@ -66,7 +66,7 @@
               metadata
               capabilities
             ;
-            cmd = mtplxCmd "qwen3.8-27b" "Youssofal/Qwen3.8-27B-MTPLX-Optimized-Speed";
+            cmd = mtplxCmd "qwen3.8-27b" "UkisAI/Swift1.5-Qwen3.8-27b-MTPLX-Optimized-Speed";
           };
         };
       in models;
