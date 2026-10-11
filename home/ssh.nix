@@ -44,6 +44,7 @@
         HostName = "192.168.64.9";
         User = "fysh";
         ForwardX11 = true;
+        ForwardX11Timeout = 0;
       };
       "cs425-b2??" = {
         User = "cs425";
