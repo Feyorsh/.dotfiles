@@ -184,27 +184,29 @@
           nodes.opal.interactiveSudo = true;
           nodes.diamond.interactiveSudo = true;
         } (lib.recursiveUpdate {
+          nodes = builtins.mapAttrs (host: config: let
+            inherit (config.pkgs.stdenv) hostPlatform;
+          in {
+            hostname = host;
+            profiles.system = {
+              sshUser = config._module.specialArgs.username;
+              user = "root";
+              path = deploy-rs.lib.${hostPlatform.system}.activate.${if hostPlatform.isDarwin then "darwin" else "nixos"} config;
+            };
+            remoteBuild = hostPlatform.isLinux;
+          }) (self.nixosConfigurations // self.darwinConfigurations);
+        } (lib.recursiveUpdate {
           nodes = lib.mapAttrs (host: config: {
             hostname = host;
-            profilesOrder = [ "home" ];
             profiles.home = {
               sshUser = config._module.specialArgs.username;
               path = deploy-rs.lib.${config.pkgs.stdenv.hostPlatform.system}.activate.home-manager config;
             };
           }) self.homeConfigurations;
         } {
-          nodes = builtins.mapAttrs (host: config: let
-            inherit (config.pkgs.stdenv) hostPlatform;
-          in {
-            hostname = host;
-            profilesOrder = [ "system" "home" ];
-            profiles.system = {
-              sshUser = config._module.specialArgs.username;
-              user = "root";
-              path = deploy-rs.lib.${hostPlatform.system}.activate.${if hostPlatform.isDarwin then "darwin" else "nixos"} config;
-            };
-            remoteBuild = true;
-          }) (self.nixosConfigurations // self.darwinConfigurations);
-        });
+          nodes = builtins.mapAttrs (host: _: {
+            profilesOrder = lib.filter (profile: self.deploy.nodes.${host}.profiles ? "${profile}") [ "system" "home" ];
+          }) (self.nixosConfigurations // self.darwinConfigurations // self.homeConfigurations);
+        }));
       };
 }
