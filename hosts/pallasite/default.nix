@@ -1,11 +1,10 @@
-{ lib, pkgs, host, username, ... }:
+{ lib, pkgs, username, ... }:
 
 {
   imports = [
     ./disko.nix
     ./vm.nix
-    ../../nixos/swiss-army.nix
-    ../../nixos/nix.nix
+    ../../nixos
     (import ../../nixos/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPOxCB2/WSh/ZdWC1rOIojWJR38TftOcFNHlh4y4xe0Y nixremote@pallasite")
     ../../nixos/sshd.nix
     ../../nixos/xforward.nix
@@ -39,6 +38,8 @@
   environment.systemPackages = with pkgs; [
     btop
   ];
+
+  programs.dconf.enable = true;
 
   # might want to change this if I can figure out how to share tailscale subnet from peridot...
   nix.settings = {
