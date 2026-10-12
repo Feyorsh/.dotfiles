@@ -42,7 +42,6 @@
 
   # might want to change this if I can figure out how to share tailscale subnet from peridot...
   nix.settings = {
-    trusted-public-keys = lib.mkForce [];
     trusted-substituters = lib.mkForce [];
   };
 
