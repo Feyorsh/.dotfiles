@@ -29,6 +29,9 @@
         User = "fysh";
         Port = 6969;
       };
+      "opal" = {
+        User = "fysh";
+      };
       "diamond" = {
         User = "ghuebner";
       };

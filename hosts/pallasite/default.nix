@@ -1,4 +1,4 @@
-{ pkgs, disko, hostname, username, ... }:
+{ pkgs, host, username, ... }:
 
 {
   imports = [
@@ -13,7 +13,7 @@
   };
 
   networking = {
-    hostName = hostname;
+    hostName = host;
     interfaces.enp0s1.useDHCP = true;
     interfaces.enp0s2.ipv4.addresses = [
       {

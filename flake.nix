@@ -16,6 +16,10 @@
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-apple-silicon = {
+      url = "github:nix-community/nixos-apple-silicon";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     disko = {
       url = "github:nix-community/disko";
@@ -90,6 +94,15 @@
               host = "pallasite";
             };
           };
+          "opal" = home-manager.lib.homeManagerConfiguration {
+            pkgs = pkgsFor "aarch64-linux";
+            modules = [ ./hosts/opal/home.nix ];
+            extraSpecialArgs = {
+              inherit inputs;
+              username = "fysh";
+              host = "opal";
+            };
+          };
         };
 
         darwinConfigurations = {
@@ -119,7 +132,6 @@
 
             modules = [
               ./hosts/pallasite
-              ./hosts/pallasite/vm.nix
 
               {
                 nixpkgs.overlays = [
@@ -142,7 +154,17 @@
             ];
             specialArgs = {
               inherit (inputs) disko;
-              hostname = "pallasite";
+              host = "pallasite";
+              username = "fysh";
+            };
+          };
+          "opal" = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+
+            modules = [ ./hosts/opal ];
+            specialArgs = {
+              inherit (inputs) nixos-apple-silicon;
+              host = "opal";
               username = "fysh";
             };
           };
@@ -155,6 +177,15 @@
               sshUser = "fysh";
               user = "root";
               path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."pallasite";
+            };
+            remoteBuild = true;
+          };
+          nodes.opal = {
+            hostname = "opal";
+            profiles.system = {
+              sshUser = "fysh";
+              user = "root";
+              path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."opal";
             };
             remoteBuild = true;
           };

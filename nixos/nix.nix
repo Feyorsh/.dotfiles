@@ -22,12 +22,12 @@ in
 
       auto-optimise-store = lib.mkDefault true;
 
-      experimental-features = "nix-command flakes";
+      experimental-features = lib.mkDefault [ "nix-command" "flakes" ];
 
       keep-outputs = true;
       keep-derivations = true;
 
-      trusted-users = lib.mkDefault (lib.mkBefore [ "root" "@wheel" ]);
+      trusted-users = lib.mkIf pkgs.stdenv.hostPlatform.isLinux [ "@wheel" ];
 
       sandbox = true;
 
