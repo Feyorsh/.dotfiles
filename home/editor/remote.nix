@@ -12,7 +12,7 @@ in
     inotify-tools # for tramp
   ];
 
-  xdg.cacheFile."emacs/tramp-rpc/tramp-rpc-server-${pkgs.emacs-tramp-rpc-server.version}" = {
+  xdg.cacheFile."emacs/tramp-rpc/tramp-rpc-server-${pkgs.emacsPackages.tramp-rpc.version}" = {
     enable = true;
     executable = true;
     source = "${pkgs.emacs-tramp-rpc-server}/bin/tramp-rpc-server";
