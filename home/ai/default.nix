@@ -82,16 +82,22 @@ in
           api = "openai-completions";
           baseUrl = "http://diamond:4141/v1";
           models = [
-            { id = "qwen3.8-flash-next"; }
-            { id = "qwen3.8-27b"; }
+            {
+              id = "qwen3.8-flash-next";
+              contextWindow = 262144;
+            }
+            {
+              id = "qwen3.8-27b";
+              contextWindow = 262144;
+            }
           ];
         };
       };
     };
 
     settings = {
-      defaultModel = "qwen3.8-flash-next";
       defaultProvider = "diamond";
+      defaultModel = "qwen3.8-flash-next";
       defaultThinkingLevel = "xhigh";
 
       packages = [
@@ -100,8 +106,8 @@ in
 
       compaction = {
         enabled = true;
-        keepRecentTokens = 20000;
-        reserveTokens = 16384;
+        keepRecentTokens = 40000;
+        reserveTokens = 64000;
       };
 
       enableInstallTelemetry = false;

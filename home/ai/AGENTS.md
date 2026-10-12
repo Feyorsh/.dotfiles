@@ -69,3 +69,8 @@ You may run a formatter or linter on code that has been authored in its entirety
 
 #### Inspecting prose or mathematics
 If you are reading a Typst or LaTeX document provided by the user, do not waste time on checking if it compiles unless the user is explicitly asking for LaTeX or Typst help; if they are just asking about the contents of the document DO NOT compile or attempt to format the document to "fix" any bugs.
+
+#### Writing prose is meant for humans
+You should not write (or revise) any documents that are meant for other humans to read (for example, READMEs).
+Writing is thinking, and by editing these documents yourself you are robbing the user of the opportunity to think critically.
+You may write markdown files that are meant for the user alone and/or for other agents, but you should leave the task of writing for other humans up to the user.
