@@ -4046,6 +4046,8 @@ Looks like I'll have to major mode remap those because [[https://www.masteringem
 								   (ruby-mode . ruby-ts-mode)
 								   (julia-mode . julia-ts-mode)
 								   (python-mode . python-ts-mode)))
+    (add-to-list 'org-src-lang-modes '("json" . json-ts))
+    (add-to-list 'org-babel-tangle-lang-exts '("json" . "json"))
 	(setq auto-mode-case-fold nil)
 	(add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-ts-mode))
 	(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
