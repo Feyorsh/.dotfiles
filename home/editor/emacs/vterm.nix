@@ -9,13 +9,20 @@ in
         shopt -s globstar nullglob
         source ${vterm}/**/emacs-vterm-bash.sh
         shopt -u globstar nullglob
+
+        vterm_find_file() {
+          for arg in "''${@:-.}"; do
+            vterm_cmd find-file "$(realpath "$arg")"
+          done
+        }
+        alias ff='vterm_find_file'
+
         man() {
           vterm_cmd man "-l $(command man -w "$@" 2>/dev/null)"
         }
         emacs() {
-          vterm_find_file "''${@:-.}"
+          vterm_find_file
         }
-        alias ff='vterm_find_file'
       fi
     '';
   };
@@ -26,20 +33,27 @@ in
         shopt -s globstar nullglob
         source ${vterm}/**/emacs-vterm-zsh.sh
         shopt -u globstar nullglob
+
+        vterm_find_file() {
+          for arg in "''${@:-.}"; do
+            vterm_cmd find-file "$(realpath "$arg")"
+          done
+        }
+        alias ff='vterm_find_file'
+
         man() {
           vterm_cmd man "-l $(command man -w "$@" 2>/dev/null)"
         }
         emacs() {
-          vterm_find_file "''${@:-.}"
+          vterm_find_file
         }
-        alias ff='vterm_find_file'
       fi
     '';
   };
 
   programs.fish = {
     interactiveShellInit = lib.mkAfter ''
-      # for stuff that needs to work in other terminal emulators too, not just vterm
+      # for stuff that needs to work in other emacs terminal emulators too, not just vterm
       if begin; [ -n "$INSIDE_EMACS" ]; end
          fish_default_key_bindings
       end
@@ -47,13 +61,20 @@ in
       if string match -qr "vterm" $INSIDE_EMACS
          source ${vterm}/**/emacs-vterm.fish
 
+         function vterm_find_file
+             set -q argv[1]; or set argv[1] "."
+             for arg in $argv
+                 vterm_cmd find-file (realpath "$arg")
+             end
+         end
+         alias ff='vterm_find_file'
+
          function emacs
              vterm_find_file "$argv"
          end
          function man
              vterm_cmd man (string join " " -- "-l" (command man -w "$argv" 2>/dev/null))
          end
-         alias ff='vterm_find_file'
       end
     '';
   };
