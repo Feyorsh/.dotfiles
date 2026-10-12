@@ -4,8 +4,6 @@ let
 in
 {
   nix = {
-    inherit (remoteBuilders) buildMachines;
-
     enable = true;
     package = pkgs.nixVersions.latest;
 

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, username, ... }:
+{ config, pkgs, lib, inputs, username, host, ... }:
 let
   home = config.users.users.${username}.home;
 in
@@ -34,8 +34,10 @@ in
     ];
   };
 
-  nix = {
-    buildMachines = [
+  nix = let
+    remoteBuilders = import ../../common/remote-builders.nix (lib.toLower host);
+  in {
+    buildMachines = remoteBuilders.buildMachines ++ [
       {
         hostName = "pallasite";
         sshUser = "nixremote";
@@ -51,6 +53,7 @@ in
         ];
       }
     ];
+
     settings = {
       # more like pwn-me-mommy
       accept-flake-config = true;
