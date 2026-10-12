@@ -45,8 +45,25 @@
     };
   };
 
+  # https://github.com/NixOS/nixpkgs/pull/571297
+  nixpkgs.overlays = [
+    (final: prev: {
+      quartus-prime-lite = prev.quartus-prime-lite.override (p: {
+        unwrapped = prev.quartus-prime-lite.unwrapped.override {
+          fetchurl = { url, ... }@args: final.fetchurl (args // {
+            url = builtins.replaceStrings [ "downloads.intel.com" ] [ "download.altera.com" ] url;
+            curlOptsList = [
+              "--user-agent"
+              "Alterabot/1.0"
+            ];
+          });
+        };
+      });
+    })
+  ];
+
   environment.systemPackages = with pkgs; [
-    # quartus-prime-lite
+    quartus-prime-lite
     # (callPackage ./vitis {})
   ];
   environment.enableAllTerminfo = true;
