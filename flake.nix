@@ -54,6 +54,7 @@
 
   outputs = inputs @ { self, nixpkgs, darwin, home-manager, deploy-rs, ... }:
     let
+      inherit (nixpkgs) lib;
       pkgsFor = system: import nixpkgs {
         inherit system;
         config = {
@@ -170,34 +171,31 @@
           };
         };
 
-        deploy = {
-          nodes.pallasite = {
-            hostname = "pallasite";
+        deploy = lib.recursiveUpdate {
+          nodes.opal.interactiveSudo = true;
+          nodes.diamond.interactiveSudo = true;
+        } (lib.recursiveUpdate {
+          nodes = lib.mapAttrs (host: config: {
+            hostname = host;
+            profilesOrder = [ "home" ];
+            profiles.home = {
+              sshUser = config._module.specialArgs.username;
+              path = deploy-rs.lib.${config.pkgs.stdenv.hostPlatform.system}.activate.home-manager config;
+            };
+          }) self.homeConfigurations;
+        } {
+          nodes = builtins.mapAttrs (host: config: let
+            inherit (config.pkgs.stdenv) hostPlatform;
+          in {
+            hostname = host;
+            profilesOrder = [ "system" "home" ];
             profiles.system = {
-              sshUser = "fysh";
+              sshUser = config._module.specialArgs.username;
               user = "root";
-              path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."pallasite";
+              path = deploy-rs.lib.${hostPlatform.system}.activate.${if hostPlatform.isDarwin then "darwin" else "nixos"} config;
             };
             remoteBuild = true;
-          };
-          nodes.opal = {
-            hostname = "opal";
-            profiles.system = {
-              sshUser = "fysh";
-              user = "root";
-              path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations."opal";
-            };
-            interactiveSudo = true;
-            remoteBuild = true;
-          };
-          nodes.diamond = {
-            hostname = "diamond";
-            profiles.system = {
-              sshUser = "ghuebner";
-              path = deploy-rs.lib.aarch64-darwin.activate.darwin self.darwinConfigurations."diamond";
-            };
-            interactiveSudo = true;
-          };
-        };
+          }) (self.nixosConfigurations // self.darwinConfigurations);
+        });
       };
 }
