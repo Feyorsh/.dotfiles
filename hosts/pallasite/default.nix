@@ -1,9 +1,14 @@
-{ pkgs, host, username, ... }:
+{ lib, pkgs, host, username, ... }:
 
 {
   imports = [
     ./disko.nix
     ./vm.nix
+    ../../nixos/swiss-army.nix
+    ../../nixos/nix.nix
+    (import ../../nixos/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPOxCB2/WSh/ZdWC1rOIojWJR38TftOcFNHlh4y4xe0Y nixremote@pallasite")
+    ../../nixos/sshd.nix
+    ../../nixos/xforward.nix
   ];
 
   boot.loader = {
@@ -13,7 +18,6 @@
   };
 
   networking = {
-    hostName = host;
     interfaces.enp0s1.useDHCP = true;
     interfaces.enp0s2.ipv4.addresses = [
       {
@@ -23,8 +27,6 @@
     ];
   };
 
-  time.timeZone = "America/Los_Angeles";
-  i18n.defaultLocale = "en_US.UTF-8";
   environment.enableAllTerminfo = true;
 
   users.users."${username}" = {
@@ -35,65 +37,16 @@
   security.sudo.wheelNeedsPassword = false;
 
   environment.systemPackages = with pkgs; [
-    coreutils
-    findutils
-    diffutils
-    inetutils
-    gawk
-    gnused
-    gnugrep
-    gnutar
-    gzip
-    xz
-    zstd
-    unixtools.wall
-    unixtools.watch
-    psutils
-
-    vim
-    wget
-    curl
-    rsync
-    netcat
-    socat
-    file
-    ripgrep
-    fd
-    jq
     btop
   ];
 
-  programs.bash.enable = true;
-
-  services.openssh = {
-    enable = true;
-    settings.X11Forwarding = true;
+  # might want to change this if I can figure out how to share tailscale subnet from peridot...
+  nix.settings = {
+    trusted-public-keys = lib.mkForce [];
+    trusted-substituters = lib.mkForce [];
   };
-  services.xserver.enable = true;
 
   virtualisation.podman.enable = true;
-
-  nixpkgs = {
-    config.allowUnfree = true;
-  };
-  nix = {
-    settings = {
-      keep-outputs = true;
-      keep-derivations = true;
-
-      trusted-users = [ "@wheel" ];
-    };
-
-    extraOptions = ''
-      experimental-features = nix-command flakes
-      builders-use-substitutes = true
-    '';
-
-    buildMachines = [
-      # ...
-    ];
-    distributedBuilds = true;
-  };
 
   boot.binfmt = {
     preferStaticEmulators = true;
