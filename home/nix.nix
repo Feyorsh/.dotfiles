@@ -23,6 +23,7 @@ in
     nix-output-monitor
     nh
     nixpkgs-review
+    nixpkgs-lint
     nixfmt-rs
     nix-prefetch
     inputs.deploy-rs.packages.${pkgs.stdenv.system}.deploy-rs
