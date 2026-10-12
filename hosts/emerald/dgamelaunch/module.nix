@@ -1,4 +1,4 @@
-pkgs: { config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   inherit (pkgs) nethack;
   cfg = config.services.dgamelaunch;
@@ -131,24 +131,36 @@ in
           fi
           done < "$closureInfo/store-paths" >> "$out"
         '';
-    launcher = lib.getExe (pkgs.writeShellScriptBin "dgamelaunch-launcher"
-      ''
+    # don't use writeShellScriptBin to avoid IFD
+    launcher = pkgs.writeTextFile rec {
+      name = "dgamelaunch-launcher";
+      executable = true;
+      destination = "/bin/${name}";
+
+      derivationArgs = { inherit chrootPaths; };
+
+      text = ''
         /run/wrappers/bin/umount /run/dgamelaunch
         /run/current-system/systemd/bin/systemctl restart run-dgamelaunch.mount
         /run/current-system/systemd/bin/systemctl restart dgamelaunch-setup.service
         exec -a dgamelaunch /run/current-system/systemd/bin/systemd-run \
           -E DGLAUTH \
           -p RootDirectory=/run/dgamelaunch \
-          ${builtins.readFile chrootPaths}   -p MountAPIVFS=true \
+          $(cat "$chrootPaths")   -p MountAPIVFS=true \
           -p BindPaths=${cfg.dataDir}/dgldir/inprogress:/dgldir/inprogress \
           -p PrivatePIDs=true \
           -p PrivateTmp=true \
           --pty --pipe -q ${lib.getExe' cfg.package "dgamelaunch"}
-      '');
-    shell = lib.getExe (pkgs.writeShellScriptBin "dgamelaunch-shell"
+      '';
+      checkPhase = ''
+        ${pkgs.stdenv.shellDryRun} "$target"
+      '';
+      meta.mainProgram = name;
+    };
+    shell = (pkgs.writeShellScriptBin "dgamelaunch-shell"
       ''
-        exec /run/wrappers/bin/sudo DGLAUTH="''${DGLAUTH:-$USER}" ${launcher}
-      '');
+        exec /run/wrappers/bin/sudo DGLAUTH="''${DGLAUTH:-$USER}" ${lib.getExe launcher}
+      '') // { shellPath = "/bin/dgamelaunch-shell"; };
   in
     lib.mkIf cfg.enable {
       services.openssh = lib.mkIf (cfg.enableSSH != null) {
@@ -200,7 +212,7 @@ in
 
       security.sudo.extraRules = lib.optionals (cfg.enableSSH != null || cfg.telnetPort != null) [{
         users = [ cfg.user ];
-        commands = [ { command = launcher; options = [ "NOPASSWD" "SETENV" ]; } ];
+        commands = [ { command = lib.getExe launcher; options = [ "NOPASSWD" "SETENV" ]; } ];
       }];
 
       systemd.tmpfiles.settings.dgamelaunch = {

@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
 
+    ./nethack.nix
     ../../nixos
     (import ../../nixos/remote-builder.nix "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBPrY64vAN0LHRZ3KX3OGtzpYKw5tAfoQdxYO6kxSqgr nixremote@emerald")
     ../../nixos/tailscale.nix
@@ -45,7 +46,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    quartus-prime-lite
+    # quartus-prime-lite
     # (callPackage ./vitis {})
   ];
   environment.enableAllTerminfo = true;
