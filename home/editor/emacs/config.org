@@ -1308,10 +1308,10 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
           mu4e-compose-context-policy 'ask-if-none
           mu4e-contexts
           `(,(make-mu4e-context
-              :name "Personal"
+              :name "Gmail"
               :match-func (lambda (msg)
                             (when msg
-                              (mu4e-message-contact-field-matches msg '(:to :cc :from) "george@feyor.sh")))
+                              (mu4e-message-contact-field-matches msg '(:to :cc :from) "ghubs25@gmail.com")))
               ;; don't set imap trash tag, just move to trash
               :enter-func (lambda ()
                             (setf (plist-get (alist-get 'trash mu4e-marks) :action)
@@ -1323,29 +1323,26 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                                     (mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
 
 			  :vars `((user-full-name . "George Huebner")
-					  (user-mail-address . "george@feyor.sh")
-                      (message-alternative-emails . ,(regexp-opt '("ghubs25@gmail.com" "george@sighacks.net")))
+					  (user-mail-address . "ghubs25@gmail.com")
 					  (mu4e-index-cleanup nil)
 					  (mu4e-index-lazy-check t)
 					  (mu4e-sent-messages-behavior . delete)
-					  (mu4e-drafts-folder . "/personal/[Gmail].Drafts")
-					  (mu4e-trash-folder . "/personal/[Gmail].Trash")
-					  (mu4e-sent-folder . "/personal/[Gmail].Sent Mail")
-					  (mu4e-refile-folder . "/personal/[Gmail].All Mail")
-					  (message-sendmail-extra-arguments . ("-a" "personal"))
+					  (mu4e-drafts-folder . "/gmail/[Gmail].Drafts")
+					  (mu4e-trash-folder . "/gmail/[Gmail].Trash")
+					  (mu4e-sent-folder . "/gmail/[Gmail].Sent Mail")
+					  (mu4e-refile-folder . "/gmail/[Gmail].All Mail")
+					  (message-sendmail-extra-arguments . ("-a" "gmail"))
 					  (mu4e-maildir-shortcuts . (
-												 (:name "Inbox" :maildir "/personal/INBOX" :key ?i)
-												 (:name "Sent" :maildir "/personal/[Gmail].Sent Mail" :key ?s)
-												 (:name "Drafts" :maildir "/personal/[Gmail].Drafts" :key ?d)
-												 (:name "Trash" :maildir "/personal/[Gmail].Trash" :key ?t)
-												 (:name "All Mail" :maildir "/personal/[Gmail].All Mail" :key ?a)
-												 (:name "Spam" :maildir "/personal/[Gmail].Spam" :key ?q)
+												 (:name "Inbox" :maildir "/gmail/INBOX" :key ?i)
+												 (:name "Sent" :maildir "/gmail/[Gmail].Sent Mail" :key ?s)
+												 (:name "Drafts" :maildir "/gmail/[Gmail].Drafts" :key ?d)
+												 (:name "Trash" :maildir "/gmail/[Gmail].Trash" :key ?t)
+												 (:name "All Mail" :maildir "/gmail/[Gmail].All Mail" :key ?a)
+												 (:name "Spam" :maildir "/gmail/[Gmail].Spam" :key ?q)
 												 ))
 					  (mu4e-bookmarks . (
-										 (:name "Personal" :query "maildir:/personal/INBOX AND flag:personal" :key ?p)
-										 (:name "Unread" :query "maildir:/personal/INBOX AND flag:unread" :key ?u)
-										 (:name "git" :query "maildir:/personal/INBOX AND (from:notifications@github.com OR subject:[PATCH]* OR contact:/.*@debbugs.gnu.org/)" :key ?g)
-										 (:name "kernel" :query "maildir:/personal/INBOX AND (list:linux-kernel.vger.kernel.org OR list:o-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
+										 (:name "Personal" :query "maildir:/gmail/INBOX AND flag:personal" :key ?p)
+										 (:name "Unread" :query "maildir:/gmail/INBOX AND flag:unread" :key ?u)
 										 ))
 					  ))
              ,(make-mu4e-context
@@ -1381,6 +1378,45 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                        (mu4e-bookmarks . ((:name "Personal" :query "maildir:/school/INBOX AND flag:personal" :key ?p)
                                           (:name "Unread" :query "maildir:/school/INBOX AND flag:unread" :key ?u)
                                           (:name "Lab" :query "maildir:/school/INBOX AND (from:kwiat@illinois.edu OR subject:Kwiat OR to:phys-kwiat-mailers@mx.uillinois.edu)" :key ?l)))))
+             ,(make-mu4e-context
+               :name "Personal"
+               :match-func (lambda (msg)
+                             (when msg
+                               (mu4e-message-contact-field-matches msg '(:to :cc :from) "george@feyor.sh")))
+               :enter-func (lambda ()
+                             (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+                                   (lambda (docid msg target)
+                                     (mu4e--server-move docid (mu4e--mark-check-target target) "-N"))))
+               :leave-func (lambda ()
+                             (setf (plist-get (alist-get 'trash mu4e-marks) :action)
+                                   (lambda (docid msg target)
+                                     (mu4e--server-move docid (mu4e--mark-check-target target) "+T-N"))))
+			   :vars `((user-full-name . "George Huebner")
+					   (user-mail-address . "ghuebner@mailbox.org")
+                       (message-alternative-emails . ,(regexp-opt '("george@feyor.sh" "george@sighacks.net")))
+					   (mu4e-index-cleanup nil)
+					   (mu4e-index-lazy-check t)
+					   (mu4e-sent-messages-behavior . delete)
+					   (mu4e-drafts-folder . "/personal/Drafts")
+					   (mu4e-trash-folder . "/personal/Trash")
+					   (mu4e-sent-folder . "/personal/Sent")
+					   (mu4e-refile-folder . "/personal/Archive")
+					   (message-sendmail-extra-arguments . ("-a" "personal"))
+					   (mu4e-maildir-shortcuts . (
+												  (:name "Inbox" :maildir "/personal/INBOX" :key ?i)
+												  (:name "Sent" :maildir "/personal/Sent" :key ?s)
+												  (:name "Drafts" :maildir "/personal/Drafts" :key ?d)
+												  (:name "Trash" :maildir "/personal/Trash" :key ?t)
+												  (:name "All Mail" :maildir "/personal/Archive" :key ?a)
+												  (:name "Spam" :maildir "/personal/Junk" :key ?q)
+												  ))
+					   (mu4e-bookmarks . (
+										  (:name "Personal" :query "maildir:/personal/INBOX AND flag:personal" :key ?p)
+										  (:name "Unread" :query "maildir:/personal/INBOX AND flag:unread" :key ?u)
+										  (:name "git" :query "maildir:/personal/INBOX AND (from:notifications@github.com OR subject:[PATCH]* OR contact:/.*@debbugs.gnu.org/)" :key ?g)
+										  (:name "kernel" :query "maildir:/personal/INBOX AND (list:linux-kernel.vger.kernel.org OR list:o-uring.vger.kernel.org OR list:kernel-janitors.vger.kernel.org)" :key ?k)
+										  ))
+					  ))
              ))
 
 	(setq smiley-style 'emoji
@@ -1505,10 +1541,34 @@ It was good, but ended up being annoying because gpg-agent didn't persistently c
 Brian Flaherty' [[https://sites.uw.edu/bxf4/2022/09/01/getting-uw-outlook-365-oauth2-to-work-with-emacs-mu4e-mbsync-and-msmtp/][guide]] on getting Outlook setup with mu4e is excellent.
 isync (mbsync) synchonizes mailboxes.
 #+begin_src conf :tangle ~/.mbsyncrc
-IMAPAccount personal
+IMAPAccount gmail
 Host imap.gmail.com
 User ghubs25@gmail.com
 PassCmd "pass show msmtp:gmail"
+Port 993
+TLSType IMAPS
+AuthMechs LOGIN
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+Path ~/Mail/gmail/
+Inbox ~/Mail/gmail/INBOX
+Flatten .
+
+Channel gmail
+Far :gmail-remote:
+Near :gmail-local:
+Create Both
+Expunge Both
+Patterns * !"[Gmail]/Important" !"[Gmail]/Starred"
+SyncState *
+
+IMAPAccount personal
+Host imap.mailbox.org
+User ghuebner@mailbox.org
+PassCmd "pass show msmtp:mailbox"
 Port 993
 TLSType IMAPS
 AuthMechs LOGIN
@@ -1526,7 +1586,7 @@ Far :personal-remote:
 Near :personal-local:
 Create Both
 Expunge Both
-Patterns * !"[Gmail]/Important" !"[Gmail]/Starred"
+Patterns *
 SyncState *
 
 IMAPAccount school
@@ -1561,7 +1621,7 @@ logfile ~/Mail/msmtp.log
 protocol smtp
 tls on
 
-account personal
+account gmail
 host smtp.gmail.com
 port 465
 auth on
@@ -1569,6 +1629,15 @@ tls_starttls off
 from ghubs25@gmail.com
 user ghubs25@gmail.com
 passwordeval pass show msmtp:gmail
+
+account personal
+host smtp.mailbox.org
+port 465
+auth on
+tls_starttls off
+from ghuebner@mailbox.org
+user ghuebner@mailbox.org
+passwordeval pass show msmtp:mailbox
 
 account personal-fysh : personal
 from george@feyor.sh
@@ -1589,7 +1658,7 @@ account default : personal
 #+end_src
 
 #+begin_src bash :results none :eval no
-mkdir -p ~/Mail/{personal,school}
+mkdir -p ~/Mail/{personal,gmail,school}
 mbsync -a
 
 mu init --my-address "george@feyor.sh" --my-address "george@sighacks.net" --my-address "ghubs25@gmail.com" --my-address "georgeh3@illinois.edu" --maildir ~/Mail
