@@ -1,0 +1,128 @@
+From 8873a7c376ae81a08e2f47b0139adaa874417678 Mon Sep 17 00:00:00 2001
+From: George Huebner <george@feyor.sh>
+Date: Sun, 5 Apr 2026 03:01:52 -0500
+Subject: [PATCH] fixup
+
+---
+ dgamelaunch.c | 22 +++++++++++++++++++---
+ dgamelaunch.h |  3 +++
+ dgl-common.c  |  8 ++++----
+ ttyrec.c      |  1 -
+ 4 files changed, 26 insertions(+), 8 deletions(-)
+
+diff --git a/dgamelaunch.c b/dgamelaunch.c
+index cbc2c46..84c1915 100644
+--- a/dgamelaunch.c
++++ b/dgamelaunch.c
+@@ -1192,6 +1192,10 @@ game_get_column_data(struct dg_game *game,
+             snprintf(data, bufsz, "  N/A");
+             *hilite = CLR_GREEN;
+             break;
++        } else if (game->extra_info && !strcmp(game->extra_info, "lisp")) {
++            snprintf(data, bufsz, "  lisp");
++            *hilite = CLR_MAGENTA;
++            break;
+         }
+         snprintf(data, bufsz, "%3dx%3d", game->ws_col, game->ws_row);
+ 	if (showplayers)
+@@ -1528,7 +1532,7 @@ watchgame:
+ 		  setproctitle("%s [watching %s]", me->username, chosen_name);
+ 	      else
+ 		  setproctitle("<Anonymous> [watching %s]", chosen_name);
+-          if (resizey == 0 && resizex == 0) {
++          if (!strcmp(games[idx]->extra_info, "lisp")) {
+               int fd = open(ttyrecname, O_RDONLY);
+               char buf[4096];
+               for (;;) {
+@@ -1547,7 +1551,19 @@ watchgame:
+                       }
+                   }
+                   if (FD_ISSET(0, &rfds)) {
+-                      if (dgl_getch() == EOF) break;
++                      switch (dgl_getch()) {
++                      case EOF:
++                      case 'q':
++                          break;
++                      case 'm':
++                          if (!loggedin)
++                              loginprompt(1);
++                          if (loggedin)
++                              domailuser(chosen_name);
++                      default:
++                          continue;
++                      }
++                      break;
+                   }
+               }
+               close(fd);
+@@ -1644,7 +1660,7 @@ leavewatchgame:
+ #endif
+ }
+ 
+-static void
++void
+ inprogressdisplay (int gameid)
+ {
+     const char *selectorchars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ";
+diff --git a/dgamelaunch.h b/dgamelaunch.h
+index 7af66f5..8ea314a 100644
+--- a/dgamelaunch.h
++++ b/dgamelaunch.h
+@@ -31,10 +31,12 @@
+ # define CLR_NORMAL  COLOR_PAIR(11)   | A_NORMAL
+ # define CLR_RED     COLOR_PAIR(COLOR_RED)   | A_NORMAL
+ # define CLR_GREEN   COLOR_PAIR(COLOR_GREEN) | A_NORMAL
++# define CLR_MAGENTA COLOR_PAIR(COLOR_MAGENTA) | A_NORMAL
+ #else
+ # define CLR_NORMAL  0
+ # define CLR_RED     0
+ # define CLR_GREEN   0
++# define CLR_MAGENTA  0
+ #endif
+ extern int color_remap[];
+ 
+@@ -339,6 +341,7 @@ extern int dgl_getch(void);
+ extern void idle_alarm_set_enabled(int enabled);
+ extern void idle_alarm_reset(void);
+ extern void inprogressmenu(int gameid);
++extern void inprogressdisplay(int gameid);
+ extern void change_email(void);
+ extern int changepw(int dowrite);
+ extern void domailuser(char *username);
+diff --git a/dgl-common.c b/dgl-common.c
+index d65262d..08e36c9 100644
+--- a/dgl-common.c
++++ b/dgl-common.c
+@@ -932,13 +932,13 @@ populate_games (int xgame, int *l, struct dg_user *me)
+ 		  games[len]->ws_col = 80;
+ 	      }
+ 
+-          if (strstr(ttyrecname, ".lisprec")) {
+-              games[len]->ws_row = 0;
+-              games[len]->ws_col = 0;
+-          }
+ 
+               games[len]->extra_info = NULL;
+               games[len]->extra_info_weight = 0;
++              if (strstr(ttyrecname, ".lisprec")) {
++                  games[len]->extra_info_weight = 1;
++                  games[len]->extra_info = strdup("lisp");;
++              }
+               if (myconfig[game]->extra_info_file) {
+                   char *extra_info_file =
+                       dgl_format_str(game, NULL,
+diff --git a/ttyrec.c b/ttyrec.c
+index 986734d..e3a73bf 100644
+--- a/ttyrec.c
++++ b/ttyrec.c
+@@ -270,7 +270,6 @@ ttyrec_main (int game, char *username, char *ttyrec_path, char* ttyrec_filename,
+ 
+   (void) fclose (fscript);
+   if (wants_lisp) {
+-      /* close(lisp_pipe[1]); */
+ 	  int status;
+ 	  wait(&status);
+   } else {
+-- 
+2.53.0
+

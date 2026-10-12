@@ -169,6 +169,15 @@
               username = "fysh";
             };
           };
+          "emerald" = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+
+            modules = [ ./hosts/emerald ];
+            specialArgs = {
+              host = "emerald";
+              username = "fysh";
+            };
+          };
         };
 
         deploy = lib.recursiveUpdate {
