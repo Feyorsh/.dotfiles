@@ -7,6 +7,8 @@
     settings = {
       auto-optimise-store = false;
 
+      experimental-features = "nix-command flakes";
+
       trusted-users = [ "@admin" ];
     };
     nixPath = [

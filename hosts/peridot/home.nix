@@ -73,6 +73,10 @@
        '')
     ];
 
+    shellAliases = {
+      powerwash = "deploy ~/.dotfiles#pallasite";
+    };
+
     stateVersion = "23.05";
   };
 

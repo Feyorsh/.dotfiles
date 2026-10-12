@@ -2,7 +2,6 @@
 let
   rinse = "nh home switch ~/.dotfiles#homeConfigurations.${host}";
   lave = "nh darwin switch ~/.dotfiles#darwinConfigurations${host}";
-  powerwash = "deploy ~/.dotfiles --skip-checks";
   nix-unfetter = "nix-store --option sandbox false --realise";
   nixc = pkgs.writeShellScriptBin "nixc" (nixc' true);
   nixcf = pkgs.writeShellScriptBin "nixcf" (nixc' false);
@@ -38,7 +37,7 @@ in
   };
 
   home.shellAliases = {
-    inherit rinse lave powerwash nix-unfetter;
+    inherit rinse lave nix-unfetter;
   };
 
   programs.fish.functions = {
