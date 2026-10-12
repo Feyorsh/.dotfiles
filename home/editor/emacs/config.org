@@ -1237,6 +1237,7 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
     (mu4e-compose-mode . turn-off-auto-fill)
     (mu4e-compose-mode . fysh/message-sign)
     (message-send . fysh/confirm-different-reply-from-original-recipient)
+    (message-send . fysh/confirm-different-send-different-from-context)
     :general-config
     ('normal 'mu4e-view-mode-map "&" (lambda () (interactive) (mu4e-action-view-in-browser (mu4e-message-at-point))))
     ('normal '(mu4e-main-mode-map mu4e-view-mode-map mu4e-headers-mode-map mu4e-search-minor-mode-map) "gR" #'mu4e-update-mail-and-index)
@@ -1275,6 +1276,14 @@ I'd like to use org-msg to compose HTML email, but there are many issues with ne
                   (recipient-emails (mapcar #'cadr (mapcan (lambda (f) (mu4e-message-field parent-msg f)) '(:to :cc :bcc)))))
         (unless (member sender-email recipient-emails)
           (unless (y-or-n-p (format "This message was not addressed to %s; Send anyway?" sender-email))
+            (user-error "Send aborted")))))
+    (defun fysh/confirm-different-send-different-from-context ()
+      "Require confirmation when sending mail from a different context."
+      (when-let* ((parent-msg mu4e-compose-parent-message)
+                  (sender-email (cadr (mail-extract-address-components (message-fetch-field "from"))))
+                  (context-name (mu4e-context-name (mu4e-context-current))))
+        (unless (or (string= user-mail-address sender-email) (string-match-p message-alternative-emails sender-email))
+          (unless (y-or-n-p (format "You are sending this message from %s, but the current mu4e context is %s. Send anyway?" sender-email context-name))
             (user-error "Send aborted")))))
 
     (use-package org-msg
