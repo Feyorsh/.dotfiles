@@ -183,6 +183,7 @@
         deploy = lib.recursiveUpdate {
           nodes.opal.interactiveSudo = true;
           nodes.diamond.interactiveSudo = true;
+          nodes.emerald.interactiveSudo = true;
         } (lib.recursiveUpdate {
           nodes = builtins.mapAttrs (host: config: let
             inherit (config.pkgs.stdenv) hostPlatform;
@@ -196,12 +197,15 @@
             remoteBuild = hostPlatform.isLinux;
           }) (self.nixosConfigurations // self.darwinConfigurations);
         } (lib.recursiveUpdate {
-          nodes = lib.mapAttrs (host: config: {
+          nodes = builtins.mapAttrs (host: config: let
+            inherit (config.pkgs.stdenv) hostPlatform;
+          in {
             hostname = host;
             profiles.home = {
               sshUser = config._module.specialArgs.username;
-              path = deploy-rs.lib.${config.pkgs.stdenv.hostPlatform.system}.activate.home-manager config;
+              path = deploy-rs.lib.${hostPlatform.system}.activate.home-manager config;
             };
+            remoteBuild = hostPlatform.isLinux;
           }) self.homeConfigurations;
         } {
           nodes = builtins.mapAttrs (host: _: {
