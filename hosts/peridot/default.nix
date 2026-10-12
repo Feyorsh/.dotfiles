@@ -35,27 +35,28 @@ in
   };
 
   nix = {
+    buildMachines = [
+      {
+        hostName = "pallasite";
+        sshUser = "nixremote";
+        protocol = "ssh-ng";
+        supportedFeatures = [
+          "kvm"
+          "big-parallel"
+          "benchmark"
+        ];
+        systems = [
+          "aarch64-linux"
+          "x86_64-linux"
+        ];
+      }
+    ];
     settings = {
       # more like pwn-me-mommy
       accept-flake-config = true;
 
       trusted-public-keys = [ "pallasite:74fFodis7RGWyycqahPhu7zm0ixVrLqyVf82Spu5yPg=" ];
-      trusted-substituters = [
-        {
-          hostName = "pallasite";
-          sshUser = "nixremote";
-          protocol = "ssh-ng";
-          supportedFeatures = [
-            "kvm"
-            "big-parallel"
-            "benchmark"
-          ];
-          systems = [
-            "aarch64-linux"
-            "x86_64-linux"
-          ];
-        }
-      ];
+      trusted-substituters = [ "ssh-ng://pallasite" ];
     };
 
     registry = {
