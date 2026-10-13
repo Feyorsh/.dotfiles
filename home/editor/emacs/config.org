@@ -3306,25 +3306,13 @@ TL;DR ~yaml-ts-mode~ unfortunately sucks (wrt indentation), and the third party 
     :general
 	(leader-def "n" #'nix-edit)
     :init
+    (declare-function nix-shebang-mode "nix-shebang")
     (add-to-list 'sh-ancestor-alist '(nix-shell . bash))
     (define-advice nix-edit (:around (fn &rest args) local-nixpkgs)
       (interactive (list (nix-read-file) nil))
       (apply fn (if current-prefix-arg
                     `(,(expand-file-name "~/Personal/nixpkgs") ,@(when (= 2 (length args)) (nth 1 args)))
                   args))))
-
-;; (use-package nix-ts-mode
-;;     :mode ("\\.nix\\'" . nix-ts-mode))
-
-(use-package nix3
-  :commands (nix3-transient)
-  :config
-  (setq nix3-terminal-function #'nix3-vterm-shell-command)
-  (setq nix3-browse-url-for-repository #'browse-url-default-browser)
-  ;; (use-package magit-nix3
-  ;;     :config
-  ;;   (magit-nix3-flake-mode t))
-  )
 
 (use-package nix-update
     :config
