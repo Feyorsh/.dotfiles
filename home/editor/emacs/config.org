@@ -809,7 +809,7 @@ Oldest trick in the book! (Not really.)
     (define-advice agent-shell--ensure-gitignore (:override () shut-up) nil)
 
     (setq agent-shell-preferred-agent-config 'codex)
-    (setq agent-shell-openai-default-model-id "gpt-5.5/xhigh")
+    (setq agent-shell-openai-default-model-id "gpt-6-sol/xhigh")
     (setq agent-shell-openai-codex-environment (agent-shell-make-environment-variables "INSIDE_EMACS" "codex"
                                                                                        "CODEX_HOME" (expand-file-name "~/.config/codex/")))
     (setq agent-shell-pi-environment (agent-shell-make-environment-variables "PI_ACP_ENABLE_EMBEDDED_CONTEXT" "true"))
