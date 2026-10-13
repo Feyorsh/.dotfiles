@@ -130,7 +130,6 @@
         nixosConfigurations = {
           "pallasite" = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-
             modules = [
               ./hosts/pallasite
 
@@ -161,7 +160,6 @@
           };
           "opal" = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-
             modules = [ ./hosts/opal ];
             specialArgs = {
               inherit (inputs) nixos-apple-silicon;
@@ -171,10 +169,17 @@
           };
           "emerald" = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-
             modules = [ ./hosts/emerald ];
             specialArgs = {
               host = "emerald";
+              username = "fysh";
+            };
+          };
+          "vermillion" = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [ ./hosts/vermillion ];
+            specialArgs = {
+              host = "vermillion";
               username = "fysh";
             };
           };
@@ -184,6 +189,7 @@
           nodes.opal.interactiveSudo = true;
           nodes.diamond.interactiveSudo = true;
           nodes.emerald.interactiveSudo = true;
+          nodes.vermillion.interactiveSudo = true;
         } (lib.recursiveUpdate {
           nodes = builtins.mapAttrs (host: config: let
             inherit (config.pkgs.stdenv) hostPlatform;
