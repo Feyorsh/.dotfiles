@@ -65,46 +65,24 @@
         ];
       };
       bootstrap = false;
+      mkHome = { host, username, system }: home-manager.lib.homeManagerConfiguration {
+        pkgs = pkgsFor system;
+        modules = [ ./hosts/${host}/home.nix ];
+        extraSpecialArgs = {
+          inherit inputs bootstrap;
+          inherit username host;
+        };
+      };
     in
       {
-        homeConfigurations = {
-          "peridot" = home-manager.lib.homeManagerConfiguration {
-            pkgs = pkgsFor "aarch64-darwin";
-            modules = [ ./hosts/peridot/home.nix ];
-            extraSpecialArgs = {
-              inherit inputs bootstrap;
-              username = "ghuebner";
-              host = "peridot";
-            };
-          };
-          "diamond" = home-manager.lib.homeManagerConfiguration {
-            pkgs = pkgsFor "aarch64-darwin";
-            modules = [ ./hosts/diamond/home.nix ];
-            extraSpecialArgs = {
-              inherit inputs bootstrap;
-              username = "ghuebner";
-              host = "diamond";
-            };
-          };
-          "pallasite" = home-manager.lib.homeManagerConfiguration {
-            pkgs = pkgsFor "aarch64-linux";
-            modules = [ ./hosts/pallasite/home.nix ];
-            extraSpecialArgs = {
-              inherit inputs;
-              username = "fysh";
-              host = "pallasite";
-            };
-          };
-          "opal" = home-manager.lib.homeManagerConfiguration {
-            pkgs = pkgsFor "aarch64-linux";
-            modules = [ ./hosts/opal/home.nix ];
-            extraSpecialArgs = {
-              inherit inputs;
-              username = "fysh";
-              host = "opal";
-            };
-          };
-        };
+        homeConfigurations = builtins.listToAttrs (map (args: { name = args.host; value = mkHome args; }) [
+          { host = "peridot";    username = "ghuebner"; system = "aarch64-darwin"; }
+          { host = "diamond";    username = "ghuebner"; system = "aarch64-darwin"; }
+          { host = "pallasite";  username = "fysh";     system = "aarch64-linux"; }
+          { host = "opal";       username = "fysh";     system = "aarch64-linux"; }
+          { host = "emerald";    username = "fysh";     system = "x86_64-linux"; }
+          { host = "vermillion"; username = "fysh";     system = "x86_64-linux"; }
+        ]);
 
         darwinConfigurations = {
           "peridot" = darwin.lib.darwinSystem {
@@ -186,10 +164,7 @@
         };
 
         deploy = lib.recursiveUpdate {
-          nodes.opal.interactiveSudo = true;
-          nodes.diamond.interactiveSudo = true;
-          nodes.emerald.interactiveSudo = true;
-          nodes.vermillion.interactiveSudo = true;
+          nodes.pallasite.system.interactiveSudo = false;
         } (lib.recursiveUpdate {
           nodes = builtins.mapAttrs (host: config: let
             inherit (config.pkgs.stdenv) hostPlatform;
@@ -198,6 +173,7 @@
             profiles.system = {
               sshUser = config._module.specialArgs.username;
               user = "root";
+              interactiveSudo = true;
               path = deploy-rs.lib.${hostPlatform.system}.activate.${if hostPlatform.isDarwin then "darwin" else "nixos"} config;
             };
             remoteBuild = hostPlatform.isLinux;
@@ -207,8 +183,9 @@
             inherit (config.pkgs.stdenv) hostPlatform;
           in {
             hostname = host;
-            profiles.home = {
+            profiles.home = rec {
               sshUser = config._module.specialArgs.username;
+              user = sshUser;
               path = deploy-rs.lib.${hostPlatform.system}.activate.home-manager config;
             };
             remoteBuild = hostPlatform.isLinux;
