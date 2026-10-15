@@ -12,14 +12,12 @@
     doCheck = false;
   });
 
-  # prioritize DNS from router over MagicDNS
-  networking.search = [ "lan" "tails.cale" ];
-  environment.etc."resolver/lan".text = ''
-    nameserver 192.168.1.1
-    timeout 1
-  '';
+  # regrettably there is not a great way to do "query 192.168.0.1 and if it returns NXDOMAIN, fallback to 100.100.100.100".
+  # in this case, I have a workaround in my ssh_config and otherwise just suck it up and use .lan.
+  networking.search = [ "tails.cale" ];
+  networking.dns = [ "100.100.100.100" ];
   environment.etc."resolver/tails.cale".text = ''
+    search tails.cale
     nameserver 100.100.100.100
-    timeout 2
   '';
 }
