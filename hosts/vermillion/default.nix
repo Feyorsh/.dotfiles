@@ -30,7 +30,15 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
   };
-  services.getty.autologinUser = username;
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.niri}/bin/niri-session";
+        user = username;
+      };
+    };
+  };
 
   virtualisation.podman.enable = true;
 
