@@ -52,9 +52,11 @@ in
       read = ''prefix_rule(pattern=[["cat", "ls", "grep", "rg", "fd"]], decision="allow", not_match=["cat ~/.ssh/id_ed25519", "rg '.*' ~/.gnupg/**", "ls ~/Mail", "grep '.*' ~/Library/**"])'';
     };
     settings = {
+      model_reasoning_effort = "high";
+
       sandbox_mode = "read-only";
       approval_policy = "on-request";
-      approvals_reviewer = "auto_review";
+      approvals_reviewer = "user";
 
       model_reasoning_summary = "detailed";
       hide_agent_reasoning = false;
