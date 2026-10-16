@@ -16,6 +16,45 @@ let
     fi
     nix copy ${if tofrom then "--to" else "--from"} "ssh://$1" $(readlink "''${2:-result}" | tee /dev/tty)
   '';
+  nixl = pkgs.writeShellApplication {
+    name = "nixl";
+    runtimeInputs = with pkgs; [ fd gnused ];
+    text = ''
+      if [ "$#" -gt 1 ]; then
+        echo "usage: $0 [store-path | -+]" >&2
+        return 1
+      fi
+
+      if [ "$#" -eq 0 ]; then
+        if [[ -L result ]]; then
+          arg=result
+        else
+          arg=-
+        fi
+      else
+        arg="$1"
+      fi
+
+      if [ -L "$arg" ]; then
+        realp=$(readlink -f -- "$arg") || return
+        if [[ "$realp" == /nix/store/* ]]; then
+          target="$realp"
+        else
+          echo "$0: '$arg' does not point to a store path" >&2
+          return 1
+        fi
+      elif [[ $arg =~ ^-+$ ]]; then
+        entry=$(fd -t f . /nix/var/log/nix/drvs -x stat -c '%Y %n' | sort -nr | sed -n "''${#arg}p")
+        [[ -n $entry ]] || return 1
+        target=$(sed -E 's@^[0-9]+ /nix/var/log/nix/drvs/([^/]+)/([^/]+)\.drv(\.bz2)?$@/nix/store/\1\2.drv@' <<< "$entry")
+      else
+        echo "$0: invalid argument '$arg'" >&2
+        return 1
+      fi
+
+      nix log "$target"
+    '';
+  };
 in
 {
   home.packages = with pkgs; [
@@ -29,6 +68,7 @@ in
 
     nixc
     nixcf
+    nixl
   ];
 
   programs.nix-index = {
