@@ -81,11 +81,7 @@ in
             });
           })
 
-          (elfeed.overrideAttrs (prev: {
-            patches = (prev.patches or [ ]) ++ [
-              ./patches/elfeed-collide-links.patch
-            ];
-          }))
+          elfeed
           elfeed-web
           elfeed-org
 
