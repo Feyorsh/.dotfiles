@@ -3391,6 +3391,22 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
       (interactive)
       (let ((tramp-use-connection-share nil))
         (funcall-interactively #'vterm t)))
+
+    (defvar-local fysh/vterm-notify-me--watcher nil)
+    (defun fysh/vterm-notify-me ()
+      (interactive)
+      (unless (derived-mode-p 'vterm-mode)
+        (user-error "This command requires a vterm buffer"))
+      (setq-local fysh/vterm-notify-me--watcher (unless fysh/vterm-notify-me--watcher
+                                                  (lambda () (fysh/notif-notification
+                                                              (format "%s is ready" (buffer-name))
+                                                              "Vterm"))))
+      (message "fysh/vterm-notify-me: %s" (if fysh/vterm-notify-me--watcher "armed" "canceled")))
+    (defun fysh/vterm-notify-me-done ()
+      (when fysh/vterm-notify-me--watcher
+        (funcall fysh/vterm-notify-me--watcher)
+        (setq fysh/vterm-notify-me--watcher nil)))
+
     (setq vterm-max-scrollback 5000)
     (setq vterm-timer-delay 0.05)
 	(setq vterm-shell "fish")
@@ -3405,7 +3421,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     (connection-local-set-profiles
        '(:application tramp :machine "router")
        'remote-openwrt)
-	(setq vterm-eval-cmds (append vterm-eval-cmds '(("less" vterm-less) ("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state) ("prompt-appeared" fysh/vterm-prompt-appeared)))))
+	(setq vterm-eval-cmds (append vterm-eval-cmds '(("notify-me-done" fysh/vterm-notify-me-done) ("less" vterm-less) ("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
 #+end_src
 
 **** Comint

@@ -75,6 +75,10 @@ in
       if string match -qr "vterm" $INSIDE_EMACS
          source ${vterm}/**/emacs-vterm.fish
 
+         function vterm_notify_me_done --on-event fish_prompt
+             vterm_cmd notify-me-done
+         end
+
          function vterm_find_file
              set -q argv[1]; or set argv[1] "."
              for arg in $argv
