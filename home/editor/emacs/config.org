@@ -3380,6 +3380,12 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
           (error "%s does not exist" FILENAME)
         (let ((default-directory (file-name-directory FILENAME)))
           (vterm '(4)))))
+    (defun vterm-less (content)
+      (let ((less-buffer (get-buffer-create (make-temp-name "eless-"))))
+        (with-current-buffer less-buffer
+          (switch-to-buffer less-buffer)
+          (read-only-mode +1)
+          (insert (base64-decode-string content)))))
     ;; x forwarding does not work properly with controlmaster; see section 5.6.1 of the TRAMP manual
     (defun fysh/vterm-with-x ()
       (interactive)
@@ -3399,7 +3405,7 @@ Vterm works really well; +I could always switch to eshell+ eshell is a "dumb" te
     (connection-local-set-profiles
        '(:application tramp :machine "router")
        'remote-openwrt)
-	(setq vterm-eval-cmds (append vterm-eval-cmds '(("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state)))))
+	(setq vterm-eval-cmds (append vterm-eval-cmds '(("less" vterm-less) ("man" man) ("evil-emacs-state" evil-emacs-state) ("evil-insert-state" evil-insert-state) ("prompt-appeared" fysh/vterm-prompt-appeared)))))
 #+end_src
 
 **** Comint

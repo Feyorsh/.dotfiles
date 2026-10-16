@@ -17,6 +17,13 @@ in
         }
         alias ff='vterm_find_file'
 
+        vterm_less() {
+          printf "\e]51;Eless \""
+          cat | base64 -w0
+          printf "\"\e\\"
+        }
+        alias eless=vterm_less
+
         man() {
           vterm_cmd man "-l $(command man -w "$@" 2>/dev/null)"
         }
@@ -40,6 +47,13 @@ in
           done
         }
         alias ff='vterm_find_file'
+
+        vterm_less() {
+          printf "\e]51;Eless \""
+          cat | base64 -w0
+          printf "\"\e\\"
+        }
+        alias eless=vterm_less
 
         man() {
           vterm_cmd man "-l $(command man -w "$@" 2>/dev/null)"
@@ -68,6 +82,13 @@ in
              end
          end
          alias ff='vterm_find_file'
+
+         function vterm_less
+             printf "\e]51;Eless \""
+             cat | base64 -w0
+             printf "\"\e\\"
+         end
+         alias eless='vterm_less'
 
          function emacs
              vterm_find_file "$argv"
