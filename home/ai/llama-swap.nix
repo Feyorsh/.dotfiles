@@ -63,7 +63,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    launchd.agents."llama-cpp" = {
+    launchd.agents."llama-swap" = {
       enable = true;
       config = {
         ProgramArguments = [
@@ -76,8 +76,8 @@ in
         RunAtLoad = true;
         KeepAlive = true;
 
-        StandardOutPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp.log";
-        StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp.log";
+        StandardOutPath = "${config.home.homeDirectory}/Library/Logs/llama-swap.log";
+        StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/llama-swap.log";
       };
     };
   };
