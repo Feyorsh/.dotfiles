@@ -126,15 +126,15 @@ in
       allowAllUnixSockets = true;
       allowUnauthenticatedSocksProxy = false;
       allowSSHAgentSocket = false;
-      allowedDomains = [];
+      allowedDomains = [
+        "cache.nixos.org"
+      ];
     };
     filesystem = {
       denyRead = [
-        "/Users"
         "~/Library"
         "~/Mail"
         "~/.ssh"
-        "id_ed25519*"
         "~/.gnupg"
         "~/.restic"
         "~/.password-store"
@@ -145,6 +145,7 @@ in
         "~/.dotfiles"
         "~/Personal/oss"
         "~/School"
+        "/nix/store"
       ];
 
       allowWrite = [
