@@ -13,6 +13,7 @@ in
         vterm_notify_me_done() {
           vterm_cmd notify-me-done
         }
+        PROMPT_COMMAND="''${PROMPT_COMMAND:+$PROMPT_COMMAND; }"'vterm_notify_me_done'
 
         vterm_find_file() {
           for arg in "''${@:-.}"; do
