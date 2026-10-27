@@ -767,7 +767,7 @@ Oldest trick in the book! (Not really.)
                         :models '(glm5.3-flash
                                   qwen3.8-flash-next
                                   qwen3.8-27b)))
-  (setq gptel-model 'qwen3.8-flash-next)
+  (setq gptel-model 'glm5.3-flash)
   (setq gptel-expert-commands t)
   (setq gptel-display-buffer-action
 		`(,(lambda (buffer &optional action norecord)

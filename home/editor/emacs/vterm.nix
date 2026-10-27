@@ -10,6 +10,10 @@ in
         source ${vterm}/**/emacs-vterm-bash.sh
         shopt -u globstar nullglob
 
+        vterm_notify_me_done() {
+          vterm_cmd notify-me-done
+        }
+
         vterm_find_file() {
           for arg in "''${@:-.}"; do
             vterm_cmd find-file "$(realpath "$arg")"

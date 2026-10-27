@@ -92,6 +92,10 @@ in
               id = "qwen3.8-27b";
               contextWindow = 262144;
             }
+            {
+              id = "glm5.3-flash";
+              contextWindow = 131072;
+            }
           ];
         };
       };
@@ -99,7 +103,7 @@ in
 
     settings = {
       defaultProvider = "diamond";
-      defaultModel = "qwen3.8-flash-next";
+      defaultModel = "glm5.3-flash";
       defaultThinkingLevel = "xhigh";
 
       packages = [
@@ -115,48 +119,55 @@ in
       enableInstallTelemetry = false;
     };
   };
-  home.file."${config.xdg.configHome}/pi/agent/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/codex/skills";
-  home.file."${config.xdg.configHome}/pi/agent/sandbox.json".text = builtins.toJSON {
-    enabled = true;
-    sandboxUserShell = true;
-    allowBrowserProcess = false;
-    network = {
-      disabled = false;
-      allowLocalBinding = true;
-      allowAllUnixSockets = true;
-      allowUnauthenticatedSocksProxy = false;
-      allowSSHAgentSocket = false;
-      allowedDomains = [
-        "cache.nixos.org"
-      ];
-    };
-    filesystem = {
-      denyRead = [
-        "~/Library"
-        "~/Mail"
-        "~/.ssh"
-        "~/.gnupg"
-        "~/.restic"
-        "~/.password-store"
-      ];
-      allowRead = [
-        "."
-        "${config.xdg.configHome}/pi"
-        "~/.dotfiles"
-        "~/Personal/oss"
-        "~/School"
-        "/nix/store"
-      ];
 
-      allowWrite = [
-        "."
-        "/tmp"
-      ];
-      denyWrite = [
-        ".env"
-        "*.pem"
-        "*.key"
-      ];
+  xdg.configFile = {
+    "pi/agent/skills".source = config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/codex/skills";
+
+    "pi/agent/extensions/permission-gate.ts".source = "${pkgs.pi-coding-agent}/lib/node_modules/pi-monorepo/examples/extensions/permission-gate.ts";
+    "pi/agent/extensions/timed-confirm.ts".source = "${pkgs.pi-coding-agent}/lib/node_modules/pi-monorepo/examples/extensions/timed-confirm.ts";
+
+    "pi/agent/sandbox.json".text = builtins.toJSON {
+      enabled = true;
+      sandboxUserShell = true;
+      allowBrowserProcess = false;
+      network = {
+        disabled = false;
+        allowLocalBinding = true;
+        allowAllUnixSockets = true;
+        allowUnauthenticatedSocksProxy = false;
+        allowSSHAgentSocket = false;
+        allowedDomains = [
+          "cache.nixos.org"
+        ];
+      };
+      filesystem = {
+        denyRead = [
+          "~/Library"
+          "~/Mail"
+          "~/.ssh"
+          "~/.gnupg"
+          "~/.restic"
+          "~/.password-store"
+        ];
+        allowRead = [
+          "."
+          "${config.xdg.configHome}/pi"
+          "~/.dotfiles"
+          "~/Personal/oss"
+          "~/School"
+          "/nix/store"
+        ];
+
+        allowWrite = [
+          "."
+          "/tmp"
+        ];
+        denyWrite = [
+          ".env"
+          "*.pem"
+          "*.key"
+        ];
+      };
     };
   };
 

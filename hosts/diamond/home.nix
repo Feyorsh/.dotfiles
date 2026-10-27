@@ -67,7 +67,7 @@
         models = {
           "qwen3.8-flash-next" = {
             cmd = mtplxCmd "qwen3.8-flash-next" "UkisAI/Swift1.5-Qwen3.8-Flash-Next-MTPLX-Optimized-Speed";
-            setParamsByID = mtplxEffort // { "\${MODEL_ID}" = mtplxEffort."\${MODEL_ID}:xhigh"; };
+            setParamsByID = mtplxEffort // { "\${MODEL_ID}" = mtplxEffort."\${MODEL_ID}:medium"; };
             metadata.port = "\${PORT}";
             capabilities = {
               "in" = [ "text" "image" ];
@@ -92,7 +92,7 @@
                 "-hf" "unsloth/GLM-5.3-Flash-GGUF:UD-IQ2_XXS"
                 "--alias" "glm5.3-flash"
                 "-ngl" "99"
-                "-c" "32768"
+                "-c" "131072"
                 "-b" "2048" "-ub" "2048"
                 "-fa" "on"
                 "--cache-type-k" "q8_0" "--cache-type-v" "q8_0"
