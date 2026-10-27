@@ -798,6 +798,7 @@ Oldest trick in the book! (Not really.)
                                                 (unless (get-buffer-window ,buf)
                                                   (fysh/notif-notification (symbol-name (quote ,ev)) "agent-shell" (map-elt (agent-shell-get-config ,buf) :buffer-name) "Glass")
                                                   )))))))
+    (evil-collection-setup . (lambda (&rest _) (general-def 'normal 'agent-shell-mode-map "RET" nil)))
     :init
     (defun agent-shell-claude-chat (&optional arg)
       (interactive "P")
@@ -807,6 +808,13 @@ Oldest trick in the book! (Not really.)
         (fysh/agent-shell--start-chat
          :new-shell (length= (agent-shell-buffers) 0))))
     :config
+    (define-advice agent-shell-markdown--apply-link-properties (:around (fun &rest args) add-yank)
+      (let ((make-map (symbol-function 'agent-shell-markdown--make-ret-binding-map)))
+        (cl-letf (((symbol-function 'agent-shell-markdown--make-ret-binding-map)
+                   (lambda (action) (let ((map (funcall make-map action)))
+                                      (define-key map (kbd "y") #'agent-shell-copy-link-url-at-point)
+                                      map))))
+          (apply fun args))))
     (define-advice agent-shell--ensure-gitignore (:override () shut-up) nil)
 
     (setq agent-shell-preferred-agent-config 'codex)
