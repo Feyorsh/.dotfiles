@@ -5,6 +5,13 @@
     ../../home
     ../../home/editor/remote.nix
     ../../home/ai/llama-swap.nix
+
+    (import ../../home/xenu {
+      cores = 8;
+      memory = 1024 * 16;
+      diskSize = 1000 * 500;
+      sharedDir = "${config.home.homeDirectory}/Personal";
+    })
   ];
 
   services.llama-swap = {
