@@ -65,6 +65,7 @@ in
   config = lib.mkIf cfg.enable {
     launchd.agents."llama-swap" = {
       enable = true;
+      domain = "user"; # do not require a GUI session
       config = {
         ProgramArguments = [
           "${cfg.package}/bin/llama-swap"

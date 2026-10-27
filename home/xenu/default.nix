@@ -24,6 +24,7 @@ lib.optionalAttrs (!bootstrap) {
 
   launchd.agents.xenu = {
     enable = true;
+    domain = "user";
     config = {
       Program = lib.getExe xenu;
       WorkingDirectory = "/var/lib/xenu";
