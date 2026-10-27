@@ -39,6 +39,7 @@
       };
     };
   };
+  systemd.user.services.niri.enableDefaultPath = false;
 
   virtualisation.podman.enable = true;
 
